@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { RendraProvider, type RendraLinkProps } from '@/components/rendra-provider'
 import { renderApp } from '@/test/render'
 import { Table, type TableColumn, type TableQuery } from './table'
+import { MotionProvider } from '@/lib/motion'
 
 /** Link falso, sem react-router: prova que a Table só depende do RendraProvider. */
 function FakeLink({ to, children }: RendraLinkProps) {
@@ -294,5 +295,70 @@ describe('Table', () => {
       </RendraProvider>,
     )
     expect(screen.getByRole('link', { name: 'Carla' })).toHaveAttribute('href', 'fake:/clientes/1')
+  })
+})
+
+describe('Table com motion', () => {
+  const emOn = (props: Partial<Parameters<typeof Table<Row>>[0]> = {}) =>
+    renderApp(
+      <MotionProvider mode="on">
+        <Table<Row>
+          aria-label="Clientes"
+          data={rows}
+          columns={columns}
+          getRowId={(r) => r.id}
+          {...props}
+        />
+      </MotionProvider>,
+    )
+
+  it('em on, as linhas aparecem na mesma ordem e a ordenação continua funcionando', async () => {
+    emOn()
+    expect(names()).toEqual(['Carla', 'Ana', 'Bruno'])
+    await userEvent.click(screen.getByRole('button', { name: /Nome/ }))
+    expect(names()).toEqual(['Ana', 'Bruno', 'Carla'])
+  })
+
+  it('em on, expandir mostra o conteúdo e recolher o tira do DOM', async () => {
+    emOn({ expandable: (row) => <p>Detalhes de {row.nome}</p> })
+    expect(screen.queryByText('Detalhes de Carla')).not.toBeInTheDocument()
+    const [primeiro] = screen.getAllByRole('button', { name: 'Expandir linha' })
+    await userEvent.click(primeiro!)
+    expect(await screen.findByText('Detalhes de Carla')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Recolher linha' }))
+    await waitFor(() => expect(screen.queryByText('Detalhes de Carla')).not.toBeInTheDocument())
+  })
+
+  it('em on, selecionar e ordenar preserva data-state=selected nas linhas certas', async () => {
+    emOn({ selectable: true })
+    await userEvent.click(screen.getAllByRole('checkbox', { name: 'Selecionar linha' })[0]!)
+    const selecionadas = () =>
+      screen
+        .getAllByRole('row')
+        .filter((r) => r.getAttribute('data-state') === 'selected')
+        .map((r) => within(r).queryAllByRole('cell')[1]?.textContent)
+    expect(selecionadas()).toEqual(['Carla'])
+    await userEvent.click(screen.getByRole('button', { name: /Nome/ }))
+    const ordem = screen
+      .getAllByRole('row')
+      .slice(1)
+      .map((r) => within(r).queryAllByRole('cell')[1]?.textContent)
+    expect(ordem).toEqual(['Ana', 'Bruno', 'Carla'])
+    expect(selecionadas()).toEqual(['Carla'])
+  })
+
+  it('em on no celular, "Ver detalhes" abre o bloco e "Ocultar detalhes" o tira do DOM', async () => {
+    setViewportWidth(360)
+    emOn({
+      columns: [
+        { id: 'nome', header: 'Nome', accessor: (r) => r.nome, mobile: 'primary' },
+        { id: 'cidade', header: 'Cidade', accessor: (r) => r.cidade, mobile: 'secondary' },
+      ],
+    })
+    expect(screen.queryByText('Recife', { selector: 'dd *, dd' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getAllByRole('button', { name: /Ver detalhes/ })[0]!)
+    expect(await screen.findByText('Cidade')).toBeInTheDocument()
+    await userEvent.click(screen.getAllByRole('button', { name: /Ocultar detalhes/ })[0]!)
+    await waitFor(() => expect(screen.queryByText('Cidade')).not.toBeInTheDocument())
   })
 })

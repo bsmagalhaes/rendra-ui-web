@@ -1,7 +1,9 @@
 import { CheckCircle2, SkipForward, XCircle } from 'lucide-react'
-import type { ComponentType, ReactNode } from 'react'
+import { m } from 'motion/react'
+import type { ComponentType, ElementType, ReactNode } from 'react'
 import type { FeedbackType } from '@/brand/types'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 
 export interface TimelineEvent {
   id: string
@@ -55,13 +57,24 @@ const statusTextTone: Record<NonNullable<TimelineEvent['status']>, string> = {
 
 /** Linha do tempo única, com eventos em ordem e tom semântico por evento. */
 export function Timeline({ events, className }: { events: TimelineEvent[]; className?: string }) {
+  const on = useMotionMode() === 'on'
+  const presets = useMotionPresets()
+  // Em `on` cada evento entra com slide curto e atraso escalonado (no máximo 10 itens).
+  const Item: ElementType = on ? m.li : 'li'
+  const enter = presets.slide('bottom', 'short')
   return (
     <ol data-rendra="TLN-001" className={cn('@container flex flex-col', className)}>
       {events.map((e, i) => {
         const StatusIcon = e.status ? statusIcon[e.status] : null
         const tone = e.tone ?? (e.status ? statusTone[e.status] : 'neutral')
         return (
-          <li key={e.id} className="relative flex gap-3 pb-6 last:pb-0">
+          <Item
+            key={e.id}
+            className="relative flex gap-3 pb-6 last:pb-0"
+            {...(on
+              ? { ...enter, transition: { ...enter.transition, ...presets.stagger(i) } }
+              : {})}
+          >
             {i < events.length - 1 && (
               <span
                 aria-hidden
@@ -99,7 +112,7 @@ export function Timeline({ events, className }: { events: TimelineEvent[]; class
                 </span>
               )}
             </div>
-          </li>
+          </Item>
         )
       })}
     </ol>

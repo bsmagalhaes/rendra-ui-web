@@ -30,8 +30,9 @@ import {
   MoreHorizontal,
   RotateCw,
 } from 'lucide-react'
+import { AnimatePresence, m } from 'motion/react'
 import { Collapsible } from 'radix-ui'
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type ElementType, type ReactNode } from 'react'
 import { useRendraLink } from '@/components/rendra-provider'
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -52,6 +53,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 import { formatCurrency } from '@/lib/masks'
 
 /* ================================================================ tipos */
@@ -337,6 +339,56 @@ const tableFeatureSet = tableFeatures({
  * Mobile (< 768px): a mesma tabela vira lista de cards, sem rolagem horizontal.
  * Desktop: tabela larga rola na horizontal só dentro do próprio contêiner.
  */
+/**
+ * Bloco "Ver detalhes" do card no celular. Em `on` a altura abre e fecha pelos presets e o
+ * conteúdo fechado sai do DOM; em `off` é o Collapsible de sempre, com as animações em CSS.
+ */
+function MobileDetails({ children }: { children: ReactNode }) {
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
+  const [open, setOpen] = useState(false)
+  const trigger = (
+    <Collapsible.Trigger className="group flex min-h-touch cursor-pointer items-center gap-1 text-sm font-medium text-primary-text">
+      <span className="group-data-[state=open]:hidden">Ver detalhes</span>
+      <span className="hidden group-data-[state=open]:inline">Ocultar detalhes</span>
+      <ChevronDown
+        className="size-icon-sm transition-transform duration-200 group-data-[state=open]:rotate-180"
+        aria-hidden
+      />
+    </Collapsible.Trigger>
+  )
+  if (motion === 'on') {
+    return (
+      <Collapsible.Root open={open} onOpenChange={setOpen}>
+        {trigger}
+        <AnimatePresence initial={false}>
+          {open && (
+            <Collapsible.Content forceMount asChild>
+              <m.div
+                className="overflow-hidden"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={presets.fade.transition}
+              >
+                {children}
+              </m.div>
+            </Collapsible.Content>
+          )}
+        </AnimatePresence>
+      </Collapsible.Root>
+    )
+  }
+  return (
+    <Collapsible.Root>
+      {trigger}
+      <Collapsible.Content className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+        {children}
+      </Collapsible.Content>
+    </Collapsible.Root>
+  )
+}
+
 export function Table<T>({
   data: dataProp,
   source,
@@ -363,6 +415,13 @@ export function Table<T>({
   ...aria
 }: TableProps<T>) {
   const { isMobile } = useBreakpoint()
+  const on = useMotionMode() === 'on'
+  const presets = useMotionPresets()
+  // Em `on` as linhas e os cards entram em fade escalonado (no máximo as 10 primeiras).
+  const RowItem: ElementType = on ? m.tr : 'tr'
+  const CardItem: ElementType = on ? m.li : 'li'
+  const rowEnter = (i: number) =>
+    on ? { ...presets.fade, transition: { ...presets.fade.transition, ...presets.stagger(i) } } : {}
   const columns = useMemo(
     () =>
       statusLast
@@ -626,13 +685,14 @@ export function Table<T>({
       )
     return (
       <ul className="flex flex-col divide-y">
-        {rows.map((r) => {
+        {rows.map((r, index) => {
           const row = r.original
           const [title, ...others] = primary
           return (
-            <li
+            <CardItem
               key={r.id}
               className={cn('flex flex-col gap-3 p-4', r.getIsSelected() && 'bg-primary-soft/50')}
+              {...rowEnter(index)}
             >
               <div className="flex items-start gap-3">
                 {selectable && (
@@ -660,36 +720,26 @@ export function Table<T>({
                 </div>
               </div>
               {(secondary.length > 0 || expandable) && (
-                <Collapsible.Root>
-                  <Collapsible.Trigger className="group flex min-h-touch cursor-pointer items-center gap-1 text-sm font-medium text-primary-text">
-                    <span className="group-data-[state=open]:hidden">Ver detalhes</span>
-                    <span className="hidden group-data-[state=open]:inline">Ocultar detalhes</span>
-                    <ChevronDown
-                      className="size-icon-sm transition-transform duration-200 group-data-[state=open]:rotate-180"
-                      aria-hidden
-                    />
-                  </Collapsible.Trigger>
-                  <Collapsible.Content className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-                    <dl className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
-                      {secondary.map((c) => (
-                        <div key={c.id} className="flex flex-col gap-1">
-                          <dt className="text-xs text-muted-foreground">{c.header}</dt>
-                          <dd className="text-sm">
-                            <CellContent col={c} row={row} />
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                    {expandable && <div className="pt-3">{expandable(row)}</div>}
-                  </Collapsible.Content>
-                </Collapsible.Root>
+                <MobileDetails>
+                  <dl className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2">
+                    {secondary.map((c) => (
+                      <div key={c.id} className="flex flex-col gap-1">
+                        <dt className="text-xs text-muted-foreground">{c.header}</dt>
+                        <dd className="text-sm">
+                          <CellContent col={c} row={row} />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                  {expandable && <div className="pt-3">{expandable(row)}</div>}
+                </MobileDetails>
               )}
               {rowActions && rowActions.length > 0 && (
                 <div className="border-t pt-3">
                   <RowActions row={row} actions={rowActions} mobile />
                 </div>
               )}
-            </li>
+            </CardItem>
           )
         })}
       </ul>
@@ -798,13 +848,14 @@ export function Table<T>({
                   )}
                 </tr>
               ))
-            : rows.map((r) => {
+            : rows.map((r, index) => {
                 const row = r.original
                 return (
                   <Fragment key={r.id}>
-                    <tr
+                    <RowItem
                       data-state={r.getIsSelected() ? 'selected' : undefined}
                       className="group/row transition-colors hover:bg-muted/40 data-[state=selected]:bg-primary-soft/60"
+                      {...rowEnter(index)}
                     >
                       {selectable && (
                         <td className="pr-2 pl-4">
@@ -863,8 +914,8 @@ export function Table<T>({
                           <RowActions row={row} actions={rowActions} />
                         </td>
                       )}
-                    </tr>
-                    {expandable && r.getIsExpanded() && (
+                    </RowItem>
+                    {expandable && !on && r.getIsExpanded() && (
                       <tr className="bg-muted/30">
                         <td
                           colSpan={
@@ -875,6 +926,30 @@ export function Table<T>({
                           {expandable(row)}
                         </td>
                       </tr>
+                    )}
+                    {expandable && on && (
+                      <AnimatePresence initial={false}>
+                        {r.getIsExpanded() && (
+                          <tr key="expanded" className="bg-muted/30">
+                            <td
+                              colSpan={
+                                visibleCols.length + (selectable ? 1 : 0) + 1 + (rowActions ? 1 : 0)
+                              }
+                              className="px-4"
+                            >
+                              <m.div
+                                className="overflow-hidden"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={presets.fade.transition}
+                              >
+                                <div className="py-4">{expandable(row)}</div>
+                              </m.div>
+                            </td>
+                          </tr>
+                        )}
+                      </AnimatePresence>
                     )}
                   </Fragment>
                 )
