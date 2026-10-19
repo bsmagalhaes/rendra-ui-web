@@ -7,7 +7,12 @@
  */
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
+import { MotionGlobalConfig } from 'motion/react'
 import { afterEach } from 'vitest'
+
+// Os testes afirmam o estado final, sem esperar tempo de animação (o Motion só roda com
+// `motion="on"`; os testes de saída animada ligam isto de volta por conta própria).
+MotionGlobalConfig.skipAnimations = true
 
 if (typeof window !== 'undefined') {
   afterEach(() => cleanup())

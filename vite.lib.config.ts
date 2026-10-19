@@ -47,6 +47,7 @@ const BANNER = packageBanner(pkg.version)
 // dependencies do package.json), mas também precisa ficar de fora do bundle.
 const EXTERNAL_PACKAGES = [
   'react',
+  'motion',
   'react/jsx-runtime',
   'react-dom',
   'radix-ui',
