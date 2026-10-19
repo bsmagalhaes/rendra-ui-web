@@ -12,6 +12,10 @@ export interface EmptyStateProps {
   actions?: ReactNode
   /** compact: dentro de tabela ou card pequeno. */
   size?: 'default' | 'compact'
+  /**
+   * Classes extras, que vencem as do componente. Para zerar o respiro vertical (por exemplo,
+   * dentro de um card que já tem o seu) use `className="py-0 md:py-0"`.
+   */
   className?: string
 }
 
