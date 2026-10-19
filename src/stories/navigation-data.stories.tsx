@@ -237,11 +237,22 @@ export const Etapas: Story = {
   ),
 }
 
-function WizardDemo() {
+function WizardDemo({ rotulosEPular }: { rotulosEPular?: boolean }) {
   const [nome, setNome] = useState('')
   const [cidade, setCidade] = useState('')
+  const extras = rotulosEPular
+    ? ({
+        nextLabel: 'Seguir',
+        backLabel: 'Anterior',
+        cancelLabel: 'Sair',
+        onCancel: () => undefined,
+        onSkip: () => undefined,
+        skipLabel: 'Pular etapa',
+      } as const)
+    : {}
   return (
     <Wizard
+      {...extras}
       steps={[
         { id: 'dados', title: 'Dados', description: 'Nome e cidade' },
         { id: 'revisao', title: 'Revisão', description: 'Confira antes de concluir' },
@@ -266,6 +277,10 @@ function WizardDemo() {
 export const Assistente: Story = {
   name: 'Wizard (etapas com validação)',
   render: () => <WizardDemo />,
+}
+export const AssistenteComRotulosEPular: Story = {
+  name: 'Wizard (rótulos próprios e Pular em "Mais ações")',
+  render: () => <WizardDemo rotulosEPular />,
 }
 
 /* ------------------------------------------------ Dados */

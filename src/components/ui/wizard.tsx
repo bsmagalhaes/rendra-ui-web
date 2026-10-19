@@ -179,7 +179,20 @@ export interface WizardProps {
   onValidateStep?: (index: number) => boolean | Promise<boolean>
   onFinish?: () => void | Promise<void>
   onCancel?: () => void
+  /** Rótulo do cancelar da primeira etapa (só aparece com `onCancel`). Padrão: "Cancelar". */
+  cancelLabel?: string
+  /** Rótulo do voltar das etapas seguintes. Padrão: "Voltar". */
+  backLabel?: string
+  /** Rótulo do avançar (todas as etapas menos a última). Padrão: "Avançar". */
+  nextLabel?: string
   finishLabel?: string
+  /**
+   * Torna a etapa opcional: "Pular" aparece no menu "Mais ações" da barra de ações (nunca na
+   * última etapa), avança **sem validar** e limpa o erro da etapa. Sem esta prop não há menu.
+   */
+  onSkip?: () => void
+  /** Rótulo do item de pular. Padrão: "Pular". */
+  skipLabel?: string
   orientation?: 'horizontal' | 'vertical'
   /** Botões no rodapé fixo da tela. Padrão: não, seguem junto do card do wizard. */
   stickyFooter?: boolean
@@ -192,7 +205,12 @@ export function Wizard({
   onValidateStep,
   onFinish,
   onCancel,
+  cancelLabel = 'Cancelar',
+  backLabel = 'Voltar',
+  nextLabel = 'Avançar',
   finishLabel = 'Concluir',
+  onSkip,
+  skipLabel = 'Pular',
   orientation = 'horizontal',
   stickyFooter = false,
 }: WizardProps) {
@@ -215,6 +233,13 @@ export function Wizard({
     } finally {
       setBusy(false)
     }
+  }
+
+  // Pular não passa pela validação: a etapa opcional fica em branco de propósito.
+  const skip = () => {
+    setErrors((e) => e.filter((x) => x !== current))
+    setCurrent((c) => c + 1)
+    onSkip?.()
   }
 
   const body = <div className="flex min-w-0 flex-col gap-6">{children[current]}</div>
@@ -241,13 +266,14 @@ export function Wizard({
           sticky={stickyFooter}
           cancel={
             current > 0
-              ? { label: 'Voltar', icon: <ArrowLeft />, onClick: () => setCurrent((c) => c - 1) }
+              ? { label: backLabel, icon: <ArrowLeft />, onClick: () => setCurrent((c) => c - 1) }
               : onCancel
-                ? { label: 'Cancelar', onClick: onCancel }
+                ? { label: cancelLabel, onClick: onCancel }
                 : undefined
           }
+          secondary={onSkip && !last ? [{ label: skipLabel, onClick: skip }] : undefined}
           primary={{
-            label: last ? finishLabel : 'Avançar',
+            label: last ? finishLabel : nextLabel,
             icon: last ? <Check /> : <ArrowRight />,
             onClick: next,
             loading: busy,
