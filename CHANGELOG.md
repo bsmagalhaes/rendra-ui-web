@@ -4,7 +4,12 @@ O que mudou em cada versão e o que um projeto derivado precisa fazer para atual
 
 ## Não publicado
 
-`rendra auditar` ganha a varredura completa (`--all`), `--ignore`, várias pastas e o `rendra.config.json`. Só aditivo: `rendra auditar` e `rendra auditar <pasta>`, sem flag e sem `rendra.config.json`, imprimem e saem como antes.
+`rendra auditar` ganha a varredura completa (`--all`), `--ignore`, várias pastas e o `rendra.config.json`, e os componentes ganham opções novas: espaços e logo no AppShell, menu do usuário enxuto, `orientation` no ButtonGroup, três opções no BrandFeedbackIcon, rótulos e "Pular" no Wizard, `back` na ErrorPage, `bodyTitle` e `titleSpace` no PageHeader, mais duas correções de acessibilidade. Sem quebra: toda prop nova é opcional e o padrão reproduz o que já era, e `rendra auditar` e `rendra auditar <pasta>`, sem flag e sem `rendra.config.json`, imprimem e saem como antes.
+
+### Corrigido
+
+- **Botão do menu do usuário (WCAG 2.5.3, `label-content-name-mismatch`):** sem foto o botão mostra as iniciais ("AS"), mas o nome acessível era "Menu de Ana Souza", sem o texto visível. Agora é "AS, menu de Ana Souza", com ou sem foto. Quem consulta o botão por rótulo nos testes troca `getByLabelText('Menu de Ana Souza')` por `getByLabelText(/menu de Ana Souza/i)`. O teste de acessibilidade passa a rodar essa regra do axe.
+- **Botão "Fechar" do Modal sem cabeçalho visível (`confirm`, `destructive` e `info`):** o corpo cobria o botão e o clique não chegava (o Playwright acusava "intercepts pointer events"). Agora o botão fica fora do cabeçalho oculto, invisível como antes, recebe clique e aparece quando ganha foco de teclado. O visual de repouso é o mesmo. A área do botão (canto superior direito) segue clicável mesmo invisível.
 
 ### Adicionado
 
@@ -13,11 +18,25 @@ O que mudou em cada versão e o que um projeto derivado precisa fazer para atual
 - **Várias pastas:** `rendra auditar src extra`. Com uma pasta, ela é a base do projeto; com duas ou mais, a base é a pasta atual. Pasta fora da base dá erro claro.
 - **`rendra.config.json`** na base do projeto, opcional, com `pastas`, `ignorar`, `regras` (`{ "<id>": false }` desliga qualquer das 17 regras), `pastasMarca` e `pastasTelas`. A flag vence o config e não soma. JSON inválido, chave ou regra desconhecida e tipo errado dão mensagem em português e código de saída 1.
 - **`rendra auditar --help`** mostra a ajuda geral e sai com 0.
+- **AppShell `workspaces`:** seletor de espaço (empresa, unidade) no topo do menu do usuário, `{ items: { id, label }[], activeId, onSelect(id), label? }`. Sem a prop, o menu é o de antes.
+- **AppShell `userMenu`:** `{ theme?, template?, layout? }`, todos `true` por padrão, esconde o submenu Tema, Template ou Layout do menu do usuário.
+- **AppShell `headerLogo`:** logo do header no celular (abaixo de `md`), no lugar do título e da trilha. O título continua anunciado ao leitor de tela, a seta de voltar e o ícone de ajuda ficam. O nó não pode ser interativo (o contêiner é `aria-hidden`).
+- **ButtonGroup `orientation`:** `horizontal` (padrão), `vertical` e `responsive` (vertical abaixo de `md`), só no modo agrupado. Códigos de catálogo `BTNG-002` (vertical) e `BTNG-003` (responsive); `BTNG-001` passa a ser a variante padrão.
+- **BrandFeedbackIcon `symbolTone`, `statusBadge` e `animation`:** `symbolTone="brand"` pinta o símbolo com a cor primária da marca; `statusBadge` põe o ícone do estado ao lado do símbolo no lugar do selo sobreposto; `animation="encaixe"` entra em 240 ms, sem quique, sem desenho e sem tremor. Novo token `--animate-encaixe`.
+- **Modal `cancelLabel` em `info`:** o segundo botão (cancelar) aparece só quando `cancelLabel` é passado. Em `confirm` e `destructive`, `cancelLabel` troca o "Cancelar".
+- **Wizard `cancelLabel`, `backLabel`, `nextLabel`, `onSkip` e `skipLabel`:** rótulos próprios e etapa opcional. "Pular" fica em "Mais ações" da barra de ações, avança sem validar e não aparece na última etapa.
+- **ErrorPage `back`:** `back={false}` tira o Voltar e a ação principal ocupa 100% da largura. Padrão `true`.
+- **PageHeader `bodyTitle` e `titleSpace`:** `bodyTitle` põe um título discreto (`text-base`) no topo do corpo abaixo de `md`; `titleSpace="none"` não reserva o bloco do título (o vão de 16 px no celular) quando o título é só de leitor de tela e não há `description`. Padrões `false` e `reserve`.
+- **Guia do host** em `docs/COMO_APLICAR.md` ("O CSS do pacote e as classes das suas telas") e no `README.md`: o que o `components.css` traz e não traz, receita para host com Tailwind v4 e sem Tailwind, e a lista das 51 `@utility`, com teste que barra a lista velha.
+- `PageHeader` e `EmptyState` documentam o `className` que zera a margem negativa (`mb-0 md:mb-0`) e o respiro vertical (`py-0 md:py-0`), com teste.
 
 ### Alterado
 
 - **Flag desconhecida em `rendra auditar`** (`--foo`) e `--ignore` sem valor agora dão erro claro e código de saída 1, em vez de a flag ser ignorada em silêncio ou o valor virar a pasta a auditar.
 - **Onde moram as regras:** `help-length.ts` e `var-prefix.ts` foram de `scripts/lib` para `src/cli` (entram no pacote da CLI); `scripts/lib` só reexporta. O `scripts/check-design-rules.mjs` virou um chamador fino de `src/cli/auditar-tudo.ts`, com a mesma saída de antes. Quem copiou `scripts/` e `src/cli` para outro projeto copia as duas pastas de novo, e, se o `tsconfig` do projeto checa `src/cli`, ativa `allowImportingTsExtensions`.
+- **`userConfigurable`** segue como era: ignora o layout que o usuário guardou no navegador ao montar. Não esconde o submenu Layout. `DESIGN_RULES.md` e `docs/COMO_APLICAR.md` passam a dizer isso e a apontar `userMenu` para esconder Tema, Template e Layout.
+- **`Modal`:** `cancelLabel` perdeu o valor padrão do parâmetro (o padrão "Cancelar" agora é resolvido em `confirm` e `destructive`), sem mudar o comportamento de quem já usa.
+- **`initials()`** saiu do `Avatar` para `src/lib/initials.ts`; não é export público.
 
 ## 2.3.0 (02/10/2026)
 
