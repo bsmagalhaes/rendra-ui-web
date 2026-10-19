@@ -48,6 +48,10 @@ const core = {
     'Funções e hooks usados pelos componentes: cn, moldura dos campos, máscaras, validadores, formato, contraste, useBreakpoint e o provedor de marca (sem a marca em si).',
   files: [
     ...ls('src/lib', ['.ts']),
+    // Motion (opcional, ligado por `motion="on"` no provider): o ls() acima não desce em
+    // pastas e só lê .ts; a pasta tem .tsx (MotionProvider) e features-max.ts, que só é
+    // importado de forma dinâmica e o analisador de imports não enxerga. Testes ficam de fora.
+    ...ls('src/lib/motion', ['.ts', '.tsx']),
     ...ls('src/hooks', ['.ts']),
     'src/brand/types.ts',
     'src/brand/brand-context.ts',
@@ -117,7 +121,7 @@ const testUtils = {
   title: 'Preparação dos testes',
   description:
     'Preparação do Vitest para testes de componente (matchMedia, ResizeObserver e o que o Radix usa no jsdom) e renderApp com os provedores do app. Aponte setupFiles para src/test/setup.ts.',
-  files: ['src/test/setup.ts', 'src/test/render.tsx'],
+  files: ['src/test/setup.ts', 'src/test/render.tsx', 'src/test/motion.ts'],
   dev: ['vitest', 'jsdom', '@testing-library/react', '@testing-library/user-event'],
 }
 const uiTests = ui
