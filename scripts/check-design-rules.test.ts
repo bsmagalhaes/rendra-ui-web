@@ -50,10 +50,14 @@ describe('scripts/check-design-rules.mjs', () => {
   })
 
   it('imprime a saída completa, na ordem de sempre (igualdade exata)', () => {
-    const esperado = readFileSync(join(FIXTURES, 'regras-completas.esperado.txt'), 'utf8')
+    // autocrlf do Windows pode converter o esperado em CRLF no checkout: normaliza
+    const esperado = readFileSync(join(FIXTURES, 'regras-completas.esperado.txt'), 'utf8').replace(
+      /\r\n/g,
+      '\n',
+    )
     const { stderr, stdout } = rodar('regras-completas')
     expect(stdout).toBe('')
-    expect(stderr).toBe(esperado)
+    expect(stderr.replace(/\r\n/g, '\n')).toBe(esperado)
   })
 
   it('numa fixture limpa sai com 0 e diz que não há violação', () => {

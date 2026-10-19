@@ -18,6 +18,7 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src", ".storybook"]
