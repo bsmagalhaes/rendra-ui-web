@@ -113,6 +113,9 @@ describe('BrandFeedbackIcon', () => {
       expect(container.querySelectorAll('[data-rendra="BFI-001"] svg')).toHaveLength(1)
       expect(container.querySelector('[data-testid="custom"]')).toBeInTheDocument()
       expect(container.querySelector('svg.lucide')).not.toBeInTheDocument()
+      const raiz = container.querySelector('[data-rendra="BFI-001"]')!
+      expect(raiz).toHaveClass('size-icon-md')
+      expect(raiz).not.toHaveClass('gap-1')
     })
 
     it('animated com animation="encaixe": símbolo e selo usam animate-encaixe, sem pop, sem desenho e sem tremor', () => {
