@@ -223,6 +223,60 @@ describe('Header', () => {
     })
   })
 
+  describe('headerLogo (logo no lugar do título e da trilha no celular)', () => {
+    const trilha: RendraBreadcrumbItem[] = [
+      { label: 'Clientes', to: '/clientes' },
+      { label: 'Relatório mensal', to: '/relatorio-mensal' },
+    ]
+    const logo = <span data-testid="logo-da-marca">Marca</span>
+    const classes = (el: Element) => el.className.split(/\s+/)
+
+    it('sem headerLogo o header é o de hoje: nada de logo, título e trilha sem classe responsiva', () => {
+      renderHeader({ pageHelp: 'Ajuda da tela' }, trilha)
+      const titulo = screen.getByText('Relatório mensal', { selector: 'p' })
+      expect(classes(titulo)).not.toContain('max-md:sr-only')
+      expect(classes(titulo.parentElement!.parentElement!)).toEqual([
+        'flex',
+        'min-w-0',
+        'flex-1',
+        'flex-col',
+        'justify-center',
+      ])
+      const nav = screen.getByRole('navigation', { name: 'Trilha de navegação' })
+      expect(classes(nav)).not.toContain('max-md:hidden')
+    })
+
+    it('mostra o logo num contêiner aria-hidden, visível só abaixo de md', () => {
+      renderHeader({ headerLogo: logo }, trilha)
+      const contentor = screen.getByTestId('logo-da-marca').parentElement!
+      expect(contentor).toHaveAttribute('aria-hidden', 'true')
+      expect(classes(contentor)).toContain('md:hidden')
+    })
+
+    it('o título continua no DOM e anunciado: oculto só no visual, no celular, e visível de md em diante', () => {
+      renderHeader({ headerLogo: logo }, trilha)
+      const titulo = screen.getByText('Relatório mensal', { selector: 'p' })
+      expect(classes(titulo)).toContain('max-md:sr-only')
+      expect(classes(titulo)).not.toContain('hidden')
+      expect(classes(titulo)).not.toContain('sr-only')
+      expect(classes(titulo)).not.toContain('max-md:hidden')
+    })
+
+    it('a trilha sai do header no celular; a ajuda da tela fica', () => {
+      renderHeader({ headerLogo: logo, pageHelp: 'Ajuda da tela' }, trilha)
+      const nav = screen.getByRole('navigation', { name: 'Trilha de navegação' })
+      expect(classes(nav)).toContain('max-md:hidden')
+      const ajuda = screen.getByRole('button', { name: 'Sobre: Relatório mensal' })
+      expect(classes(ajuda)).not.toContain('max-md:hidden')
+      expect(ajuda.closest('.max-md\\:hidden')).toBeNull()
+    })
+
+    it('a seta de voltar continua renderizada', () => {
+      renderHeader({ headerLogo: logo }, trilha)
+      expect(screen.getByRole('link', { name: 'Voltar para Clientes' })).toBeInTheDocument()
+    })
+  })
+
   describe('nome acessível do botão do menu do usuário (WCAG 2.5.3)', () => {
     it('contém o texto visível (as iniciais) e continua trazendo o nome', async () => {
       renderHeader({ user: { name: 'Ana Souza' } })

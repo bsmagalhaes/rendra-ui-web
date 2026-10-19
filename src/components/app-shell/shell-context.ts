@@ -56,6 +56,8 @@ export interface ShellContextValue {
   userMenu?: ShellUserMenuConfig
   /** Seletor de espaço no topo do menu do avatar. Sem esta prop, não aparece. */
   workspaces?: ShellWorkspacesConfig
+  /** Logo que ocupa o lugar do título e da trilha no header, abaixo de `md`. */
+  headerLogo?: ReactNode
 }
 
 export const ShellContext = createContext<ShellContextValue | null>(null)

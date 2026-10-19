@@ -181,4 +181,16 @@ describe('AppShell', () => {
       )
     })
   })
+
+  describe('headerLogo', () => {
+    it('a prop atravessa o contexto e o logo aparece no header', () => {
+      renderShell({ headerLogo: <span data-testid="logo-da-marca">Marca</span> })
+      expect(screen.getByTestId('logo-da-marca')).toBeInTheDocument()
+    })
+
+    it('sem a prop, nenhum logo é desenhado no lugar do título', () => {
+      renderShell()
+      expect(screen.queryByTestId('logo-da-marca')).not.toBeInTheDocument()
+    })
+  })
 })

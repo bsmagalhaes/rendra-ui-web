@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { createMemoryRouter, RouterProvider } from 'react-router'
+import { LayoutDashboard } from 'lucide-react'
+import { useState } from 'react'
+import { AppShell } from '@/components/app-shell/app-shell'
 import { Container, Grid, PageHeader, Section, Stack } from '@/components/layout'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { routes } from '@/routes'
 import { TokensPage } from '@/pages/tokens-page'
 
@@ -78,4 +82,41 @@ export const Primitivas: Story = {
       </Stack>
     </Container>
   ),
+}
+
+export const AppShellEspacosLogoMenuEnxuto: Story = {
+  name: 'AppShell: espaços, logo no celular e menu do usuário enxuto',
+  parameters: { router: true, layout: 'fullscreen' },
+  render: function Render() {
+    const [ativo, setAtivo] = useState('matriz')
+    return (
+      <div className="h-dvh">
+        <AppShell
+          navigation={[
+            {
+              title: 'Geral',
+              items: [{ title: 'Painel', to: '/', icon: LayoutDashboard, bottomNav: true }],
+            },
+          ]}
+          user={{ name: 'Ana Souza', email: 'ana@exemplo.com.br' }}
+          workspaces={{
+            items: [
+              { id: 'matriz', label: 'Matriz' },
+              { id: 'filial', label: 'Filial Sul' },
+            ],
+            activeId: ativo,
+            onSelect: setAtivo,
+          }}
+          userMenu={{ theme: false, template: false }}
+          headerLogo={<BrandLogo on="surface" />}
+        >
+          <Container padded>
+            <p>
+              No celular o logo ocupa o lugar do título; abra o menu do usuário para ver os espaços.
+            </p>
+          </Container>
+        </AppShell>
+      </div>
+    )
+  },
 }

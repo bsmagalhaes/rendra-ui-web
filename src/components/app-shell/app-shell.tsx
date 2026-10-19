@@ -114,6 +114,14 @@ export interface AppShellProps {
    */
   workspaces?: ShellWorkspacesConfig
   /**
+   * Logo do header no celular (abaixo de `md`): ocupa o lugar do título e da trilha. O título
+   * continua anunciado ao leitor de tela (só some do visual), o botão de voltar e o ícone de
+   * ajuda da tela ficam, e a trilha sai do header. A partir de `md` nada muda. O contêiner é
+   * `aria-hidden`: o logo é decorativo para o leitor, então o nó **não pode ser interativo**
+   * (um link ali dentro reprova `aria-hidden-focus` no axe).
+   */
+  headerLogo?: ReactNode
+  /**
    * Permite que o usuário troque o layout pelo menu do avatar (guardado no navegador).
    * Desligue em produção se o layout do projeto for fixo.
    */
@@ -140,6 +148,7 @@ export function AppShell({
   notifications,
   userMenu,
   workspaces,
+  headerLogo,
   userConfigurable = true,
   children,
 }: AppShellProps) {
@@ -215,6 +224,7 @@ export function AppShell({
       notifications,
       userMenu,
       workspaces,
+      headerLogo,
     }
   }, [
     layout,
@@ -234,6 +244,7 @@ export function AppShell({
     notifications,
     userMenu,
     workspaces,
+    headerLogo,
   ])
 
   return (
