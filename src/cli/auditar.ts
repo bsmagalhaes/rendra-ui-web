@@ -13,8 +13,10 @@
  *     chama isso por arquivo, porque ele já tem sua própria varredura de diretório com a
  *     exceção `src/brand`/`src/styles` (regras próprias do tema deste repositório, que não
  *     fazem sentido num projeto de destino qualquer).
- *   - `auditar(cwd)`: varre `cwd` (ou `cwd/src`, quando existir) sozinha, sem exceção de
- *     diretório, e devolve a lista completa. É o que `rendra auditar` chama.
+ *   - `auditar(cwd, opcoes?)`: varre `cwd` (ou `cwd/src`, quando existir) sozinha e devolve a
+ *     lista completa. Por padrão, sem exceção de diretório; `opcoes` (`pastas`, `ignorar`,
+ *     `regras`) são opt-in e, sem elas, o resultado é o de sempre. É o que `rendra auditar`
+ *     chama. As regras do vocabulário do Rendra (as dez extras) ficam em `auditar-tudo.ts`.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
@@ -126,33 +128,89 @@ export function auditLines(text: string): AuditViolation[] {
   return found
 }
 
-const SKIP_DIR_NAMES = new Set(['node_modules', 'dist', 'build', '.git', '.storybook-static'])
+export const NOMES_PULADOS = new Set(['node_modules', 'dist', 'build', '.git', '.storybook-static'])
 
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    if (SKIP_DIR_NAMES.has(name)) return []
-    const full = join(dir, name)
-    return statSync(full).isDirectory() ? walk(full) : [full]
+/** Opções de `auditar`. Todas opcionais: sem elas, o comportamento é o de sempre. */
+export interface OpcoesAuditar {
+  /** Pastas a varrer, relativas a `cwd`. Valem como estão (sem o atalho para `src`). */
+  pastas?: string[]
+  /** Pastas a pular, relativas a `cwd`: prefixo de pasta, nunca glob nem prefixo de texto. */
+  ignorar?: string[]
+  /** `{ "<id>": false }` desliga a regra de identificador `<id>`. */
+  regras?: Record<string, boolean>
+}
+
+/** `./src/brand/` e `src\\brand` viram `src/brand`; o que sobrar vazio (`.`, `./`) é descartado. */
+function normalizarPrefixo(prefixo: string): string {
+  let p = prefixo.replace(/\\/g, '/')
+  while (p.startsWith('./')) p = p.slice(2)
+  p = p.replace(/\/+$/, '')
+  return p === '.' ? '' : p
+}
+
+/**
+ * `file` (relativo a `cwd`, com `/`) está numa das pastas de `prefixos`? Prefixo de pasta:
+ * `src/brand` casa `src/brand` e `src/brand/x.ts`, nunca `src/brand-novo/x.ts` nem, com
+ * `src/br`, `src/brand`.
+ */
+export function casaPrefixo(file: string, prefixos: string[]): boolean {
+  return prefixos.some((bruto) => {
+    const p = normalizarPrefixo(bruto)
+    return p !== '' && (file === p || file.startsWith(p + '/'))
   })
 }
+
+/**
+ * Lista os arquivos sob `dir`. `pular(nome, caminho)` decide por pasta ou arquivo se a entrada
+ * fica de fora (a pasta pulada não é aberta). Ordem: a do sistema de arquivos, como sempre.
+ */
+export function percorrer(
+  dir: string,
+  pular: (nome: string, caminho: string) => boolean,
+): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const full = join(dir, name)
+    if (pular(name, full)) return []
+    return statSync(full).isDirectory() ? percorrer(full, pular) : [full]
+  })
+}
+
+export const EXTENSAO_VARRIDA = /\.(tsx?|jsx?|css)$/
 
 /**
  * Varre `cwd` (ou `cwd/src`, quando existir: a convenção deste boilerplate e da maioria dos
  * projetos React) por arquivos `.ts`/`.tsx`/`.js`/`.jsx`/`.css`, ignorando teste e story, e
  * devolve toda violação das sete regras genéricas. É o que `rendra auditar [cwd]` chama; não
  * imprime nada e não lança (a CLI decide o formato de saída e o código de saída).
+ *
+ * Com `opcoes.pastas`, varre exatamente essas pastas (relativas a `cwd`, sem o atalho para
+ * `src`); com `opcoes.ignorar`, pula as pastas dadas; `opcoes.regras` desliga regras por id.
+ * `file` sai sempre relativo a `cwd`, com `/`, ordenado por arquivo e linha.
  */
-export function auditar(cwd: string): FileAuditViolation[] {
-  const root = existsSync(join(cwd, 'src')) ? join(cwd, 'src') : cwd
-  if (!existsSync(root)) return []
-  const files = walk(root).filter(
-    (f) => /\.(tsx?|jsx?|css)$/.test(f) && !f.includes('.test.') && !f.includes('.stories.'),
-  )
+export function auditar(cwd: string, opcoes: OpcoesAuditar = {}): FileAuditViolation[] {
+  const ignorar = opcoes.ignorar ?? []
+  const relativo = (caminho: string) => relative(cwd, caminho).split(sep).join('/')
+  const raizes =
+    opcoes.pastas && opcoes.pastas.length > 0
+      ? opcoes.pastas.map((p) => join(cwd, p))
+      : [existsSync(join(cwd, 'src')) ? join(cwd, 'src') : cwd]
+  const arquivos = new Set<string>()
+  for (const raiz of raizes) {
+    if (!existsSync(raiz)) continue
+    const pular = (nome: string, caminho: string) =>
+      NOMES_PULADOS.has(nome) || casaPrefixo(relativo(caminho), ignorar)
+    for (const f of percorrer(raiz, pular)) arquivos.add(f)
+  }
   const problems: FileAuditViolation[] = []
-  for (const file of files) {
-    const rel = relative(cwd, file).split(sep).join('/')
+  for (const file of arquivos) {
+    if (!EXTENSAO_VARRIDA.test(file) || file.includes('.test.') || file.includes('.stories.'))
+      continue
+    const rel = relativo(file)
     const text = readFileSync(file, 'utf8')
-    for (const violation of auditLines(text)) problems.push({ file: rel, ...violation })
+    for (const violation of auditLines(text)) {
+      if (opcoes.regras?.[violation.rule] === false) continue
+      problems.push({ file: rel, ...violation })
+    }
   }
   return problems.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line)
 }
