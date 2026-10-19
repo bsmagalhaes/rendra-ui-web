@@ -145,8 +145,13 @@ function LayoutItems() {
 
 function UserMenu() {
   const Link = useRendraLink()
-  const { user, userMenuItems, onLogout } = useShell()
+  const { user, userMenuItems, onLogout, userMenu } = useShell()
   const { brand, brands, setBrandId, palette, palettes, setPaletteId } = useBrand()
+  const showTheme = userMenu?.theme !== false
+  const showTemplate = userMenu?.template !== false
+  const showLayout = userMenu?.layout !== false
+  // O separador antes do grupo só existe se ao menos um dos submenus existir.
+  const showPreferences = showTheme || showTemplate || showLayout
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -184,59 +189,65 @@ function UserMenu() {
             })}
           </>
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Sun aria-hidden />
-            Tema
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <ModeItems />
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Palette aria-hidden />
-            Template
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuLabel>Modelo</DropdownMenuLabel>
-            <DropdownMenuRadioGroup value={brand.id} onValueChange={setBrandId}>
-              {brands.map((b) => (
-                <DropdownMenuRadioItem key={b.id} value={b.id}>
-                  <span className="flex flex-col">
-                    <span>{b.productName}</span>
-                    <span className="text-xs text-muted-foreground">{shapeLabels[b.shape]}</span>
-                  </span>
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Paleta de cores</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={palette.id}
-              onValueChange={(v) => setPaletteId(v === brand.id ? null : v)}
-            >
-              {palettes.map((b) => (
-                <DropdownMenuRadioItem key={b.id} value={b.id}>
-                  {b.name}
-                  {b.id === brand.id && (
-                    <span className="ml-auto pl-4 text-xs text-muted-foreground">do modelo</span>
-                  )}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <LayoutTemplate aria-hidden />
-            Layout
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <LayoutItems />
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        {showPreferences && <DropdownMenuSeparator />}
+        {showTheme && (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Sun aria-hidden />
+              Tema
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <ModeItems />
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        )}
+        {showTemplate && (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Palette aria-hidden />
+              Template
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuLabel>Modelo</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={brand.id} onValueChange={setBrandId}>
+                {brands.map((b) => (
+                  <DropdownMenuRadioItem key={b.id} value={b.id}>
+                    <span className="flex flex-col">
+                      <span>{b.productName}</span>
+                      <span className="text-xs text-muted-foreground">{shapeLabels[b.shape]}</span>
+                    </span>
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Paleta de cores</DropdownMenuLabel>
+              <DropdownMenuRadioGroup
+                value={palette.id}
+                onValueChange={(v) => setPaletteId(v === brand.id ? null : v)}
+              >
+                {palettes.map((b) => (
+                  <DropdownMenuRadioItem key={b.id} value={b.id}>
+                    {b.name}
+                    {b.id === brand.id && (
+                      <span className="ml-auto pl-4 text-xs text-muted-foreground">do modelo</span>
+                    )}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        )}
+        {showLayout && (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <LayoutTemplate aria-hidden />
+              Layout
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <LayoutItems />
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem destructive onSelect={() => onLogout?.()}>
           <LogOut aria-hidden />

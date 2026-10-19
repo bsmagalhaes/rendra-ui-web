@@ -65,3 +65,13 @@ export interface ShellNotificationsConfig {
   onMarkAllRead?: () => void
   onItemClick?: (id: string) => void
 }
+
+/** Quais submenus o menu do avatar mostra. Cada um é `true` por padrão. */
+export interface ShellUserMenuConfig {
+  /** Submenu "Tema" (claro, escuro, automático). */
+  theme?: boolean
+  /** Submenu "Template" (modelo e paleta de cores). */
+  template?: boolean
+  /** Submenu "Layout" (posição e comportamento do menu). */
+  layout?: boolean
+}

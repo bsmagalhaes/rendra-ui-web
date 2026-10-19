@@ -316,7 +316,8 @@ O `<AppShell>` nunca importa `@/config`: tudo entra por prop, montada por quem m
 - `homeLabel`: rótulo do item raiz da trilha (padrão "Início").
 - `quickActions`: ações rápidas oferecidas na busca global (Ctrl+K).
 - `notifications`: itens do sino de notificações (`items`, `onMarkAllRead`, `onItemClick`).
-- `userConfigurable`: permite que o usuário troque o layout (menu do avatar e Configurações); `false` trava o layout do projeto.
+- `userMenu`: quais submenus o menu do avatar mostra, `{ theme?, template?, layout? }`, todos `true` por padrão; `{ template: false }` esconde só o Template. É o caminho para tirar Tema, Template ou Layout das mãos do usuário.
+- `userConfigurable`: com `false`, o AppShell ignora o layout que o usuário guardou no navegador ao montar, e o layout do projeto vale. Não esconde o submenu Layout nem impede `setLayout` de gravar a escolha; para esconder, use `userMenu={{ layout: false }}`.
 
 A sidebar tem z-index maior que o header. O item ativo do menu é sempre o destino mais específico que combina com o endereço atual.
 

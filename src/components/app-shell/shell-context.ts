@@ -1,7 +1,14 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import type { ShellLayout } from './layout'
 import type { NavigationTarget } from './navigation-utils'
-import type { NavGroup, NavItem, ShellMenuItem, ShellNotificationsConfig, ShellUser } from './types'
+import type {
+  NavGroup,
+  NavItem,
+  ShellMenuItem,
+  ShellNotificationsConfig,
+  ShellUser,
+  ShellUserMenuConfig,
+} from './types'
 
 export interface ShellContextValue {
   /** Layout efetivo: padrão interno + prop `layout` do AppShell + escolha do usuário. */
@@ -44,6 +51,8 @@ export interface ShellContextValue {
   quickActions: ShellMenuItem[]
   /** Notificações do sino do header. Sem esta prop, o sino não aparece. */
   notifications?: ShellNotificationsConfig
+  /** Submenus Tema, Template e Layout do menu do avatar. Sem esta prop, os três aparecem. */
+  userMenu?: ShellUserMenuConfig
 }
 
 export const ShellContext = createContext<ShellContextValue | null>(null)

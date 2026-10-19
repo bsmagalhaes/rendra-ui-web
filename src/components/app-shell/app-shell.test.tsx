@@ -45,7 +45,7 @@ function FakeLink({ to, children, ...rest }: { to: string; children?: React.Reac
 
 function renderShell(overrides: Partial<ComponentProps<typeof AppShell>> = {}) {
   const navigate = vi.fn()
-  render(
+  const tree = (o: Partial<ComponentProps<typeof AppShell>>) => (
     <BrandProvider
       brands={availableBrands}
       palettes={availablePalettes}
@@ -58,13 +58,14 @@ function renderShell(overrides: Partial<ComponentProps<typeof AppShell>> = {}) {
         navigate={navigate}
         goBack={() => {}}
       >
-        <AppShell navigation={navigation} user={{ name: 'Ana Ribeiro' }} {...overrides}>
+        <AppShell navigation={navigation} user={{ name: 'Ana Ribeiro' }} {...o}>
           <p>Conteúdo da tela</p>
         </AppShell>
       </RendraProvider>
-    </BrandProvider>,
+    </BrandProvider>
   )
-  return { navigate }
+  const { rerender } = render(tree(overrides))
+  return { navigate, rerender: (o: Partial<ComponentProps<typeof AppShell>>) => rerender(tree(o)) }
 }
 
 describe('AppShell', () => {
@@ -114,5 +115,37 @@ describe('AppShell', () => {
     const user = userEvent.setup()
     await user.click(screen.getByLabelText(/menu de Ana Ribeiro/i))
     expect(await screen.findByText('Meu perfil')).toBeInTheDocument()
+  })
+
+  describe('userMenu', () => {
+    const itemDoMenu = (nome: string) => screen.queryByRole('menuitem', { name: nome })
+
+    it('a prop atravessa o contexto até o menu do avatar', async () => {
+      renderShell({ userMenu: { template: false } })
+      const user = userEvent.setup()
+      await user.click(screen.getByLabelText(/menu de Ana Ribeiro/i))
+      await screen.findByText('Sair')
+      expect(itemDoMenu('Tema')).toBeInTheDocument()
+      expect(itemDoMenu('Template')).not.toBeInTheDocument()
+      expect(itemDoMenu('Layout')).toBeInTheDocument()
+    })
+
+    it('mudar userMenu por rerender atualiza o menu', async () => {
+      const { rerender } = renderShell({ userMenu: { layout: false } })
+      rerender({ userMenu: { theme: false } })
+      const user = userEvent.setup()
+      await user.click(screen.getByLabelText(/menu de Ana Ribeiro/i))
+      await screen.findByText('Sair')
+      expect(itemDoMenu('Tema')).not.toBeInTheDocument()
+      expect(itemDoMenu('Layout')).toBeInTheDocument()
+    })
+
+    it('userConfigurable={false} não esconde o submenu Layout (comportamento de hoje)', async () => {
+      renderShell({ userConfigurable: false })
+      const user = userEvent.setup()
+      await user.click(screen.getByLabelText(/menu de Ana Ribeiro/i))
+      await screen.findByText('Sair')
+      expect(itemDoMenu('Layout')).toBeInTheDocument()
+    })
   })
 })
