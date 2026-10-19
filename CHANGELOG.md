@@ -10,6 +10,7 @@ O que mudou em cada versão e o que um projeto derivado precisa fazer para atual
 
 - **Botão do menu do usuário (WCAG 2.5.3, `label-content-name-mismatch`):** sem foto o botão mostra as iniciais ("AS"), mas o nome acessível era "Menu de Ana Souza", sem o texto visível. Agora é "AS, menu de Ana Souza", com ou sem foto. Quem consulta o botão por rótulo nos testes troca `getByLabelText('Menu de Ana Souza')` por `getByLabelText(/menu de Ana Souza/i)`. O teste de acessibilidade passa a rodar essa regra do axe.
 - **Botão "Fechar" do Modal sem cabeçalho visível (`confirm`, `destructive` e `info`):** o corpo cobria o botão e o clique não chegava (o Playwright acusava "intercepts pointer events"). Agora o botão fica fora do cabeçalho oculto, invisível como antes, recebe clique e aparece quando ganha foco de teclado. O visual de repouso é o mesmo. A área do botão (canto superior direito) segue clicável mesmo invisível.
+- **Logo da sidebar (WCAG 2.5.3, `label-content-name-mismatch`):** o `BrandLogo` com o nome do produto separava as palavras com um espaço dentro do segundo `<span>`; o axe apara esse espaço, lê "RendraSafira" e acusa que o nome acessível do link ("Rendra Safira, ir para o painel") não contém o texto visível, na sidebar expandida a 1280 px. O espaço agora é um nó de texto entre os dois `<span>`; nada muda no visual.
 
 ### Adicionado
 

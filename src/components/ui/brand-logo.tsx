@@ -70,7 +70,10 @@ export function BrandLogo({ on = 'surface', symbolOnly, size = 'md', className }
       {!symbolOnly && (
         <span className="truncate text-lg leading-none tracking-tight">
           <span className={cn('font-semibold', strong)}>{first}</span>
-          {rest.length > 0 && <span className={cn('font-normal', soft)}> {rest.join(' ')}</span>}
+          {/* O espaço fica fora dos spans: o axe apara o espaço da ponta de cada um e juntaria
+              "RendraSafira", que o nome acessível do link não contém (WCAG 2.5.3). */}
+          {rest.length > 0 && ' '}
+          {rest.length > 0 && <span className={cn('font-normal', soft)}>{rest.join(' ')}</span>}
         </span>
       )}
       {symbolOnly && <span className="sr-only">{brand.productName}</span>}
