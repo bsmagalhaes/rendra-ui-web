@@ -191,6 +191,7 @@ Tudo configurável por props, com o padrão em `src/config/layout.ts`:
 - sidebar **recolhida** (só ícones, padrão) ou **expandida**, com opção de **abrir por cima do conteúdo** ao passar o mouse;
 - submenu em **segunda barra lateral** ou **dentro da sidebar**, e, no menu superior, **submenu navegável** ou **mega menu** com seções;
 - header sempre fixo, com título da página e trilha, busca global (**Ctrl+K**), notificações, tema e menu do usuário;
+- menu do usuário enxuto: `userMenu` esconde Tema, Template ou Layout, um a um;
 - no celular, gaveta de navegação e barra inferior com até 4 itens.
 
 ### Telas base

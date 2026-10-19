@@ -85,6 +85,61 @@ function renderHeader(
 }
 
 describe('Header', () => {
+  describe('userMenu (Tema, Template e Layout no menu do usuário)', () => {
+    async function abrirMenu(overrides: Partial<ShellContextValue> = {}) {
+      renderHeader(overrides)
+      const user = userEvent.setup()
+      await user.click(screen.getByLabelText(/menu de Marina Alves/i))
+      await screen.findByText('Sair')
+      return screen.getByRole('menu')
+    }
+    const tem = (nome: string) => screen.queryByRole('menuitem', { name: nome }) !== null
+    const papeis = (menu: HTMLElement) =>
+      Array.from(menu.children).map((el) => el.getAttribute('role'))
+
+    it('sem userMenu mostra Tema, Template e Layout (padrão de hoje)', async () => {
+      await abrirMenu()
+      expect(tem('Tema')).toBe(true)
+      expect(tem('Template')).toBe(true)
+      expect(tem('Layout')).toBe(true)
+    })
+
+    it('theme: false esconde só o Tema', async () => {
+      await abrirMenu({ userMenu: { theme: false } })
+      expect(tem('Tema')).toBe(false)
+      expect(tem('Template')).toBe(true)
+      expect(tem('Layout')).toBe(true)
+    })
+
+    it('template: false esconde só o Template', async () => {
+      await abrirMenu({ userMenu: { template: false } })
+      expect(tem('Tema')).toBe(true)
+      expect(tem('Template')).toBe(false)
+      expect(tem('Layout')).toBe(true)
+    })
+
+    it('layout: false esconde só o Layout', async () => {
+      await abrirMenu({ userMenu: { layout: false } })
+      expect(tem('Tema')).toBe(true)
+      expect(tem('Template')).toBe(true)
+      expect(tem('Layout')).toBe(false)
+    })
+
+    it('os três false não deixam separador órfão: sobra só o separador antes de Sair', async () => {
+      const menu = await abrirMenu({ userMenu: { theme: false, template: false, layout: false } })
+      expect(tem('Tema') || tem('Template') || tem('Layout')).toBe(false)
+      const seq = papeis(menu)
+      expect(seq.filter((r) => r === 'separator')).toHaveLength(1)
+      expect(seq[seq.length - 2]).toBe('separator')
+      expect(seq[seq.length - 1]).toBe('menuitem')
+    })
+
+    it('com os três visíveis há separador antes do grupo e antes de Sair', async () => {
+      const menu = await abrirMenu()
+      expect(papeis(menu).filter((r) => r === 'separator')).toHaveLength(2)
+    })
+  })
+
   describe('nome acessível do botão do menu do usuário (WCAG 2.5.3)', () => {
     it('contém o texto visível (as iniciais) e continua trazendo o nome', async () => {
       renderHeader({ user: { name: 'Ana Souza' } })

@@ -24,7 +24,7 @@ Dois jeitos de trazer o boilerplate: **clonar o repositório** (código-fonte in
 4. Apague o que é só demonstração:
    - `src/mocks` e as telas de exemplo em `src/pages/app` que não servirem (mantenha as que forem ponto de partida).
    - Os templates alternativos, se não forem usados: a pasta `src/brand/examples`, os `@import` correspondentes em `src/styles/themes.css` e as importações em `src/brand/index.ts`.
-   - Se o layout do projeto for fixo: `userConfigurable={false}` na prop do `<AppShell>`, em `src/app/app-layout.tsx`.
+   - Se o layout do projeto for fixo: `userConfigurable={false}` na prop do `<AppShell>`, em `src/app/app-layout.tsx`. Ele só faz o AppShell ignorar o layout que o usuário guardou no navegador; para tirar do menu do avatar o Tema, o Template ou o Layout, use `userMenu={{ theme: false, template: false, layout: false }}` (cada chave é opcional).
 5. Ajuste o menu em `src/config/navigation.ts` e as rotas em `src/routes.tsx` e `src/config/routes-list.ts`.
 6. Rode `npm run typecheck`, `npm run lint`, `npm run check:rules`, `npm test`, `npm run test:layout` e `npm run test:a11y`.
 

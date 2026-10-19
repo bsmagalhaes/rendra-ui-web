@@ -9,7 +9,13 @@ import { defaultShellLayout, type ShellLayout } from './layout'
 import { getBottomNavItems, getNavigationTargets, resolveActiveTo } from './navigation-utils'
 import { ShellContext, useShell, type ShellContextValue } from './shell-context'
 import { Sidebar } from './sidebar'
-import type { NavGroup, ShellMenuItem, ShellNotificationsConfig, ShellUser } from './types'
+import type {
+  NavGroup,
+  ShellMenuItem,
+  ShellNotificationsConfig,
+  ShellUser,
+  ShellUserMenuConfig,
+} from './types'
 
 const LAYOUT_KEY = 'ui-shell-layout'
 
@@ -95,6 +101,12 @@ export interface AppShellProps {
   /** Notificações do sino do header. Sem esta prop, o sino não aparece. */
   notifications?: ShellNotificationsConfig
   /**
+   * Quais submenus o menu do avatar mostra: `theme` (Tema), `template` (Template) e
+   * `layout` (Layout). Todos `true` por padrão; `{ theme: false }` esconde só o Tema.
+   * É o caminho para tirar essas escolhas do usuário (`userConfigurable` não faz isso).
+   */
+  userMenu?: ShellUserMenuConfig
+  /**
    * Permite que o usuário troque o layout pelo menu do avatar (guardado no navegador).
    * Desligue em produção se o layout do projeto for fixo.
    */
@@ -119,6 +131,7 @@ export function AppShell({
   homeLabel = 'Início',
   quickActions = [],
   notifications,
+  userMenu,
   userConfigurable = true,
   children,
 }: AppShellProps) {
@@ -192,6 +205,7 @@ export function AppShell({
       homeLabel,
       quickActions,
       notifications,
+      userMenu,
     }
   }, [
     layout,
@@ -209,6 +223,7 @@ export function AppShell({
     homeLabel,
     quickActions,
     notifications,
+    userMenu,
   ])
 
   return (
