@@ -38,7 +38,7 @@ describe('Accordion com motion', () => {
     expect(screen.queryByText('Por boleto ou Pix.')).not.toBeInTheDocument()
     await userEvent.click(trigger)
     expect(trigger).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByText('Por boleto ou Pix.')).toBeVisible()
+    await waitFor(() => expect(screen.getByText('Por boleto ou Pix.')).toBeVisible())
     await userEvent.click(trigger)
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     await waitFor(() => expect(screen.queryByText('Por boleto ou Pix.')).not.toBeInTheDocument())
