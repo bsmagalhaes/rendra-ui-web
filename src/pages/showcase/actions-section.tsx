@@ -136,6 +136,32 @@ export function ActionsSection() {
             </Button>
           </ButtonGroup>
         </Row>
+        <Row label="Vertical (orientation)" code="BTNG-002">
+          <ButtonGroup aria-label="Ações do cliente" orientation="vertical">
+            <Button variant="outline" icon={<Copy />}>
+              Duplicar
+            </Button>
+            <Button variant="outline" icon={<Archive />}>
+              Arquivar
+            </Button>
+          </ButtonGroup>
+        </Row>
+        <Row
+          label="Responsivo: vertical no celular, lado a lado a partir do tablet"
+          code="BTNG-003"
+        >
+          <ButtonGroup aria-label="Ações do pedido" orientation="responsive">
+            <Button variant="outline" icon={<Copy />}>
+              Duplicar
+            </Button>
+            <Button variant="outline" icon={<Archive />}>
+              Arquivar
+            </Button>
+            <Button variant="outline" icon={<List />}>
+              Ver itens
+            </Button>
+          </ButtonGroup>
+        </Row>
         <Row label="Segmentado">
           <ButtonGroup
             aria-label="Visualização"
