@@ -7,6 +7,8 @@ export function Tela() {
           <Button>Salvar</Button>
         </CardContent>
       </Card>
+      <div className="p-[13px]" />
+      <span className="text-primary">x</span>
     </>
   )
 }
