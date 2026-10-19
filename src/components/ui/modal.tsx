@@ -1,9 +1,11 @@
+import { AnimatePresence, m } from 'motion/react'
 import { Dialog } from 'radix-ui'
 import { useState, type ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { BrandFeedbackIcon } from '@/components/ui/brand-feedback-icon'
 import { ActionBar } from '@/components/ui/action-bar'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 import { OverlayShell } from './overlay-shell'
 
 /*
@@ -42,6 +44,18 @@ export interface ModalProps {
   loading?: boolean
 }
 
+// Classes do Tailwind do caminho `off`; em `on` o Motion anima e `tw-animate-css` sai.
+const overlayCls = 'fixed inset-0 z-50 bg-overlay'
+const overlayOffCls = cn(
+  overlayCls,
+  'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
+)
+const contentCls = cn(
+  // Mobile: tela inteira. Desktop: centralizado.
+  'fixed inset-0 z-50 flex h-dvh flex-col bg-card text-card-foreground outline-none',
+  'md:inset-auto md:top-1/2 md:left-1/2 md:h-auto md:max-h-sheet md:w-full md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-surface md:border md:shadow-lg',
+)
+
 const feedback = { confirm: 'info', destructive: 'error', info: 'info' } as const
 
 export function Modal({
@@ -71,70 +85,96 @@ export function Modal({
     }
   }
   const isForm = type === 'form'
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
+
+  // destructive tem o mesmo formato do confirm (só muda a cor): mesmo código, MOD-001.
+  // O desvio fica explícito de propósito: sem ele, destructive só cairia em MOD-001
+  // pelo fallback de resolveCatalogCode (o primeiro código do Modal no catálogo), ou
+  // seja, dependeria da ordem das entradas em src/catalog/components.ts.
+  const code = resolveCatalogCode('Modal', {
+    type: type === 'destructive' ? 'confirm' : type,
+  })
+  const sizeCls = sizes[size]
+  const shell = (
+    <OverlayShell
+      title={title}
+      description={isForm ? description : undefined}
+      hideHeader={!isForm}
+      onRequestClose={close}
+      bodyClassName={cn(!isForm && 'flex flex-col items-center justify-center gap-4 text-center')}
+      footer={
+        <ActionBar
+          primary={{
+            label: confirmLabel,
+            destructive: type === 'destructive',
+            loading: busy || loading,
+            loadingLabel: `${confirmLabel}...`,
+            type: isForm && formId ? 'submit' : 'button',
+            form: isForm ? formId : undefined,
+            onClick: isForm && formId ? undefined : confirm,
+          }}
+          cancel={
+            type === 'info' && cancelLabel === undefined
+              ? undefined
+              : { label: cancelLabel ?? 'Cancelar', onClick: close }
+          }
+        />
+      }
+    >
+      {!isForm && (
+        <>
+          <BrandFeedbackIcon type={feedback[type as keyof typeof feedback]} size="2xl" animated />
+          <div className="flex flex-col gap-2">
+            <p className="text-lg font-semibold">{title}</p>
+            {description && <p className="text-sm text-muted-foreground">{description}</p>}
+          </div>
+          {children}
+        </>
+      )}
+      {isForm && <div className="flex flex-col gap-2">{children}</div>}
+    </OverlayShell>
+  )
+
+  // `on`: o conteúdo só existe enquanto aberto ou saindo (AnimatePresence); o Radix fica com
+  // forceMount e o `m.div` entra por asChild, preservando data-rendra e o foco do Dialog.
+  if (motion === 'on') {
+    return (
+      <Dialog.Root open={open} onOpenChange={onOpenChange}>
+        <AnimatePresence>
+          {open && (
+            <Dialog.Portal forceMount key="modal">
+              <Dialog.Overlay forceMount asChild>
+                <m.div className={overlayCls} {...presets.fade} />
+              </Dialog.Overlay>
+              <Dialog.Content
+                forceMount
+                asChild
+                data-rendra={code}
+                className={cn(contentCls, sizeCls)}
+              >
+                <m.div {...presets.scale}>{shell}</m.div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          )}
+        </AnimatePresence>
+      </Dialog.Root>
+    )
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Overlay className={overlayOffCls} />
         <Dialog.Content
-          // destructive tem o mesmo formato do confirm (só muda a cor): mesmo código, MOD-001.
-          // O desvio fica explícito de propósito: sem ele, destructive só cairia em MOD-001
-          // pelo fallback de resolveCatalogCode (o primeiro código do Modal no catálogo), ou
-          // seja, dependeria da ordem das entradas em src/catalog/components.ts.
-          data-rendra={resolveCatalogCode('Modal', {
-            type: type === 'destructive' ? 'confirm' : type,
-          })}
+          data-rendra={code}
           className={cn(
-            // Mobile: tela inteira. Desktop: centralizado.
-            'fixed inset-0 z-50 flex h-dvh flex-col bg-card text-card-foreground outline-none',
-            'md:inset-auto md:top-1/2 md:left-1/2 md:h-auto md:max-h-sheet md:w-full md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-surface md:border md:shadow-lg',
+            contentCls,
             'data-[state=open]:animate-in data-[state=open]:fade-in-0 md:data-[state=open]:zoom-in-95',
-            sizes[size],
+            sizeCls,
           )}
         >
-          <OverlayShell
-            title={title}
-            description={isForm ? description : undefined}
-            hideHeader={!isForm}
-            onRequestClose={close}
-            bodyClassName={cn(
-              !isForm && 'flex flex-col items-center justify-center gap-4 text-center',
-            )}
-            footer={
-              <ActionBar
-                primary={{
-                  label: confirmLabel,
-                  destructive: type === 'destructive',
-                  loading: busy || loading,
-                  loadingLabel: `${confirmLabel}...`,
-                  type: isForm && formId ? 'submit' : 'button',
-                  form: isForm ? formId : undefined,
-                  onClick: isForm && formId ? undefined : confirm,
-                }}
-                cancel={
-                  type === 'info' && cancelLabel === undefined
-                    ? undefined
-                    : { label: cancelLabel ?? 'Cancelar', onClick: close }
-                }
-              />
-            }
-          >
-            {!isForm && (
-              <>
-                <BrandFeedbackIcon
-                  type={feedback[type as keyof typeof feedback]}
-                  size="2xl"
-                  animated
-                />
-                <div className="flex flex-col gap-2">
-                  <p className="text-lg font-semibold">{title}</p>
-                  {description && <p className="text-sm text-muted-foreground">{description}</p>}
-                </div>
-                {children}
-              </>
-            )}
-            {isForm && <div className="flex flex-col gap-2">{children}</div>}
-          </OverlayShell>
+          {shell}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

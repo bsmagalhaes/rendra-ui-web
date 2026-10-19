@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Select } from './select'
+import type { ReactNode } from 'react'
+import { MotionProvider } from '@/lib/motion'
+import { expectSettled, reduceMotion } from '@/test/motion'
 
 const options = [
   { value: 'sp', label: 'São Paulo' },
@@ -117,5 +120,51 @@ describe('Select', () => {
       expect(await screen.findByRole('option', { name: /Selecionar todos/ })).toBeInTheDocument()
       expect(screen.queryByText('Desmarcar todos')).not.toBeInTheDocument()
     })
+  })
+})
+
+describe('Select com motion', () => {
+  const emOn = (ui: ReactNode) => render(<MotionProvider mode="on">{ui}</MotionProvider>)
+
+  it('em on, no desktop: abre a lista, escolhe e a lista sai do DOM', async () => {
+    const onChange = vi.fn()
+    emOn(<Select label="Estado" options={options} onChange={onChange} />)
+    await open()
+    await userEvent.click(await screen.findByRole('option', { name: /Rio de Janeiro/ }))
+    expect(onChange).toHaveBeenCalledWith('rj')
+    await waitFor(() => expect(screen.queryByRole('listbox')).not.toBeInTheDocument())
+    expect(screen.getByRole('combobox', { name: 'Estado' })).toHaveTextContent('Rio de Janeiro')
+  })
+
+  it('em on, no mobile: o bottom sheet abre e, ao escolher, sai do DOM', async () => {
+    ;(globalThis as unknown as { setViewportWidth: (w: number) => void }).setViewportWidth(360)
+    try {
+      const onChange = vi.fn()
+      emOn(<Select label="Estado" options={options} onChange={onChange} />)
+      await open()
+      expect(await screen.findByRole('dialog')).toBeInTheDocument()
+      await userEvent.click(await screen.findByRole('option', { name: /Minas Gerais/ }))
+      expect(onChange).toHaveBeenCalledWith('mg')
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    } finally {
+      ;(globalThis as unknown as { setViewportWidth: (w: number) => void }).setViewportWidth(1280)
+    }
+  })
+
+  it('em on, o painel é animado por transform; com movimento reduzido, só opacidade', async () => {
+    emOn(<Select label="Estado" options={options} />)
+    await open()
+    const panel = (await screen.findByRole('listbox')).parentElement!.parentElement!
+    await expectSettled(panel, 'none')
+    cleanup()
+    const restore = reduceMotion()
+    try {
+      emOn(<Select label="Estado" options={options} />)
+      await open()
+      const reduced = (await screen.findByRole('listbox')).parentElement!.parentElement!
+      await expectSettled(reduced, 'absent')
+    } finally {
+      restore()
+    }
   })
 })
