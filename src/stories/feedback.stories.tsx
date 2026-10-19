@@ -71,6 +71,25 @@ export const IconesDeFeedback: Story = {
     </div>
   ),
 }
+export const IconesDeFeedbackMarcaEEncaixe: Story = {
+  name: 'BrandFeedbackIcon: cor da marca, selo ao lado e encaixe',
+  render: () => (
+    <div className="flex flex-wrap items-end gap-6">
+      {(['success', 'error', 'warning', 'info'] as const).map((t) => (
+        <BrandFeedbackIcon
+          key={t}
+          type={t}
+          size="2xl"
+          animated
+          symbolTone="brand"
+          statusBadge
+          animation="encaixe"
+          label={t}
+        />
+      ))}
+    </div>
+  ),
+}
 export const Avisos: Story = {
   name: 'Toast',
   render: () => (

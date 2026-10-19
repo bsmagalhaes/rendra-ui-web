@@ -328,7 +328,7 @@ A sidebar tem z-index maior que o header. O item ativo do menu é sempre o desti
 
 ## 8. Feedback com a marca
 
-`BrandFeedbackIcon` (success, error, warning, info) renderiza o símbolo da marca tingido pela cor semântica, com selo de status, para o significado não depender só da cor. Com `animated`, o check se desenha, o X se risca e o erro treme, respeitando "reduzir movimento". É **obrigatório** em toast, alert, modal de confirmação, estado vazio e tela de erro. Os componentes `Toast`, `Alert`, `Modal`, `EmptyState` e `ErrorPage` já o usam. Cada tipo pode ser trocado por um SVG próprio em `brand.config.ts` (`feedbackIcons`).
+`BrandFeedbackIcon` (success, error, warning, info) renderiza o símbolo da marca tingido pela cor semântica, com selo de status, para o significado não depender só da cor. Com `animated`, o check se desenha, o X se risca e o erro treme, respeitando "reduzir movimento". É **obrigatório** em toast, alert, modal de confirmação, estado vazio e tela de erro. Os componentes `Toast`, `Alert`, `Modal`, `EmptyState` e `ErrorPage` já o usam. Cada tipo pode ser trocado por um SVG próprio em `brand.config.ts` (`feedbackIcons`), que vence qualquer selo. Três props opt-in, todas com o padrão igual ao de sempre: `symbolTone="brand"` pinta o símbolo com a cor primária da marca (o selo de estado mantém a cor do estado); `statusBadge` põe o ícone do estado ao lado do símbolo, no lugar do selo sobreposto; `animation="encaixe"` entra em 240 ms, sem quique, sem desenho e sem tremor (movimento reduzido já corta toda animação).
 
 ## 9. Acessibilidade
 
