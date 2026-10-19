@@ -1,8 +1,37 @@
+import { AnimatePresence, m } from 'motion/react'
 import { Popover as P } from 'radix-ui'
-import type { ComponentProps } from 'react'
+import { createContext, useContext, useState, type ComponentProps } from 'react'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 
-export const Popover = P.Root
+/*
+ * Em `on` o Popover precisa saber se está aberto para manter o conteúdo montado durante a
+ * saída animada. O Root vira um wrapper com exatamente os mesmos tipos do Radix
+ * (`ComponentProps<typeof P.Root>`) que espelha o estado (controlado ou não) num contexto.
+ * Em `off` é o `P.Root` de sempre, sem estado nem contexto novos.
+ */
+const PopoverOpenContext = createContext<boolean | null>(null)
+
+function AnimatedRoot({ open, defaultOpen, onOpenChange, ...rest }: ComponentProps<typeof P.Root>) {
+  const [inner, setInner] = useState(defaultOpen ?? false)
+  const current = open ?? inner
+  return (
+    <PopoverOpenContext.Provider value={current}>
+      <P.Root
+        {...rest}
+        open={current}
+        onOpenChange={(next) => {
+          setInner(next)
+          onOpenChange?.(next)
+        }}
+      />
+    </PopoverOpenContext.Provider>
+  )
+}
+
+export function Popover(props: ComponentProps<typeof P.Root>) {
+  return useMotionMode() === 'on' ? <AnimatedRoot {...props} /> : <P.Root {...props} />
+}
 export const PopoverTrigger = P.Trigger
 export const PopoverClose = P.Close
 export const PopoverAnchor = P.Anchor
@@ -17,8 +46,41 @@ export function PopoverContent({
   align = 'center',
   sideOffset = 8,
   width = 'md',
+  children,
+  asChild,
   ...props
 }: PopoverContentProps) {
+  const open = useContext(PopoverOpenContext)
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
+  const base = cn(
+    'z-50 rounded-surface border bg-popover text-popover-foreground shadow-md outline-none',
+    width === 'sm' ? 'w-popover-sm' : 'w-popover',
+  )
+
+  if (motion === 'on' && open !== null && !asChild) {
+    return (
+      <AnimatePresence>
+        {open && (
+          <P.Portal forceMount key="popover">
+            <P.Content
+              forceMount
+              asChild
+              align={align}
+              sideOffset={sideOffset}
+              collisionPadding={16}
+              data-rendra="POP-001"
+              className={cn(base, className)}
+              {...props}
+            >
+              <m.div {...presets.scale}>{children}</m.div>
+            </P.Content>
+          </P.Portal>
+        )}
+      </AnimatePresence>
+    )
+  }
+
   return (
     <P.Portal>
       <P.Content
@@ -27,13 +89,15 @@ export function PopoverContent({
         collisionPadding={16}
         data-rendra="POP-001"
         className={cn(
-          'z-50 rounded-surface border bg-popover text-popover-foreground shadow-md outline-none',
-          width === 'sm' ? 'w-popover-sm' : 'w-popover',
+          base,
           'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
           className,
         )}
+        asChild={asChild}
         {...props}
-      />
+      >
+        {children}
+      </P.Content>
     </P.Portal>
   )
 }

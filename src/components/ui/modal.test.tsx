@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
-import { screen, waitFor, within } from '@testing-library/react'
+import { screen, waitFor, within, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Modal, type ModalProps } from './modal'
+import { MotionProvider } from '@/lib/motion'
+import { expectSettled, reduceMotion } from '@/test/motion'
 
 function Harness(props: Partial<ModalProps>) {
   const [open, setOpen] = useState(true)
@@ -147,5 +149,47 @@ describe('Modal', () => {
       expect(fechar.closest('header')).not.toBeNull()
       expect(fechar.className).not.toContain('opacity-0')
     })
+  })
+})
+
+describe('Modal com motion', () => {
+  const emOn = (props: Partial<ModalProps> = {}) =>
+    renderApp(
+      <MotionProvider mode="on">
+        <Harness {...props} />
+      </MotionProvider>,
+    )
+
+  it('em on, abre com o código do catálogo e, ao cancelar, o diálogo e o fundo saem do DOM', async () => {
+    emOn()
+    expect(screen.getByRole('dialog', { name: 'Excluir cliente?' })).toHaveAttribute(
+      'data-rendra',
+      'MOD-001',
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(document.querySelector('.bg-overlay')).toBeNull()
+    expect(screen.getByTestId('estado')).toHaveTextContent('fechado')
+  })
+
+  it('em on, confirmar chama a ação e fecha', async () => {
+    const onConfirm = vi.fn()
+    emOn({ onConfirm })
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(onConfirm).toHaveBeenCalled()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('em on, o diálogo é animado por transform; com movimento reduzido, fica só opacidade', async () => {
+    emOn()
+    await expectSettled(screen.getByRole('dialog'), 'none')
+    cleanup()
+    const restore = reduceMotion()
+    try {
+      emOn()
+      await expectSettled(screen.getByRole('dialog'), 'absent')
+    } finally {
+      restore()
+    }
   })
 })

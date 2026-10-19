@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Drawer } from './drawer'
+import { MotionProvider } from '@/lib/motion'
+import { expectSettled, reduceMotion } from '@/test/motion'
 
 function Harness({ dirty }: { dirty?: boolean }) {
   const [open, setOpen] = useState(true)
@@ -40,5 +42,61 @@ describe('Drawer', () => {
     await userEvent.keyboard('{Escape}')
     await userEvent.click(await screen.findByRole('button', { name: 'Descartar' }))
     await waitFor(() => expect(screen.getByTestId('estado')).toHaveTextContent('fechado'))
+  })
+})
+
+describe('Drawer com motion', () => {
+  const emOn = (dirty?: boolean) =>
+    renderApp(
+      <MotionProvider mode="on">
+        <Harness dirty={dirty} />
+      </MotionProvider>,
+    )
+
+  it('em on, abre com o código do catálogo e fecha pelo Esc: o painel sai do DOM', async () => {
+    emOn()
+    expect(screen.getByRole('dialog', { name: 'Novo cliente' })).toHaveAttribute(
+      'data-rendra',
+      'GAV-001',
+    )
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByTestId('estado')).toHaveTextContent('fechado')
+    expect(screen.queryByText('Campos')).not.toBeInTheDocument()
+  })
+
+  it('em on, com alterações não salvas o Esc pede confirmação; continuar editando mantém o painel', async () => {
+    emOn(true)
+    await userEvent.keyboard('{Escape}')
+    expect(await screen.findByRole('dialog', { name: 'Descartar alterações?' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Continuar editando' }))
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Descartar alterações?' }),
+      ).not.toBeInTheDocument(),
+    )
+    expect(screen.getByText('Campos')).toBeInTheDocument()
+    expect(screen.getByTestId('estado')).toHaveTextContent('aberto')
+  })
+
+  it('em on, descartar fecha o painel e a confirmação', async () => {
+    emOn(true)
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(await screen.findByRole('button', { name: 'Descartar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByTestId('estado')).toHaveTextContent('fechado')
+  })
+
+  it('em on, o painel desliza por transform; com movimento reduzido, só opacidade', async () => {
+    emOn()
+    await expectSettled(screen.getByRole('dialog'), 'none')
+    cleanup()
+    const restore = reduceMotion()
+    try {
+      emOn()
+      await expectSettled(screen.getByRole('dialog'), 'absent')
+    } finally {
+      restore()
+    }
   })
 })

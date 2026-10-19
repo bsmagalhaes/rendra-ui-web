@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { format } from 'date-fns'
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { DatePicker } from './date-picker'
+import { MotionProvider } from '@/lib/motion'
 
 describe('DatePicker', () => {
   it('o gatilho usa o código do catálogo e abrir o campo mostra o calendário', async () => {
@@ -46,5 +47,26 @@ describe('DatePicker', () => {
     expect(gatilho).toBeDisabled()
     await userEvent.click(gatilho)
     expect(screen.queryByRole('grid')).not.toBeInTheDocument()
+  })
+})
+
+describe('DatePicker com motion', () => {
+  it('em on: abre o calendário, escolhe hoje e o calendário sai do DOM', async () => {
+    function Demo() {
+      const [value, setValue] = useState<Date | null>(null)
+      return (
+        <MotionProvider mode="on">
+          <DatePicker label="Data" value={value} onChange={setValue} dropdowns={false} />
+        </MotionProvider>
+      )
+    }
+    renderApp(<Demo />)
+    await userEvent.click(screen.getByRole('button', { name: 'Selecione a data' }))
+    await screen.findByRole('grid')
+    await userEvent.click(screen.getByRole('button', { name: /^Hoje,/ }))
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument())
+    expect(
+      screen.getByRole('button', { name: format(new Date(), 'dd/MM/yyyy') }),
+    ).toBeInTheDocument()
   })
 })

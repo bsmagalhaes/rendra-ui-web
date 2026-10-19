@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useState } from 'react'
-import { describe, expect, it } from 'vitest'
+import { useState, type ComponentProps, type ReactNode } from 'react'
+import { describe, expect, it, expectTypeOf } from 'vitest'
 import { renderApp } from '@/test/render'
 import {
   DropdownMenu,
@@ -13,6 +13,9 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './dropdown-menu'
+import { DropdownMenu as D } from 'radix-ui'
+import { MotionProvider } from '@/lib/motion'
+import { expectSettled, reduceMotion } from '@/test/motion'
 
 describe('DropdownMenuContent', () => {
   it('abre e usa o código do catálogo', async () => {
@@ -66,5 +69,108 @@ describe('DropdownMenu com subitens', () => {
 
     expect(await screen.findByText('Selecionado: Exportar')).toBeInTheDocument()
     await waitFor(() => expect(screen.queryAllByRole('menu')).toHaveLength(0))
+  })
+})
+
+describe('DropdownMenu com motion', () => {
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+
+  it('os Roots aceitam exatamente as props do Radix (mesmos tipos)', () => {
+    expectTypeOf<ComponentProps<typeof DropdownMenu>>().toEqualTypeOf<
+      ComponentProps<typeof D.Root>
+    >()
+    expectTypeOf<ComponentProps<typeof DropdownMenuSub>>().toEqualTypeOf<
+      ComponentProps<typeof D.Sub>
+    >()
+  })
+
+  it('em on, abre com o código do catálogo e fechar com Esc tira o menu do DOM', async () => {
+    const user = userEvent.setup()
+    emOn(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Ações</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>Editar</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Ações' }))
+    expect(await screen.findByRole('menuitem', { name: 'Editar' })).toBeInTheDocument()
+    expect(screen.getByRole('menu')).toHaveAttribute('data-rendra', 'DDM-001')
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument())
+  })
+
+  it('em on, escolher um item chama o efeito e fecha o menu', async () => {
+    const user = userEvent.setup()
+    function Com() {
+      const [feito, setFeito] = useState('Nada')
+      return (
+        <>
+          <p>Feito: {feito}</p>
+          <DropdownMenu>
+            <DropdownMenuTrigger>Ações</DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={() => setFeito('Editar')}>Editar</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )
+    }
+    emOn(<Com />)
+    await user.click(screen.getByRole('button', { name: 'Ações' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Editar' }))
+    expect(screen.getByText('Feito: Editar')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument())
+  })
+
+  it('em on, o submenu abre, anima e some ao voltar com a seta para a esquerda', async () => {
+    const user = userEvent.setup()
+    emOn(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Ações</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Mais opções</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem>Exportar</DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Ações' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Mais opções' }))
+    await user.keyboard('{ArrowRight}')
+    expect(await screen.findByRole('menuitem', { name: 'Exportar' })).toBeInTheDocument()
+    await user.keyboard('{ArrowLeft}')
+    await waitFor(() =>
+      expect(screen.queryByRole('menuitem', { name: 'Exportar' })).not.toBeInTheDocument(),
+    )
+    expect(screen.getByRole('menuitem', { name: 'Mais opções' })).toBeInTheDocument()
+  })
+
+  it('em on, o menu é animado por transform; com movimento reduzido, só opacidade', async () => {
+    const user = userEvent.setup()
+    const ui = (
+      <DropdownMenu>
+        <DropdownMenuTrigger>Ações</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>Editar</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+    emOn(ui)
+    await user.click(screen.getByRole('button', { name: 'Ações' }))
+    await expectSettled(await screen.findByRole('menu'), 'none')
+    cleanup()
+    const restore = reduceMotion()
+    try {
+      emOn(ui)
+      await user.click(screen.getByRole('button', { name: 'Ações' }))
+      await expectSettled(await screen.findByRole('menu'), 'absent')
+    } finally {
+      restore()
+    }
   })
 })
