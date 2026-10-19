@@ -81,4 +81,40 @@ describe('ErrorPage', () => {
       Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
     }
   })
+
+  describe('back={false}', () => {
+    it('padrão: Voltar aparece e a ação principal ocupa 7 de 10 colunas', () => {
+      renderApp(<ErrorPage code={404} />)
+      expect(screen.getByRole('button', { name: 'Voltar' })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /painel/i }).className).toContain('col-span-7')
+    })
+
+    it('404 sem Voltar: só o link do painel, na largura toda', () => {
+      renderApp(<ErrorPage code={404} back={false} />)
+      expect(screen.queryByRole('button', { name: 'Voltar' })).not.toBeInTheDocument()
+      const link = screen.getByRole('link', { name: /painel/i })
+      expect(link.className).toContain('col-span-10')
+      expect(link.className).not.toContain('col-span-7')
+    })
+
+    it('500 sem Voltar: Tentar de novo na largura toda e recarrega a página', async () => {
+      const reload = vi.fn()
+      const originalLocation = window.location
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: { ...originalLocation, reload },
+      })
+      try {
+        renderApp(<ErrorPage code={500} back={false} />)
+        expect(screen.queryByRole('button', { name: 'Voltar' })).not.toBeInTheDocument()
+        const botao = screen.getByRole('button', { name: 'Tentar de novo' })
+        expect(botao.className).toContain('col-span-10')
+        expect(botao.className).not.toContain('col-span-7')
+        await userEvent.click(botao)
+        expect(reload).toHaveBeenCalledTimes(1)
+      } finally {
+        Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
+      }
+    })
+  })
 })
