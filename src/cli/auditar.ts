@@ -88,6 +88,9 @@ export const LINE_RULES: LineRule[] = [
   },
 ]
 
+/** Identificadores das sete regras genéricas (as seis de linha e `fora-da-escala`). */
+export const IDS_REGRAS_GENERICAS = [...LINE_RULES.map((r) => r.id), 'fora-da-escala']
+
 // Degraus fora da escala não geram CSS (o Tailwind ignora em silêncio e o layout quebra).
 const ALLOWED_STEPS = new Set(['0', '1', '2', '3', '4', '6', '8', '12', '16', '24'])
 const STEP_CLASS =
@@ -178,6 +181,38 @@ export function percorrer(
 export const EXTENSAO_VARRIDA = /\.(tsx?|jsx?|css)$/
 
 /**
+ * Arquivos que `auditar` (e `auditarTudo`, no modo `cli`) examinam: `.ts`/`.tsx`/`.js`/`.jsx`/
+ * `.css`, sem teste nem story, sem `NOMES_PULADOS` e sem as pastas de `ignorar`. Caminhos
+ * absolutos, na ordem do sistema de arquivos, sem repetição. Sem `pastas`, a raiz é
+ * `cwd/src` (quando existe) ou `cwd`; com `pastas`, são exatamente essas, relativas a `cwd`.
+ */
+export function coletarArquivos(
+  cwd: string,
+  opcoes: Pick<OpcoesAuditar, 'pastas' | 'ignorar'> = {},
+): string[] {
+  const ignorar = opcoes.ignorar ?? []
+  const raizes =
+    opcoes.pastas && opcoes.pastas.length > 0
+      ? opcoes.pastas.map((p) => join(cwd, p))
+      : [existsSync(join(cwd, 'src')) ? join(cwd, 'src') : cwd]
+  const pular = (nome: string, caminho: string) =>
+    NOMES_PULADOS.has(nome) || casaPrefixo(relativoA(cwd, caminho), ignorar)
+  const arquivos = new Set<string>()
+  for (const raiz of raizes) {
+    if (!existsSync(raiz)) continue
+    for (const f of percorrer(raiz, pular)) arquivos.add(f)
+  }
+  return [...arquivos].filter(
+    (f) => EXTENSAO_VARRIDA.test(f) && !f.includes('.test.') && !f.includes('.stories.'),
+  )
+}
+
+/** Caminho relativo a `base`, com `/` em qualquer sistema. */
+export function relativoA(base: string, caminho: string): string {
+  return relative(base, caminho).split(sep).join('/')
+}
+
+/**
  * Varre `cwd` (ou `cwd/src`, quando existir: a convenção deste boilerplate e da maioria dos
  * projetos React) por arquivos `.ts`/`.tsx`/`.js`/`.jsx`/`.css`, ignorando teste e story, e
  * devolve toda violação das sete regras genéricas. É o que `rendra auditar [cwd]` chama; não
@@ -188,24 +223,9 @@ export const EXTENSAO_VARRIDA = /\.(tsx?|jsx?|css)$/
  * `file` sai sempre relativo a `cwd`, com `/`, ordenado por arquivo e linha.
  */
 export function auditar(cwd: string, opcoes: OpcoesAuditar = {}): FileAuditViolation[] {
-  const ignorar = opcoes.ignorar ?? []
-  const relativo = (caminho: string) => relative(cwd, caminho).split(sep).join('/')
-  const raizes =
-    opcoes.pastas && opcoes.pastas.length > 0
-      ? opcoes.pastas.map((p) => join(cwd, p))
-      : [existsSync(join(cwd, 'src')) ? join(cwd, 'src') : cwd]
-  const arquivos = new Set<string>()
-  for (const raiz of raizes) {
-    if (!existsSync(raiz)) continue
-    const pular = (nome: string, caminho: string) =>
-      NOMES_PULADOS.has(nome) || casaPrefixo(relativo(caminho), ignorar)
-    for (const f of percorrer(raiz, pular)) arquivos.add(f)
-  }
   const problems: FileAuditViolation[] = []
-  for (const file of arquivos) {
-    if (!EXTENSAO_VARRIDA.test(file) || file.includes('.test.') || file.includes('.stories.'))
-      continue
-    const rel = relativo(file)
+  for (const file of coletarArquivos(cwd, opcoes)) {
+    const rel = relativoA(cwd, file)
     const text = readFileSync(file, 'utf8')
     for (const violation of auditLines(text)) {
       if (opcoes.regras?.[violation.rule] === false) continue
