@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { resolveCatalogCode } from '@/catalog/components'
 import { cn } from '@/lib/cn'
 
 interface ButtonGroupProps {
@@ -13,6 +14,13 @@ interface ButtonGroupProps {
   onChange?: (value: string) => void
   size?: 'sm' | 'md'
   fullWidth?: boolean
+  /**
+   * Só no modo agrupado (`children`); o segmentado (`options`) ignora. `horizontal` (padrão):
+   * botões lado a lado. `vertical`: empilhados, na largura do maior, com as bordas unidas.
+   * `responsive`: vertical abaixo de `md` e horizontal a partir dele (para três botões largos
+   * que não cabem em 360 px).
+   */
+  orientation?: 'horizontal' | 'vertical' | 'responsive'
   'aria-label'?: string
   className?: string
 }
@@ -28,6 +36,7 @@ export function ButtonGroup({
   onChange,
   size = 'md',
   fullWidth,
+  orientation = 'horizontal',
   className,
   ...aria
 }: ButtonGroupProps) {
@@ -36,7 +45,7 @@ export function ButtonGroup({
       <div
         role="radiogroup"
         aria-label={aria['aria-label']}
-        data-rendra="BTNG-001"
+        data-rendra={resolveCatalogCode('ButtonGroup', { orientation: 'horizontal' })}
         className={cn(
           'inline-flex max-w-full flex-wrap gap-1 rounded-control border bg-muted p-1',
           fullWidth && 'flex w-full',
@@ -70,15 +79,25 @@ export function ButtonGroup({
       </div>
     )
   }
+  const vertical = orientation === 'vertical'
+  const responsive = orientation === 'responsive'
   return (
     <div
       role="group"
       aria-label={aria['aria-label']}
-      data-rendra="BTNG-001"
+      data-rendra={resolveCatalogCode('ButtonGroup', { orientation })}
       className={cn(
         'inline-flex max-w-full',
-        '[&>*]:rounded-none [&>*]:shadow-none [&>*:first-child]:rounded-l-control [&>*:focus-visible]:z-10 [&>*:last-child]:rounded-r-control [&>*:not(:first-child)]:-ml-px',
-        fullWidth && 'flex w-full [&>*]:flex-1',
+        '[&>*]:rounded-none [&>*]:shadow-none [&>*:focus-visible]:z-10',
+        orientation === 'horizontal' &&
+          '[&>*:first-child]:rounded-l-control [&>*:last-child]:rounded-r-control [&>*:not(:first-child)]:-ml-px',
+        vertical &&
+          'flex-col [&>*]:w-full [&>*:first-child]:rounded-t-control [&>*:last-child]:rounded-b-control [&>*:not(:first-child)]:-mt-px',
+        // Vertical abaixo de md; de md em diante volta a linha e zera o que a vertical pôs
+        // (o canto superior direito do primeiro, o inferior esquerdo do último e o -mt-px).
+        responsive &&
+          'flex-col md:flex-row [&>*]:w-full md:[&>*]:w-auto [&>*:first-child]:rounded-t-control md:[&>*:first-child]:rounded-l-control md:[&>*:first-child]:rounded-tr-none [&>*:last-child]:rounded-b-control md:[&>*:last-child]:rounded-r-control md:[&>*:last-child]:rounded-bl-none [&>*:not(:first-child)]:-mt-px md:[&>*:not(:first-child)]:mt-0 md:[&>*:not(:first-child)]:-ml-px',
+        fullWidth && (vertical ? 'flex w-full' : 'flex w-full [&>*]:flex-1'),
         className,
       )}
     >

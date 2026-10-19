@@ -82,6 +82,31 @@ export const Grupo: Story = {
   ),
 }
 
+export const GrupoVertical: Story = {
+  name: 'ButtonGroup: vertical e responsivo',
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <ButtonGroup aria-label="Ações do cliente" orientation="vertical">
+        <Button variant="outline" icon={<Copy />}>
+          Duplicar
+        </Button>
+        <Button variant="outline" icon={<Download />}>
+          Exportar
+        </Button>
+      </ButtonGroup>
+      <ButtonGroup aria-label="Ações do pedido" orientation="responsive">
+        <Button variant="outline" icon={<Copy />}>
+          Duplicar
+        </Button>
+        <Button variant="outline" icon={<Download />}>
+          Exportar
+        </Button>
+        <Button variant="outline">Ver itens</Button>
+      </ButtonGroup>
+    </div>
+  ),
+}
+
 function SegmentedDemo() {
   const [v, setV] = useState('mes')
   return (

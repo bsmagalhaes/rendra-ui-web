@@ -178,6 +178,7 @@ Se o conteúdo rola muito ou tem muitos campos, não cabe em modal. **Nunca moda
 - **Um botão:** 100% da largura.
 - **Dois botões:** cancelar com 30% à esquerda (outline) e ação principal com 70% à direita (primária).
 - **Três ou mais:** as secundárias vão para o menu de três pontinhos.
+- Três botões largos que não cabem em 360 px, fora do `ActionBar` (ações de um cartão, por exemplo): `ButtonGroup` com `orientation="responsive"` empilha abaixo de `md` e alinha a partir dele; `orientation="vertical"` empilha sempre. Só no modo agrupado.
 - Vale para drawer, modal e formulário em página, em qualquer largura. Só as barras de ferramentas acima de tabelas usam botões de largura automática.
 - O envio mostra carregamento e fica desabilitado enquanto processa (`loading`).
 - **Salvar, cadastrar e criar ficam sempre no rodapé fixo**, desenhado pelo AppShell abaixo da área rolável: sempre colado embaixo, na largura inteira, e **nunca sobe**, mesmo com formulário curto. Como o botão fica fora do `<form>`, use `primary.form` com o id do formulário. No **wizard**, os botões seguem junto do card (sem rodapé fixo).

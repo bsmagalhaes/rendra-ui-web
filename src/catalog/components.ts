@@ -201,8 +201,25 @@ export const CATALOG: ComponentCatalogEntry[] = [
     name: 'Grupo de botões',
     component: 'ButtonGroup',
     file: 'components/ui/button-group.tsx',
-    variantProps: {},
+    variantProps: { orientation: 'horizontal' },
     whenToUse: 'Para botões encostados ou um controle segmentado de escolha única.',
+    isDefault: true,
+  },
+  {
+    code: 'BTNG-002',
+    name: 'Grupo de botões vertical',
+    component: 'ButtonGroup',
+    file: 'components/ui/button-group.tsx',
+    variantProps: { orientation: 'vertical' },
+    whenToUse: 'Para botões de ação empilhados, na largura do maior, com as bordas unidas.',
+  },
+  {
+    code: 'BTNG-003',
+    name: 'Grupo de botões responsivo',
+    component: 'ButtonGroup',
+    file: 'components/ui/button-group.tsx',
+    variantProps: { orientation: 'responsive' },
+    whenToUse: 'Para botões que empilham no celular e ficam lado a lado a partir do tablet.',
   },
   // ---------------------------------------------------------------- calendar
   {

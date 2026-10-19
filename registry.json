@@ -390,6 +390,7 @@
       "description": "Componente button-group do Rendra Design System.",
       "dependencies": [],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/catalog.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
       ],
@@ -400,7 +401,7 @@
           "target": "src/components/ui/button-group.tsx"
         }
       ],
-      "meta": { "codes": ["BTNG-001"] }
+      "meta": { "codes": ["BTNG-001", "BTNG-002", "BTNG-003"] }
     },
     {
       "name": "button",
@@ -1710,6 +1711,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/button.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/button-group.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
