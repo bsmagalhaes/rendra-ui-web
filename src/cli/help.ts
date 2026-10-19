@@ -13,7 +13,12 @@ export function formatHelp(): string {
   return `Uso: rendra <codigos|auditar|trocar> ...
 
   rendra codigos                          lista o catálogo de códigos de componente
-  rendra auditar [pasta]                  regras genéricas de DESIGN_RULES.md (padrão: pasta atual)
+  rendra auditar [pasta...] [--all] [--ignore a,b]
+                                          regras de DESIGN_RULES.md (padrão: pasta atual, sete
+                                          regras genéricas); --all liga as 17 regras do
+                                          check:rules; --ignore pula pastas; rendra.config.json
+                                          na pasta do projeto guarda pastas, ignorar, regras,
+                                          pastasMarca e pastasTelas
   rendra trocar <DE> <PARA> [--dry-run]   troca a variante DE pela PARA no projeto
 
 ${AUTHOR_LINE}`

@@ -7,7 +7,9 @@
  *
  * Três subcomandos, mais `--help`/sem argumento (ver printHelp, `src/cli/help.ts`):
  *   rendra codigos                    lista o catálogo de códigos de componente
- *   rendra auditar [cwd]              regras genéricas de DESIGN_RULES.md (padrão: cwd atual)
+ *   rendra auditar [pasta...] [--all] [--ignore a,b]
+ *                                     regras de DESIGN_RULES.md (padrão: cwd atual e as sete
+ *                                     genéricas; --all liga as 17; rendra.config.json opcional)
  *   rendra trocar <DE> <PARA> [--dry-run]   troca a variante DE pela PARA no projeto
  */
 import { existsSync } from 'node:fs'
@@ -33,7 +35,7 @@ function printAudit(violations) {
   }
   for (const v of violations) {
     console.error(`\n${v.file}:${v.line}  [${v.rule}] ${v.message}`)
-    console.error(`    ${v.source.slice(0, 160)}`)
+    if (v.source) console.error(`    ${v.source.slice(0, 160)}`)
   }
   console.error(`\n${violations.length} violação(ões) das regras de design.`)
 }
@@ -71,11 +73,21 @@ async function main() {
   }
 
   if (command === 'auditar') {
-    const cwd = rest.find((a) => !a.startsWith('--')) ?? process.cwd()
-    const { auditar } = await importDist('auditar')
-    const violations = auditar(cwd)
-    printAudit(violations)
-    process.exitCode = violations.length > 0 ? 1 : 0
+    // Toda a decisão (argumentos, base, config, precedência) mora em src/cli/executar-auditar.ts,
+    // com teste: aqui só se chama, imprime e define o código de saída.
+    const { executarAuditar } = await importDist('executar-auditar')
+    const resultado = executarAuditar(rest, process.cwd())
+    if ('erro' in resultado) {
+      console.error(resultado.erro)
+      process.exitCode = 1
+      return
+    }
+    if ('ajuda' in resultado) {
+      console.log(resultado.ajuda)
+      return
+    }
+    printAudit(resultado.violacoes)
+    process.exitCode = resultado.violacoes.length > 0 ? 1 : 0
     return
   }
 
