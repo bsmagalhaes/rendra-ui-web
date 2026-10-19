@@ -148,4 +148,37 @@ describe('AppShell', () => {
       expect(itemDoMenu('Layout')).toBeInTheDocument()
     })
   })
+
+  describe('workspaces', () => {
+    const itens = [
+      { id: 'a', label: 'Espaço A' },
+      { id: 'b', label: 'Espaço B' },
+    ]
+
+    it('a prop atravessa o contexto e o item ativo vem de activeId', async () => {
+      renderShell({ workspaces: { items: itens, activeId: 'a', onSelect: () => {} } })
+      const user = userEvent.setup()
+      await user.click(screen.getByLabelText(/menu de Ana Ribeiro/i))
+      expect(await screen.findByRole('menuitemradio', { name: 'Espaço A' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      )
+    })
+
+    it('rerender com outro activeId troca o item marcado', async () => {
+      const onSelect = () => {}
+      const { rerender } = renderShell({ workspaces: { items: itens, activeId: 'a', onSelect } })
+      rerender({ workspaces: { items: itens, activeId: 'b', onSelect } })
+      const user = userEvent.setup()
+      await user.click(screen.getByLabelText(/menu de Ana Ribeiro/i))
+      expect(await screen.findByRole('menuitemradio', { name: 'Espaço B' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      )
+      expect(screen.getByRole('menuitemradio', { name: 'Espaço A' })).toHaveAttribute(
+        'aria-checked',
+        'false',
+      )
+    })
+  })
 })

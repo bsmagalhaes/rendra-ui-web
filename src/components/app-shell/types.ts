@@ -75,3 +75,15 @@ export interface ShellUserMenuConfig {
   /** Submenu "Layout" (posição e comportamento do menu). */
   layout?: boolean
 }
+
+/** Seletor de espaço (empresa, unidade, workspace) no topo do menu do avatar. */
+export interface ShellWorkspacesConfig {
+  /** Espaços disponíveis. Lista vazia não desenha o bloco. */
+  items: { id: string; label: string }[]
+  /** `id` do espaço atual (o item marcado). */
+  activeId: string
+  /** Chamado com o `id` do espaço escolhido. A troca em si é de quem monta a aplicação. */
+  onSelect: (id: string) => void
+  /** Título do bloco no menu. Padrão: "Espaço". */
+  label?: string
+}

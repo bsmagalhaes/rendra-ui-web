@@ -145,7 +145,7 @@ function LayoutItems() {
 
 function UserMenu() {
   const Link = useRendraLink()
-  const { user, userMenuItems, onLogout, userMenu } = useShell()
+  const { user, userMenuItems, onLogout, userMenu, workspaces } = useShell()
   const { brand, brands, setBrandId, palette, palettes, setPaletteId } = useBrand()
   const showTheme = userMenu?.theme !== false
   const showTemplate = userMenu?.template !== false
@@ -168,6 +168,19 @@ function UserMenu() {
           <span className="text-sm font-medium text-foreground">{user.name}</span>
           {user.email && <span className="font-normal">{user.email}</span>}
         </DropdownMenuLabel>
+        {workspaces && workspaces.items.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>{workspaces.label ?? 'Espaço'}</DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={workspaces.activeId} onValueChange={workspaces.onSelect}>
+              {workspaces.items.map((w) => (
+                <DropdownMenuRadioItem key={w.id} value={w.id}>
+                  {w.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </>
+        )}
         {userMenuItems.length > 0 && (
           <>
             <DropdownMenuSeparator />

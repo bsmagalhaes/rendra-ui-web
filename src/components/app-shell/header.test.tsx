@@ -140,6 +140,89 @@ describe('Header', () => {
     })
   })
 
+  describe('workspaces (seletor de espaço no menu do usuário)', () => {
+    const espacos = {
+      items: [
+        { id: 'matriz', label: 'Matriz' },
+        { id: 'filial', label: 'Filial Sul' },
+      ],
+      activeId: 'filial',
+      onSelect: vi.fn(),
+    }
+    async function abrir(overrides: Partial<ShellContextValue> = {}) {
+      renderHeader(overrides)
+      const user = userEvent.setup()
+      await user.click(screen.getByLabelText(/menu de Marina Alves/i))
+      await screen.findByText('Sair')
+      return { user, menu: screen.getByRole('menu') }
+    }
+
+    it('sem workspaces o menu é igual ao de hoje', async () => {
+      const { menu } = await abrir()
+      expect(screen.queryAllByRole('menuitemradio')).toHaveLength(0)
+      expect(screen.queryByText('Espaço')).not.toBeInTheDocument()
+      expect(menu).toBeInTheDocument()
+    })
+
+    it('mostra o rótulo padrão e um item de rádio por espaço, com o ativo marcado', async () => {
+      await abrir({ workspaces: espacos })
+      expect(screen.getByText('Espaço')).toBeInTheDocument()
+      expect(screen.getByRole('menuitemradio', { name: 'Matriz' })).toHaveAttribute(
+        'aria-checked',
+        'false',
+      )
+      expect(screen.getByRole('menuitemradio', { name: 'Filial Sul' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      )
+    })
+
+    it('usa o label passado no lugar do padrão', async () => {
+      await abrir({ workspaces: { ...espacos, label: 'Empresa' } })
+      expect(screen.getByText('Empresa')).toBeInTheDocument()
+      expect(screen.queryByText('Espaço')).not.toBeInTheDocument()
+    })
+
+    it('clicar em outro espaço chama onSelect com o id dele', async () => {
+      const onSelect = vi.fn()
+      const { user } = await abrir({ workspaces: { ...espacos, onSelect } })
+      await user.click(screen.getByRole('menuitemradio', { name: 'Matriz' }))
+      expect(onSelect).toHaveBeenCalledTimes(1)
+      expect(onSelect).toHaveBeenCalledWith('matriz')
+    })
+
+    it('o bloco vem depois do usuário e antes dos itens de userMenuItems', async () => {
+      await abrir({
+        workspaces: espacos,
+        userMenuItems: [{ label: 'Minha conta', to: '/minha-conta' }],
+      })
+      const usuario = screen.getByText('Marina Alves')
+      const espaco = screen.getByText('Espaço')
+      const conta = screen.getByText('Minha conta')
+      const depois = (a: Element, b: Element) =>
+        Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+      expect(depois(usuario, espaco)).toBe(true)
+      expect(depois(espaco, conta)).toBe(true)
+    })
+
+    it('items vazio não desenha o bloco', async () => {
+      await abrir({ workspaces: { ...espacos, items: [] } })
+      expect(screen.queryByText('Espaço')).not.toBeInTheDocument()
+    })
+
+    it('com os três submenus escondidos não há dois separadores seguidos', async () => {
+      const { menu } = await abrir({
+        workspaces: espacos,
+        userMenu: { theme: false, template: false, layout: false },
+      })
+      const seq = Array.from(menu.children).map((el) => el.getAttribute('role'))
+      expect(seq.filter((r) => r === 'separator').length).toBeGreaterThan(0)
+      seq.forEach((r, i) => {
+        if (r === 'separator') expect(seq[i + 1]).not.toBe('separator')
+      })
+    })
+  })
+
   describe('nome acessível do botão do menu do usuário (WCAG 2.5.3)', () => {
     it('contém o texto visível (as iniciais) e continua trazendo o nome', async () => {
       renderHeader({ user: { name: 'Ana Souza' } })
