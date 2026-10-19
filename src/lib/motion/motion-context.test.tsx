@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { m } from 'motion/react'
 import { describe, expect, it } from 'vitest'
-import { MotionModeScope, MotionProvider, useMotionMode } from './motion-context'
+import { MotionModeScope, MotionProvider, useLayoutReady, useMotionMode } from './motion-context'
 
 function Probe() {
   return <p>modo: {useMotionMode()}</p>
@@ -65,5 +65,50 @@ describe('MotionProvider', () => {
     expect(screen.getByTestId('alvo')).toHaveTextContent('conteúdo')
     // o carregador assíncrono termina e o elemento segue montado
     await waitFor(() => expect(screen.getByTestId('alvo')).toBeInTheDocument())
+  })
+
+  it('em on, quem lê o modo renderiza de novo quando o chunk do domMax chega (m.* ganha o nó de projeção do layout); em off não', async () => {
+    let renders = 0
+    function Contador() {
+      renders++
+      return <p>modo: {useMotionMode()}</p>
+    }
+    const { unmount } = render(
+      <MotionProvider mode="on">
+        <Contador />
+      </MotionProvider>,
+    )
+    const aoMontar = renders
+    await waitFor(() => expect(renders).toBeGreaterThan(aoMontar))
+    unmount()
+    renders = 0
+    render(
+      <MotionProvider mode="off">
+        <Contador />
+      </MotionProvider>,
+    )
+    await new Promise((r) => setTimeout(r, 100))
+    expect(renders).toBe(1)
+  })
+
+  it('useLayoutReady: false até o domMax chegar e true depois, só em on', async () => {
+    function Pronto() {
+      return <p>pronto: {String(useLayoutReady())}</p>
+    }
+    render(
+      <MotionProvider mode="on">
+        <Pronto />
+      </MotionProvider>,
+    )
+    expect(screen.getByText('pronto: false')).toBeInTheDocument()
+    expect(await screen.findByText('pronto: true')).toBeInTheDocument()
+    cleanup()
+    render(
+      <MotionProvider mode="off">
+        <Pronto />
+      </MotionProvider>,
+    )
+    await new Promise((r) => setTimeout(r, 100))
+    expect(screen.getByText('pronto: false')).toBeInTheDocument()
   })
 })

@@ -6,7 +6,7 @@ import { useRendraLink } from '@/components/rendra-provider'
 import { Badge } from '@/components/ui/badge'
 import { SortableHandle } from '@/components/ui/sortable-handle'
 import { cn } from '@/lib/cn'
-import { layoutEnabled, useMotionMode, useMotionPresets } from '@/lib/motion'
+import { layoutEnabled, useLayoutReady, useMotionMode, useMotionPresets } from '@/lib/motion'
 import { useSortable } from '@/lib/sortable'
 
 export interface ListItem {
@@ -76,6 +76,7 @@ export function List({
   })
   const sortableEnabled = Boolean(onReorder)
   const motion = useMotionMode()
+  const ready = useLayoutReady()
   const presets = useMotionPresets()
   // Em `on` o item anima o layout, mas só fora do arraste: sob o ponteiro a ordem muda a cada
   // passo e animar atrasaria a linha atrás do cursor. Pelo teclado (moveBy) o layout anima.
@@ -83,7 +84,7 @@ export function List({
   const itemMotion =
     motion === 'on'
       ? {
-          layout: layoutEnabled({ mode: motion, dragging: sortable.draggingId !== null }),
+          layout: layoutEnabled({ mode: motion, ready, dragging: sortable.draggingId !== null }),
           transition: presets.layout,
         }
       : {}
@@ -92,6 +93,8 @@ export function List({
   if (items.length === 0 && empty) return <>{empty}</>
   return (
     <ul
+      // Remonta uma vez quando o domMax chega: o layout só vale para itens criados depois disso.
+      key={String(ready)}
       data-rendra={code}
       className={cn('flex w-full min-w-0 flex-col', divided && 'divide-y', className)}
     >

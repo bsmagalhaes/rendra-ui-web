@@ -38,3 +38,13 @@ export async function expectSettled(el: HTMLElement, transform: 'none' | 'absent
   await waitFor(() => expect(el.style.opacity).toBe('1'))
   expect(el.style.transform).toBe(transform === 'none' ? 'none' : '')
 }
+
+/**
+ * Espera o chunk do `domMax` chegar e o provider liberar o layout. Itens com `layout` remontam
+ * uma vez quando isso acontece, então os testes que mexem na lista logo depois de montar
+ * esperam este momento antes.
+ */
+export async function settleLayout() {
+  await import('@/lib/motion/features-max')
+  await new Promise((resolve) => setTimeout(resolve, 30))
+}

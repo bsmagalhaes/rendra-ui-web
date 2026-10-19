@@ -5,6 +5,7 @@ import { renderApp } from '@/test/render'
 import { Upload } from './upload'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
+import { settleLayout } from '@/test/motion'
 
 // jsdom não sabe gerar um blob: real a partir do File do Node/Vitest; o componente só
 // precisa de uma string para a miniatura, então os testes substituem as duas funções.
@@ -232,13 +233,17 @@ describe('Upload', () => {
 })
 
 describe('Upload com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = async (ui: ReactNode) => {
+    const r = renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+    await settleLayout()
+    return r
+  }
   const pdf = (name: string) => new File(['x'], name, { type: 'application/pdf' })
 
   it.each(['list', 'gallery'] as const)(
     'em on (%s): adicionar mostra exatamente os arquivos e remover tira o item do DOM',
     async (layout) => {
-      const { container } = emOn(<Upload layout={layout} />)
+      const { container } = await emOn(<Upload layout={layout} />)
       const input = container.querySelector('input[type="file"]') as HTMLInputElement
       fireEvent.change(input, { target: { files: [pdf('a.pdf'), pdf('b.pdf')] } })
       expect(await screen.findByText('a.pdf')).toBeInTheDocument()
@@ -261,7 +266,7 @@ describe('Upload com motion', () => {
           resolveUpload = resolve
         }),
     )
-    const { container } = emOn(<Upload layout="gallery" onUpload={onUpload} />)
+    const { container } = await emOn(<Upload layout="gallery" onUpload={onUpload} />)
     const input = container.querySelector('input[type="file"]') as HTMLInputElement
     fireEvent.change(input, {
       target: { files: [new File(['a'], 'foto.png', { type: 'image/png' })] },
@@ -274,7 +279,7 @@ describe('Upload com motion', () => {
 
   it('em on, reordenar pelo teclado troca a ordem visível e avisa onReorder', async () => {
     const onReorder = vi.fn()
-    const { container } = emOn(<Upload onReorder={onReorder} />)
+    const { container } = await emOn(<Upload onReorder={onReorder} />)
     const input = container.querySelector('input[type="file"]') as HTMLInputElement
     fireEvent.change(input, { target: { files: [pdf('a.pdf'), pdf('b.pdf')] } })
     await screen.findByText('a.pdf')

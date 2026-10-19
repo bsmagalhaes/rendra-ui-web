@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { Select } from '@/components/ui/select'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useLayoutReady, useMotionMode, useMotionPresets } from '@/lib/motion'
 
 /** Contador de instâncias, só para o `layoutId` do indicador (ver `indicatorId`). */
 let tabsCreated = 0
@@ -66,7 +66,9 @@ export function Tabs({
 
   const motion = useMotionMode()
   const presets = useMotionPresets()
-  const on = motion === 'on'
+  // O indicador deslizante (layoutId) só existe com o domMax carregado: um elemento com layoutId
+  // criado antes disso não ganha projeção. Até lá vale o destaque em CSS de sempre.
+  const on = useLayoutReady()
   // Um layoutId por instância: duas Tabs na mesma tela não trocam o indicador entre si. Não usa
   // `useId` de propósito: ele consome a sequência de ids do React e deslocaria os ids de tudo o
   // que vem depois na página, mudando o HTML do caminho `off`.
@@ -153,7 +155,11 @@ export function Tabs({
       {items.map((it) => (
         <T.Content key={it.value} value={it.value} className="min-w-0 outline-none">
           {/* Sem forceMount: o Radix só monta o painel ativo, e o conteúdo novo entra animado. */}
-          {on ? <m.div {...presets.slide('bottom', 'short')}>{it.content}</m.div> : it.content}
+          {motion === 'on' ? (
+            <m.div {...presets.slide('bottom', 'short')}>{it.content}</m.div>
+          ) : (
+            it.content
+          )}
         </T.Content>
       ))}
     </T.Root>

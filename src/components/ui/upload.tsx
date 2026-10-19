@@ -16,7 +16,7 @@ import { ImageCropper, type ImageCropperAspect } from '@/components/ui/image-cro
 import { Progress } from '@/components/ui/progress'
 import { SortableHandle } from '@/components/ui/sortable-handle'
 import { cn } from '@/lib/cn'
-import { layoutEnabled, useMotionMode, useMotionPresets } from '@/lib/motion'
+import { layoutEnabled, useLayoutReady, useMotionMode, useMotionPresets } from '@/lib/motion'
 import { useSortable } from '@/lib/sortable'
 
 export interface UploadItem {
@@ -228,6 +228,7 @@ export function Upload({
     },
   })
   const motion = useMotionMode()
+  const ready = useLayoutReady()
   const presets = useMotionPresets()
   // Em `on` cada item entra e sai animado (a saída segura o item até terminar) e reordena com
   // layout, pela mesma regra da List: sem layout durante o arraste.
@@ -236,7 +237,7 @@ export function Upload({
     motion === 'on'
       ? {
           ...presets.fade,
-          layout: layoutEnabled({ mode: motion, dragging: sortable.draggingId !== null }),
+          layout: layoutEnabled({ mode: motion, ready, dragging: sortable.draggingId !== null }),
           transition: { ...presets.fade.transition, layout: presets.layout },
         }
       : {}
@@ -303,7 +304,11 @@ export function Upload({
     )
 
   const listView = items.length > 0 && (
-    <ul className="flex flex-col divide-y rounded-control border bg-card" aria-live="polite">
+    <ul
+      key={String(ready)}
+      className="flex flex-col divide-y rounded-control border bg-card"
+      aria-live="polite"
+    >
       {animated(
         items.map((it) => (
           <Item
@@ -373,7 +378,7 @@ export function Upload({
   )
 
   const galleryView = items.length > 0 && (
-    <ul className="grid grid-cols-2 gap-3 md:grid-cols-3">
+    <ul key={String(ready)} className="grid grid-cols-2 gap-3 md:grid-cols-3">
       {animated(
         items.map((it) => (
           <Item

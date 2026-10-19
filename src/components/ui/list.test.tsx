@@ -7,6 +7,7 @@ import { renderApp } from '@/test/render'
 import { List, type ListItem } from './list'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
+import { settleLayout } from '@/test/motion'
 
 /** Lista controlada: aplica onReorder de verdade, para o teste ver a ordem na tela mudar. */
 function ControlledList({ initial }: { initial: ListItem[] }) {
@@ -169,14 +170,18 @@ describe('List', () => {
 })
 
 describe('List com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = async (ui: ReactNode) => {
+    const r = renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+    await settleLayout()
+    return r
+  }
   const tres: ListItem[] = [
     { id: '1', title: 'Cliente A' },
     { id: '2', title: 'Cliente B' },
     { id: '3', title: 'Cliente C' },
   ]
 
-  it('em on, a seta ↓ da alça reordena e onReorder recebe a lista na nova ordem', () => {
+  it('em on, a seta ↓ da alça reordena e onReorder recebe a lista na nova ordem', async () => {
     const onReorder = vi.fn()
     function Controlada() {
       const [items, setItems] = useState(tres)
@@ -190,7 +195,7 @@ describe('List com motion', () => {
         />
       )
     }
-    emOn(<Controlada />)
+    await emOn(<Controlada />)
     fireEvent.keyDown(screen.getByRole('button', { name: 'Reordenar Cliente A' }), {
       key: 'ArrowDown',
     })
@@ -198,8 +203,8 @@ describe('List com motion', () => {
     expect(onReorder).toHaveBeenLastCalledWith(['2', '1', '3'])
   })
 
-  it('em on, arrastar a alça pelo ponteiro reordena igual a off', () => {
-    emOn(<ControlledList initial={tres} />)
+  it('em on, arrastar a alça pelo ponteiro reordena igual a off', async () => {
+    await emOn(<ControlledList initial={tres} />)
     const targetRow = screen.getByText('Cliente C').closest('[data-sortable-id]')!
     targetRow.getBoundingClientRect = () => ({ top: 100, height: 40, bottom: 140 }) as DOMRect
     document.elementFromPoint = (() => targetRow) as typeof document.elementFromPoint
@@ -210,8 +215,8 @@ describe('List com motion', () => {
     expect(visibleOrder()).toEqual(['Cliente B', 'Cliente A', 'Cliente C'])
   })
 
-  it('em on, sem onReorder a lista segue só leitura e usa LIST-001', () => {
-    emOn(<List items={tres} />)
+  it('em on, sem onReorder a lista segue só leitura e usa LIST-001', async () => {
+    await emOn(<List items={tres} />)
     expect(screen.queryByRole('button', { name: /Reordenar/ })).not.toBeInTheDocument()
     expect(screen.getByText('Cliente A').closest('[data-rendra="LIST-001"]')).toBeInTheDocument()
   })

@@ -6,6 +6,15 @@ import type { MotionMode } from './motion-context'
  * passo atrasaria o item atrás do cursor; ao soltar (ou pelo teclado/menu) a ordem muda de uma
  * vez, e aí o layout anima o resultado.
  */
-export function layoutEnabled({ mode, dragging }: { mode: MotionMode; dragging: boolean }) {
-  return mode === 'on' && !dragging
+export function layoutEnabled({
+  mode,
+  ready,
+  dragging,
+}: {
+  mode: MotionMode
+  /** O chunk do `domMax` já chegou (`useLayoutReady`). Antes disso `layout` não faz nada. */
+  ready: boolean
+  dragging: boolean
+}) {
+  return mode === 'on' && ready && !dragging
 }

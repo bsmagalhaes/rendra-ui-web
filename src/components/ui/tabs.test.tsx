@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen, cleanup } from '@testing-library/react'
+import { cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { renderApp } from '@/test/render'
@@ -45,7 +45,8 @@ describe('Tabs com motion', () => {
 
   it('em on há exatamente um indicador e ele fica dentro da aba ativa, também depois de trocar', async () => {
     emOn(<Tabs aria-label="Cliente" items={items} />)
-    expect(indicators()).toHaveLength(1)
+    // o indicador só entra depois que o chunk do domMax chega (antes vale o destaque em CSS)
+    await waitFor(() => expect(indicators()).toHaveLength(1))
     expect(indicators()[0]!.closest('[role="tab"]')).toBe(
       screen.getByRole('tab', { name: /Dados/ }),
     )
@@ -63,8 +64,7 @@ describe('Tabs com motion', () => {
         <Tabs aria-label="Segunda" items={items} variant="pill" />
       </>,
     )
-    const todos = indicators()
-    expect(todos).toHaveLength(2)
+    await waitFor(() => expect(indicators()).toHaveLength(2))
     const [a, b] = screen.getAllByRole('tablist')
     expect(indicators(a!)).toHaveLength(1)
     expect(indicators(b!)).toHaveLength(1)
@@ -84,6 +84,15 @@ describe('Tabs com motion', () => {
     await userEvent.click(screen.getByRole('tab', { name: /Contratos/ }))
     expect(await screen.findByText('Lista de contratos')).toBeInTheDocument()
     expect(screen.queryByText('Conteúdo dos dados')).not.toBeInTheDocument()
+  })
+
+  it('antes de o domMax chegar o destaque da aba ativa é a borda em CSS; depois vira o indicador', async () => {
+    emOn(<Tabs aria-label="Cliente" items={items} />)
+    const aba = screen.getByRole('tab', { name: /Dados/ })
+    if (indicators().length === 0)
+      expect(aba.className).toContain('data-[state=active]:border-primary')
+    await waitFor(() => expect(indicators()).toHaveLength(1))
+    expect(aba.className).not.toContain('data-[state=active]:border-primary')
   })
 
   it('em off não existe indicador', () => {

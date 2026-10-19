@@ -1,4 +1,10 @@
-export { MotionModeScope, MotionProvider, useMotionMode, type MotionMode } from './motion-context'
+export {
+  MotionModeScope,
+  MotionProvider,
+  useLayoutReady,
+  useMotionMode,
+  type MotionMode,
+} from './motion-context'
 export { useMotionPresets } from './use-motion-presets'
 export type { MotionPreset, Presets, SlideDistance, SlideFrom } from './presets'
 export { layoutEnabled } from './reorder'
