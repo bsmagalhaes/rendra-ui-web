@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
-import { screen } from '@testing-library/react'
+import { screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Stepper, Wizard } from './wizard'
+import type { ReactNode } from 'react'
+import { MotionProvider } from '@/lib/motion'
+import { expectSettled, reduceMotion } from '@/test/motion'
 
 const steps = [
   { id: 'a', title: 'Dados' },
@@ -194,5 +197,78 @@ describe('Stepper', () => {
   it('usa o código do catálogo', () => {
     const { container } = renderApp(<Stepper steps={[{ id: 'a', title: 'Dados' }]} current={0} />)
     expect(container.querySelector('[data-rendra="WIZ-002"]')).toBeInTheDocument()
+  })
+})
+
+describe('Wizard com motion', () => {
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+
+  it('em on, avançar e voltar mostra só a etapa certa', async () => {
+    emOn(
+      <Wizard steps={steps}>
+        <p>Conteúdo da etapa 1</p>
+        <p>Conteúdo da etapa 2</p>
+      </Wizard>,
+    )
+    expect(screen.getByText('Conteúdo da etapa 1')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /Avançar/ }))
+    expect(await screen.findByText('Conteúdo da etapa 2')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Conteúdo da etapa 1')).not.toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: /Voltar/ }))
+    expect(await screen.findByText('Conteúdo da etapa 1')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Conteúdo da etapa 2')).not.toBeInTheDocument())
+  })
+
+  it('em on, o valor digitado numa etapa (campo controlado) volta igual ao de off', async () => {
+    function Campos() {
+      const [nome, setNome] = useState('')
+      return (
+        <Wizard steps={steps}>
+          <input aria-label="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+          <p>Corpo da revisão</p>
+        </Wizard>
+      )
+    }
+    for (const modo of ['off', 'on'] as const) {
+      const { unmount } = renderApp(
+        <MotionProvider mode={modo}>
+          <Campos />
+        </MotionProvider>,
+      )
+      await userEvent.type(screen.getByRole('textbox', { name: 'Nome' }), 'Ana')
+      await userEvent.click(screen.getByRole('button', { name: /Avançar/ }))
+      expect(await screen.findByText('Corpo da revisão')).toBeInTheDocument()
+      await userEvent.click(screen.getByRole('button', { name: /Voltar/ }))
+      expect(await screen.findByRole('textbox', { name: 'Nome' })).toHaveValue('Ana')
+      unmount()
+    }
+  })
+
+  it('em on, a bolinha concluída do Stepper mostra o check com o pop; em off também mostra o check', () => {
+    const { container } = emOn(<Stepper steps={steps} current={1} />)
+    expect(container.querySelector('svg.lucide-check')).toBeInTheDocument()
+  })
+
+  it('em on, a etapa nova entra por deslocamento curto; reduzido, só opacidade', async () => {
+    emOn(
+      <Wizard steps={steps}>
+        <p>Conteúdo da etapa 1</p>
+        <p>Conteúdo da etapa 2</p>
+      </Wizard>,
+    )
+    await expectSettled(screen.getByText('Conteúdo da etapa 1').parentElement!, 'none')
+    cleanup()
+    const restore = reduceMotion()
+    try {
+      emOn(
+        <Wizard steps={steps}>
+          <p>Conteúdo da etapa 1</p>
+          <p>Conteúdo da etapa 2</p>
+        </Wizard>,
+      )
+      await expectSettled(screen.getByText('Conteúdo da etapa 1').parentElement!, 'absent')
+    } finally {
+      restore()
+    }
   })
 })
