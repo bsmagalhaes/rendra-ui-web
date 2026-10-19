@@ -105,6 +105,11 @@ export const navigation: NavGroup[] = [
             to: '/componentes-motion',
             description: 'As animações do Motion, ligadas e desligadas.',
           },
+          {
+            title: 'Dashboard com motion',
+            to: '/dashboard-motion',
+            description: 'Um painel entrando com contagem, gráficos e cascata.',
+          },
         ],
       },
       {
