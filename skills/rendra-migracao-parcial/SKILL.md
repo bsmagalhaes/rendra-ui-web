@@ -21,7 +21,7 @@ Escala de espaço, tipografia, raio e sombra (`DESIGN_RULES.md`, "Tokens estrutu
 
 1. Rode `rendra auditar <cwd>` (o caminho do projeto de destino) e leia a lista: cada linha é `arquivo:linha [regra] mensagem`, com sete regras genéricas (`cor-fixa`, `valor-arbitrario`, `estilo-inline`, `fonte-fixa`, `100vh`, `fora-da-escala`, `raio-fixo`) mais o texto do trecho encontrado.
 2. Corrija uma regra de cada vez, começando pela mais frequente. `cor-fixa` e `fonte-fixa` viram token semântico ou variável de tema; `valor-arbitrario` e `fora-da-escala` viram um degrau da escala (0, 1, 2, 3, 4, 6, 8, 12, 16, 24) ou um token nomeado; `100vh` vira `100dvh`; `raio-fixo` vira um token de raio por papel.
-3. Rode `rendra auditar <cwd>` de novo depois de cada lote de correções, até a lista sair vazia. Relate ao usuário quantas violações havia, quantas foram corrigidas e o que ficou pendente (ex.: um valor que depende de decisão de design, marcado para revisão humana).
+3. Rode `rendra auditar <cwd>` de novo depois de cada lote de correções, até a lista sair vazia. Para não auditar a marca e os estilos do próprio design system, use `--ignore src/brand,src/styles`; a lista continua sendo as sete regras genéricas, e `--all` (as 17 regras do `check:rules`) só vale para projeto que segue o vocabulário e as pastas do Rendra. Relate ao usuário quantas violações havia, quantas foram corrigidas e o que ficou pendente (ex.: um valor que depende de decisão de design, marcado para revisão humana).
 
 ## Nível 2: padrões
 

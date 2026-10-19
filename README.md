@@ -206,7 +206,7 @@ Login, esqueci a senha, verificação em duas etapas (2FA), nova senha, cadastro
 - **Regressão visual** (`npm run test:visual`): 128 capturas comparadas com a referência aprovada. Pegam cor que mudou, espaçamento que quebrou e ícone que sumiu. As referências são geradas no Linux do CI; depois de uma mudança visual intencional, aplique o rótulo `atualizar-visual` no Pull Request.
 - **Testes unitários e de componente com Vitest e Testing Library** (`npm test`; `npm run test:coverage` com o piso por arquivo): comportamento de Table (ordenação, busca, paginação, seleção, ações em massa, modo remoto e cartões no celular), Select, Input (máscaras, centavos e busca de CEP e CNPJ), Modal, Drawer, campos de formulário e navegação, além de validadores, máscaras, buscas e o gerador de paletas (AA garantido em todas). Cada componente tem o teste ao lado, e ele vai junto quando você copia o componente para outro projeto.
 - **CI no GitHub Actions**: todo Pull Request passa por tipos, lint, formatação, regras, unitários, build, Storybook e os três testes no navegador. A `main` só aceita merge com tudo verde. Os alertas de segurança do GitHub avisam de dependência vulnerável; as atualizações de versão são feitas à mão (veja o `CONTRIBUTING.md`).
-- **Verificador de regras** (`npm run check:rules`): barra cor fixa, valor arbitrário, degrau fora da escala, estilo inline, fonte fixa, `100vh` e arquivos duplicados ou mobile.
+- **Verificador de regras** (`npm run check:rules`): barra cor fixa, valor arbitrário, degrau fora da escala, estilo inline, fonte fixa, `100vh` e arquivos duplicados ou mobile. A mesma varredura, com as 17 regras, roda em qualquer projeto por `npx @rendra-ui/web auditar --all`.
 
 ---
 
@@ -367,13 +367,31 @@ Três comandos. Forma segura, que não exige instalar nada: `npx @rendra-ui/web 
 
 ```bash
 npx @rendra-ui/web codigos                    # lista o catálogo de códigos de componente
-npx @rendra-ui/web auditar [pasta]            # regras genéricas de DESIGN_RULES.md no projeto de destino
+npx @rendra-ui/web auditar [pasta...] [--all] [--ignore a,b]   # regras de DESIGN_RULES.md no projeto de destino
 npx @rendra-ui/web trocar <DE> <PARA> --dry-run   # simula a troca de uma variante do catálogo pela outra
 ```
 
 Nota: `npx rendra <comando>` só funciona com o pacote instalado neste projeto (ou instalado global, como `rendra <comando>` direto). Sem instalar, não use `npx rendra`: o nome `rendra` no npm pertence a outro pacote, não a este.
 
-`rendra auditar` aplica sete regras estáticas, sem IA (cor fixa, valor arbitrário, estilo inline, fonte fixa, `100vh`, degrau fora da escala, raio fixo), o mesmo tipo de checagem do `check:rules` deste repositório, aplicado a qualquer projeto. `rendra trocar` reescreve a prop literal que distingue duas variantes do catálogo (`ABA-001` para `ABA-002`, por exemplo), sempre com `--dry-run` primeiro: um elemento sem a prop conta como a variante padrão do componente (troca também esse caso, inserindo ou removendo a prop conforme o lado); prop dinâmica (`variant={x}`) nunca é reescrita, só listada para revisão manual, e troca entre componentes diferentes nunca edita, só aponta onde o componente aparece. Só `rendra trocar` precisa do `typescript` instalado no projeto de destino (`peerDependency` opcional do pacote), para ler e reescrever o JSX; sem ele, avisa e sai com erro.
+`rendra auditar` aplica, por padrão, sete regras estáticas, sem IA (cor fixa, valor arbitrário, estilo inline, fonte fixa, `100vh`, degrau fora da escala, raio fixo), o mesmo tipo de checagem do `check:rules` deste repositório, aplicado a qualquer projeto. Sem flag e sem `rendra.config.json`, a saída e o código de saída são os de sempre (1 com violação, 0 sem).
+
+**`--all`** liga as 17 regras do `check:rules`: as sete acima mais `var-inline`, `svg-marca`, `classe-dinamica`, `texto-estreito`, `primaria-como-texto`, `componente-duplicado`, `css-fora-do-lugar`, `botao-solto`, `texto-orientativo` e `variavel-sem-prefixo-rendra`. Use quando o projeto segue o vocabulário e as pastas do Rendra (`--rendra-*`, `src/brand`, `src/styles`, telas em `src/pages/app`); num projeto que não segue, desligue as regras que não fazem sentido em `rendra.config.json`. Com `--all`, pastas de marca e de estilos só passam pelo prefixo `--rendra-`, e `.test.`, `.stories.`, `node_modules`, `dist` e `build` não são varridos.
+
+**`--ignore a,b`** pula pastas, por prefixo de pasta relativo ao projeto (sem glob): `src/brand` pula `src/brand` e tudo dentro, mas não `src/brand-novo`. Vale também `--ignore a --ignore b` e `--ignore=a,b`, com ou sem `--all`. **Várias pastas:** `auditar src extra` varre as duas. Com uma só pasta, ela é a base do projeto (o `file` da saída sai relativo a ela e o `rendra.config.json` é lido dela); com duas ou mais, a base é a pasta atual. Pasta fora da base dá erro claro, sem varrer nada.
+
+**`rendra.config.json`** é opcional, fica na base do projeto e aceita cinco chaves, todas opcionais:
+
+```json
+{
+  "pastas": ["src", "extra"],
+  "ignorar": ["src/gerado"],
+  "regras": { "botao-solto": false, "cor-fixa": false },
+  "pastasMarca": ["src/brand", "src/styles"],
+  "pastasTelas": ["src/pages/app"]
+}
+```
+
+`pastas` substitui o atalho para `src`; `ignorar` tem o efeito de `--ignore`; `regras` desliga qualquer um dos 17 identificadores (`false`), com ou sem `--all`; `pastasMarca` e `pastasTelas` valem com `--all`, e os padrões são os do exemplo. A flag vence o config e não soma: `--ignore` substitui `ignorar`, e duas ou mais pastas posicionais substituem `pastas`. JSON inválido, chave desconhecida, tipo errado ou regra desconhecida dão mensagem em português e código de saída 1, assim como flag desconhecida (`--foo`) e `--ignore` sem valor. `rendra auditar --help` mostra a ajuda geral. `rendra trocar` reescreve a prop literal que distingue duas variantes do catálogo (`ABA-001` para `ABA-002`, por exemplo), sempre com `--dry-run` primeiro: um elemento sem a prop conta como a variante padrão do componente (troca também esse caso, inserindo ou removendo a prop conforme o lado); prop dinâmica (`variant={x}`) nunca é reescrita, só listada para revisão manual, e troca entre componentes diferentes nunca edita, só aponta onde o componente aparece. Só `rendra trocar` precisa do `typescript` instalado no projeto de destino (`peerDependency` opcional do pacote), para ler e reescrever o JSX; sem ele, avisa e sai com erro.
 
 ### Skill de migração parcial
 
