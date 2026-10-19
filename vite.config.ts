@@ -129,6 +129,7 @@ export default defineConfig({
         'src/cli/help.ts': { lines: 100 },
         'src/cli/regras-extras.ts': { lines: 90 },
         'src/cli/auditar-tudo.ts': { lines: 90 },
+        'src/cli/config.ts': { lines: 90 },
         'scripts/lib/robots.ts': { lines: 100 },
         'scripts/lib/llms-txt.ts': { lines: 100 },
         'scripts/lib/{pages-stage,pages-env,redirect-stubs,sitemap,og-html}.ts': { lines: 90 },
