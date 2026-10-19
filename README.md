@@ -362,6 +362,8 @@ import '@rendra-ui/web/components.css'
 
 O CSS já sai compilado (estratégia A: o host recebe `tokens.css`, `base.css` e `components.css` prontos, sem precisar ter o Tailwind instalado, e sem nenhuma variável do namespace do Tailwind vazar para o seu tema). `react-router` fica fora das dependências: quem usa React Router importa a ponte, `@rendra-ui/web/router-bridge`; quem não usa, não precisa dela. Os componentes pesados (`document-viewer`, `rich-text-editor`, `chart`, `widget-grid`) são subcaminhos próprios, para não engordar quem não usa.
 
+**O que o `components.css` traz, e o que não traz.** Ele contém só as classes que os componentes do pacote usam por dentro e as `@utility` do Rendra. Classes de composição das suas próprias telas (`p-12`, `max-w-sm`, `flex-col`, `mb-0`) não estão garantidas: num host com Tailwind v4, deixe o seu Tailwind gerá-las e reproduza no `@theme` a escala do Rendra (espaço 0, px, 1, 2, 3, 4, 6, 8, 12, 16 e 24, raios por papel, cores `--rendra-*`); num host sem Tailwind, escreva o CSS de composição à mão com as variáveis `--rendra-*`. A receita completa e a lista de todas as `@utility` estão em [`docs/COMO_APLICAR.md`](docs/COMO_APLICAR.md), na seção "O CSS do pacote e as classes das suas telas".
+
 **Publicação:** uma tag `vX.Y.Z` empurrada para o repositório (`git push origin vX.Y.Z`) dispara o `.github/workflows/publish.yml`, que builda o pacote, roda o `verify:pack` e publica com `npm publish --provenance --access public`, depois de conferir que a tag bate com a `version` do `package.json`. Com o _trusted publishing_ do npm configurado para este repositório, o workflow dispensa o segredo `NPM_TOKEN`.
 
 ### CLI (`rendra`)

@@ -45,6 +45,23 @@ A ideia é trazer a base e depois migrar tela por tela, sem parar o projeto.
 4. **Convivência.** A escala do Tailwind foi zerada de propósito. Se o CSS antigo usa classes como `p-5` ou `bg-blue-500`, elas deixam de funcionar. Migre tela por tela e, se precisar, mantenha o CSS antigo isolado no arquivo de cada tela enquanto a migração acontece.
 5. **Migração** (seção "Ordem de migração").
 
+## O CSS do pacote e as classes das suas telas
+
+Vale para quem instalou o pacote (`1b`) e tem telas próprias. O CSS do pacote sai compilado (`tokens.css`, `base.css`, `components.css`) e **não é o Tailwind inteiro**: o `components.css` traz só as classes que os componentes do pacote usam por dentro (o build escaneia apenas os arquivos publicados, nunca as telas do boilerplate nem as suas) e as classes `@utility` do Rendra listadas abaixo, que entram sempre. Classes de composição que você escreve nas suas telas, como `p-12`, `max-w-sm`, `flex-col` ou `mb-0`, só existem se algum componente do pacote as usa por dentro: não conte com elas.
+
+**Host com Tailwind v4.** Deixe o Tailwind do host escanear as suas telas, que ele gera as classes de composição. Para as telas terem o mesmo ritmo dos componentes, reproduza a escala do Rendra no `@theme` do host (os valores estão em `src/styles/globals.css`; o Rendra zera a escala padrão do Tailwind):
+
+- espaço: `0`, `px` (1px), `1` (0,25rem), `2` (0,5rem), `3` (0,75rem), `4` (1rem), `6` (1,5rem), `8` (2rem), `12` (3rem), `16` (4rem) e `24` (6rem). Um `p-5` ou `gap-7` do Tailwind padrão não existe na escala do Rendra: confira a escala do host contra esta antes de migrar uma tela;
+- raios por papel, ligados ao formato do modelo ativo: `--radius-control`, `--radius-surface`, `--radius-item`, `--radius-block` e `--radius-avatar` valem `var(--rendra-shape-control)`, `var(--rendra-shape-surface)` e assim por diante;
+- cores e fonte, apontando para as variáveis do `tokens.css`: `--color-primary: var(--rendra-primary)`, `--color-card: var(--rendra-card)`, `--font-sans: var(--rendra-brand-font)` e as demais da mesma forma;
+- tipografia: sete tamanhos (`xs` 0,75rem, `sm` 0,875rem, `base` 1rem, `lg` 1,0625rem, `xl` 1,125rem, `2xl` 1,3125rem, `3xl` 1,5rem, os três últimos ampliam a partir de `md`) e três pesos, 400, 500 e 600.
+
+**Host sem Tailwind.** Escreva o CSS de composição das suas telas à mão. O `tokens.css` só expõe variáveis `--rendra-*` (cores, raios por papel `--rendra-shape-*`, elevação, fonte da marca); a escala de espaço e de tipografia **não** vira variável (os valores já estão dentro das classes compiladas; só as dez que mudam de valor a partir de `md`, como as alturas de controle, o cabeçalho e os títulos `xl` a `3xl`, seguem como variável, renomeada para `--rendra-*`), então copie da lista acima o que precisar e use as variáveis `--rendra-*` para cor, raio e fonte.
+
+`@utility` do Rendra (sempre presentes): `label-case`, `bg-gradient-brand`, `bg-gradient-soft`, `bg-gradient-accent`, `bg-sidebar-brand`, `pb-safe`, `pt-safe`, `mask-status-cutout`, `anim-delay-1`, `anim-delay-2`, `focus-ring`, `w-popover`, `w-popover-sm`, `w-sidebar-drawer`, `max-w-popover`, `pb-safe-inset`, `max-h-command`, `w-trigger`, `max-h-sheet`, `grid-actions-2`, `grid-actions-3`, `w-progress`, `progress-slide`, `bg-swatch`, `swatch-check-light`, `swatch-check-dark`, `grid-cols-otp`, `calendar-event`, `calendar-now`, `grid-cols-week`, `grid-cols-week-time`, `w-ratio`, `bg-fill`, `gauge-needle`, `clip-trapezoid`, `h-board`, `scrollbar-subtle`, `field-sizing-content`, `h-autosize`, `w-sheet-30`, `w-sheet-40`, `w-sheet-50`, `w-sheet-75`, `grid-chat-2`, `grid-chat-3`, `w-kanban-col`, `wave-bar`, `h-var`, `aspect-crop`, `cropper-image`, `size-var`.
+
+Uma `@utility` nova em `src/styles/globals.css` entra nesta lista no mesmo commit: o teste `src/lib/utilities-doc.test.ts` falha se a lista e o arquivo divergirem.
+
 ## Limpeza do clone
 
 Só se aplica a quem clonou o repositório inteiro (caminho 1a, ou o caminho "clone e refazer" de uma migração, `docs/PROMPT_MIGRACAO.md`). O clone nasce publicável como o pacote `@rendra-ui/web`: antes de considerar o projeto pronto, troque ou remova o que só faz sentido no repositório do Rendra.
