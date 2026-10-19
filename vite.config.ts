@@ -127,6 +127,7 @@ export default defineConfig({
         'src/cli/trocar.ts': { lines: 85 },
         'src/cli/typescript-loader.ts': { lines: 80 },
         'src/cli/help.ts': { lines: 100 },
+        'src/cli/regras-extras.ts': { lines: 90 },
         'scripts/lib/robots.ts': { lines: 100 },
         'scripts/lib/llms-txt.ts': { lines: 100 },
         'scripts/lib/{pages-stage,pages-env,redirect-stubs,sitemap,og-html}.ts': { lines: 90 },
