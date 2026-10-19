@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { forwardRef, useState, type ComponentProps } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { List, type ListItem } from '@/components/ui/list'
@@ -38,10 +38,11 @@ function Controlada({ mode }: { mode: 'on' | 'off' }) {
 }
 
 describe('regra do layout na List', () => {
-  it('em on o layout fica ligado em repouso, desliga durante o arraste e volta ao soltar', () => {
+  it('em on o layout fica ligado em repouso, desliga durante o arraste e volta ao soltar', async () => {
     renderApp(<Controlada mode="on" />)
-    expect(seen.layout.length).toBeGreaterThan(0)
-    expect(seen.layout.every((v) => v === true)).toBe(true)
+    // antes de o chunk do domMax chegar o layout fica desligado; depois, ligado em repouso
+    expect(seen.layout[0]).toBe(false)
+    await waitFor(() => expect(seen.layout.at(-1)).toBe(true))
 
     seen.layout.length = 0
     const handle = screen.getByRole('button', { name: 'Reordenar Cliente A' })
@@ -56,7 +57,7 @@ describe('regra do layout na List', () => {
     expect(seen.layout.every((v) => v === true)).toBe(true)
   })
 
-  it('em off nenhum item vira m.li', () => {
+  it('em off nenhum item vira m.li e o layout nunca liga', () => {
     seen.layout.length = 0
     renderApp(<Controlada mode="off" />)
     expect(seen.layout).toHaveLength(0)

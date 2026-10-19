@@ -1,5 +1,5 @@
 import { domAnimation, LazyMotion } from 'motion/react'
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 
 /*
  * Modo de motion do Rendra. `off` (padrão): nada do Motion é montado, e o DOM e o
@@ -10,16 +10,38 @@ import { createContext, useContext, type ReactNode } from 'react'
 
 export type MotionMode = 'off' | 'on'
 
-const MotionContext = createContext<MotionMode>('off')
+interface MotionState {
+  mode: MotionMode
+  /**
+   * O chunk do `domMax` (layout e arraste) já chegou. O contexto muda quando ele chega, para
+   * os componentes que leem o modo renderizarem de novo: um `m.*` montado antes disso não tem
+   * nó de projeção, e `layout`/`layoutId` só passam a valer na renderização seguinte.
+   */
+  layoutReady: boolean
+}
+
+const MotionContext = createContext<MotionState>({ mode: 'off', layoutReady: false })
 
 /** Modo de motion do provider mais próximo (`off` sem provider). */
 export function useMotionMode(): MotionMode {
-  return useContext(MotionContext)
+  return useContext(MotionContext).mode
+}
+
+/**
+ * Em `on`, o chunk do `domMax` já chegou. Um `m.*` com `layout` ou `layoutId` só ganha o nó de
+ * projeção se for criado DEPOIS disso (o Motion não monta a projeção de um elemento que já
+ * estava na tela), então quem usa layout liga a prop e remonta o item quando isto vira `true`.
+ */
+export function useLayoutReady(): boolean {
+  const { mode, layoutReady } = useContext(MotionContext)
+  return mode === 'on' && layoutReady
 }
 
 /** Só troca o modo lido pelos componentes; não monta nem desmonta o LazyMotion. */
 export function MotionModeScope({ mode, children }: { mode: MotionMode; children: ReactNode }) {
-  return <MotionContext.Provider value={mode}>{children}</MotionContext.Provider>
+  const { layoutReady } = useContext(MotionContext)
+  const value = useMemo(() => ({ mode, layoutReady }), [mode, layoutReady])
+  return <MotionContext.Provider value={value}>{children}</MotionContext.Provider>
 }
 
 /** O carregador do `domMax` (chunk à parte): layout, layoutId e arraste do Motion. */
@@ -35,10 +57,26 @@ const loadMax = () => import('./features-max').then((m) => m.default)
  */
 export function MotionProvider({ mode, children }: { mode: MotionMode; children: ReactNode }) {
   if (mode !== 'on') return <MotionModeScope mode="off">{children}</MotionModeScope>
+  return <OnProvider>{children}</OnProvider>
+}
+
+function OnProvider({ children }: { children: ReactNode }) {
+  const [layoutReady, setLayoutReady] = useState(false)
+  const value = useMemo(() => ({ mode: 'on' as const, layoutReady }), [layoutReady])
+  // O LazyMotion registra os recursos DEPOIS de a promessa do carregador resolver; o aviso vai
+  // para o ciclo seguinte, para a renderização que ele provoca já enxergar o layout.
+  const load = useMemo(
+    () => () =>
+      loadMax().then((features) => {
+        setTimeout(() => setLayoutReady(true), 0)
+        return features
+      }),
+    [],
+  )
   return (
-    <LazyMotion features={loadMax}>
+    <LazyMotion features={load}>
       <LazyMotion features={domAnimation}>
-        <MotionModeScope mode="on">{children}</MotionModeScope>
+        <MotionContext.Provider value={value}>{children}</MotionContext.Provider>
       </LazyMotion>
     </LazyMotion>
   )

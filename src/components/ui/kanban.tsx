@@ -35,7 +35,7 @@ import { Tabs } from '@/components/ui/tabs'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { useFillHeight } from '@/hooks/use-fill-height'
 import { cn } from '@/lib/cn'
-import { layoutEnabled, useMotionMode, useMotionPresets } from '@/lib/motion'
+import { layoutEnabled, useLayoutReady, useMotionMode, useMotionPresets } from '@/lib/motion'
 import { bindPointerDrag, findDragTarget, resolveDropIndex } from '@/lib/sortable'
 
 /*
@@ -292,6 +292,7 @@ export function Kanban({
   const code = resolveCatalogCode('Kanban', { hasDropTargets: Boolean(dropTargets?.length) })
   const { isMobile } = useBreakpoint()
   const motion = useMotionMode()
+  const ready = useLayoutReady()
   const presets = useMotionPresets()
   const boardRef = useFillHeight()
   // Touchpad: o gesto lateral leva o quadro para o mesmo lado dos dedos (esquerda move o
@@ -575,7 +576,7 @@ export function Kanban({
               el.removeEventListener('dragend', dragEnd)
             }
           }}
-          layout={layoutEnabled({ mode: motion, dragging: touchDrag !== null })}
+          layout={layoutEnabled({ mode: motion, ready, dragging: touchDrag !== null })}
           transition={presets.layout}
           {...common}
         >
@@ -645,6 +646,8 @@ export function Kanban({
         className="min-h-0 flex-1 scrollbar-subtle overflow-y-auto overscroll-y-contain"
       >
         <ol
+          // Remonta uma vez quando o domMax chega: o layout só vale para cards criados depois.
+          key={String(ready)}
           aria-label={`Cards em ${col.title}`}
           onDragOver={(e) => {
             if (!dragging) return
