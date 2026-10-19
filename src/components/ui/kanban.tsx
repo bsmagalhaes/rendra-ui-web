@@ -79,6 +79,9 @@ export interface KanbanColumn {
   limit?: number
 }
 
+/** Contador de quadros, só para o `layoutId` dos cards em `on` (um prefixo por instância). */
+let boardsCreated = 0
+
 export interface KanbanCard {
   id: string
   columnId: string
@@ -294,6 +297,9 @@ export function Kanban({
   const motion = useMotionMode()
   const ready = useLayoutReady()
   const presets = useMotionPresets()
+  // Prefixo do layoutId dos cards: dois quadros na mesma tela não trocam cards entre si. Sem
+  // `useId`, que consumiria a sequência de ids do React também em `off`.
+  const [boardId] = useState(() => `rendra-kanban-${++boardsCreated}`)
   const boardRef = useFillHeight()
   // Touchpad: o gesto lateral leva o quadro para o mesmo lado dos dedos (esquerda move o
   // quadro para a esquerda). A rolagem vertical segue normal dentro de cada etapa.
@@ -559,6 +565,7 @@ export function Kanban({
     )
 
     if (motion === 'on') {
+      const layout = layoutEnabled({ mode: motion, ready, dragging: touchDrag !== null })
       // O Motion toma `onDragStart`/`onDragEnd` para o gesto de arraste dele e os tira do DOM.
       // O arraste nativo (HTML5) do desktop segue por ouvintes `dragstart`/`dragend` ligados
       // direto no elemento; o layout só liga fora do arraste por toque (o arraste nativo não
@@ -576,7 +583,8 @@ export function Kanban({
               el.removeEventListener('dragend', dragEnd)
             }
           }}
-          layout={layoutEnabled({ mode: motion, ready, dragging: touchDrag !== null })}
+          layout={layout}
+          layoutId={layout ? `${boardId}-${card.id}` : undefined}
           transition={presets.layout}
           {...common}
         >
