@@ -317,6 +317,7 @@ O `<AppShell>` nunca importa `@/config`: tudo entra por prop, montada por quem m
 - `quickActions`: ações rápidas oferecidas na busca global (Ctrl+K).
 - `notifications`: itens do sino de notificações (`items`, `onMarkAllRead`, `onItemClick`).
 - `workspaces`: seletor de espaço (empresa, unidade) no topo do menu do avatar, `{ items: { id, label }[], activeId, onSelect(id), label? }`. Só no menu do avatar do header; a troca em si é de quem monta a aplicação.
+- `headerLogo`: logo do header no celular (abaixo de `md`), no lugar do título e da trilha. O título continua anunciado ao leitor de tela, a seta de voltar e o ícone de ajuda ficam, e a trilha sai do header. O nó não pode ser interativo (o contêiner é `aria-hidden`).
 - `userMenu`: quais submenus o menu do avatar mostra, `{ theme?, template?, layout? }`, todos `true` por padrão; `{ template: false }` esconde só o Template. É o caminho para tirar Tema, Template ou Layout das mãos do usuário.
 - `userConfigurable`: com `false`, o AppShell ignora o layout que o usuário guardou no navegador ao montar, e o layout do projeto vale. Não esconde o submenu Layout nem impede `setLayout` de gravar a escolha; para esconder, use `userMenu={{ layout: false }}`.
 

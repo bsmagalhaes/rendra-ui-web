@@ -404,8 +404,16 @@ function TopNav() {
 }
 
 export function Header() {
-  const { layout, setLayout, setMobileNavOpen, setSearchOpen, pageHelp, homeLabel, notifications } =
-    useShell()
+  const {
+    layout,
+    setLayout,
+    setMobileNavOpen,
+    setSearchOpen,
+    pageHelp,
+    homeLabel,
+    notifications,
+    headerLogo,
+  } = useShell()
   const { brand, resolvedMode } = useBrand()
   const Link = useRendraLink()
   const crumbs = useRendraBreadcrumbs()
@@ -421,19 +429,39 @@ export function Header() {
   const menuInFooter = layout.bottomNav || hasParent
   // Título e trilha em uma linha cada; se não couber, reticências (nunca quebra linha).
   const pageTitle = (
-    <div className="flex min-w-0 flex-1 flex-col justify-center">
-      <span className="flex min-w-0 items-center gap-1">
-        <p className="truncate text-sm leading-tight font-semibold md:text-base">
-          {crumbs[crumbs.length - 1]?.label ?? brand.productName}
-        </p>
-        {pageHelp && (
-          <InfoHint title={crumbs[crumbs.length - 1]?.label ?? brand.productName} className="-my-2">
-            {pageHelp}
-          </InfoHint>
+    <>
+      {headerLogo && (
+        <span aria-hidden className="flex min-w-0 flex-1 items-center md:hidden">
+          {headerLogo}
+        </span>
+      )}
+      <div
+        className={cn(
+          'flex min-w-0 flex-1 flex-col justify-center',
+          headerLogo && 'max-md:flex-none',
         )}
-      </span>
-      <Breadcrumb items={trail} variant="trail" />
-    </div>
+      >
+        <span className="flex min-w-0 items-center gap-1">
+          <p
+            className={cn(
+              'truncate text-sm leading-tight font-semibold md:text-base',
+              headerLogo && 'max-md:sr-only',
+            )}
+          >
+            {crumbs[crumbs.length - 1]?.label ?? brand.productName}
+          </p>
+          {pageHelp && (
+            <InfoHint
+              title={crumbs[crumbs.length - 1]?.label ?? brand.productName}
+              className="-my-2"
+            >
+              {pageHelp}
+            </InfoHint>
+          )}
+        </span>
+        <Breadcrumb items={trail} variant="trail" className={cn(headerLogo && 'max-md:hidden')} />
+      </div>
+    </>
   )
   const collapsed = layout.sidebar === 'collapsed'
 
