@@ -2,7 +2,7 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
-## Não publicado
+## 2.4.0 (19/10/2026)
 
 `rendra auditar` ganha a varredura completa (`--all`), `--ignore`, várias pastas e o `rendra.config.json`, e os componentes ganham opções novas: espaços e logo no AppShell, menu do usuário enxuto, `orientation` no ButtonGroup, três opções no BrandFeedbackIcon, rótulos e "Pular" no Wizard, `back` na ErrorPage, `bodyTitle` e `titleSpace` no PageHeader, mais duas correções de acessibilidade. Sem quebra: toda prop nova é opcional e o padrão reproduz o que já era, e `rendra auditar` e `rendra auditar <pasta>`, sem flag e sem `rendra.config.json`, imprimem e saem como antes.
 
@@ -40,6 +40,7 @@ O que mudou em cada versão e o que um projeto derivado precisa fazer para atual
 - **Limpeza do clone:** o teste que lê o `registry.json` (`meta.codes`) saiu de `src/catalog/components.test.ts` para `src/catalog/registry.test.ts`, e a lista "Limpeza do clone" passou a apagar esse arquivo e o `src/lib/utilities-doc.test.ts` junto com o resto que só vale no Rendra. Antes, quem aplicava a lista à risca ficava com `npm test` vermelho. `scripts/lib/clone-cleanup.test.ts` ganhou uma guarda: nenhum teste que fica no clone lê um arquivo que a lista apaga.
 - **`docs/BRIEFING_MODELO.md`:** o 3.7 diz o que `userConfigurable` faz de verdade e aponta `userMenu`; o 3.8 pergunta por `workspaces`, `headerLogo` e `userMenu`; a tabela do bloco 7 ganhou a linha do `ButtonGroup` (`BTNG-001`, `BTNG-002`, `BTNG-003`).
 - **`initials()`** saiu do `Avatar` para `src/lib/initials.ts`; não é export público.
+- Simulação dos dois leigos aprovada em 19/10/2026 (Regra um, item 7): começar um sistema novo e migrar um sistema existente, nos três perfis de IA (com terminal e agentes, com terminal sem agentes, chat sem terminal), com o AppShell com espaços, menu do usuário enxuto e logo no celular, o PageHeader com `bodyTitle` e `titleSpace`, o ButtonGroup vertical e responsivo, o Wizard com rótulos próprios e "Pular", o BrandFeedbackIcon na cor da marca com selo ao lado e `encaixe`, a ErrorPage sem Voltar, o Modal `info` com segundo botão, e `rendra auditar` com `--all`, `--ignore`, várias pastas e `rendra.config.json` alcançados a partir do link, com o clone no ar, o clone limpo e as verificações verdes, sem lacuna bloqueadora.
 
 ## 2.3.0 (02/10/2026)
 
