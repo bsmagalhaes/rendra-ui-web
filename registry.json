@@ -330,7 +330,7 @@
       "type": "registry:item",
       "title": "brand-feedback-icon",
       "description": "Componente brand-feedback-icon do Rendra Design System.",
-      "dependencies": ["class-variance-authority@^0.7.1"],
+      "dependencies": ["class-variance-authority@^0.7.1", "lucide-react@^1.48.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -1650,9 +1650,10 @@
       "type": "registry:item",
       "title": "brand-feedback-icon (teste)",
       "description": "Testes de comportamento do brand-feedback-icon, com Vitest e Testing Library.",
-      "devDependencies": ["vitest@^5.0.2"],
+      "devDependencies": ["@testing-library/react@^16.3.3", "vitest@^5.0.2"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/brand-feedback-icon.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
       "files": [
