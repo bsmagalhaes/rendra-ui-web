@@ -172,20 +172,37 @@ describe('auditar com opções', () => {
 })
 
 describe('não duplicação (scripts/check-design-rules.mjs)', () => {
-  const scriptSource = readFileSync(
-    join(import.meta.dirname, '../../scripts/check-design-rules.mjs'),
-    'utf8',
-  )
+  const raiz = join(import.meta.dirname, '../..')
+  const scriptSource = readFileSync(join(raiz, 'scripts/check-design-rules.mjs'), 'utf8')
+  const tudoSource = readFileSync(join(raiz, 'src/cli/auditar-tudo.ts'), 'utf8')
 
-  it('importa as regras genéricas de src/cli/auditar.ts em vez de repeti-las', () => {
-    expect(scriptSource).toMatch(/from ['"]\.\.\/src\/cli\/auditar\.ts['"]/)
+  it('importa a varredura de src/cli/auditar-tudo.ts em vez de repeti-la', () => {
+    expect(scriptSource).toMatch(/from ['"]\.\.\/src\/cli\/auditar-tudo\.ts['"]/)
   })
 
-  it('não mantém uma segunda cópia da regra cor-fixa', () => {
-    expect(scriptSource).not.toContain("id: 'cor-fixa'")
+  it('auditar-tudo reaproveita as regras dos módulos únicos', () => {
+    expect(tudoSource).toMatch(/import \{[^}]*\bauditLines\b[^}]*\} from ['"]\.\/auditar\.ts['"]/)
+    expect(tudoSource).toMatch(/from ['"]\.\/regras-extras\.ts['"]/)
   })
 
-  it('não mantém uma segunda cópia da regra fora-da-escala', () => {
-    expect(scriptSource).not.toContain("id: 'fora-da-escala'")
+  it('regras-extras delega texto-orientativo e prefixo aos módulos movidos', () => {
+    const extras = readFileSync(join(raiz, 'src/cli/regras-extras.ts'), 'utf8')
+    expect(extras).toMatch(/checkGuidance\b[^;]*from ['"]\.\/help-length\.ts['"]/)
+    expect(extras).toMatch(/checkVarPrefix\b[^;]*from ['"]\.\/var-prefix\.ts['"]/)
+  })
+
+  it.each([
+    'cor-fixa',
+    'fora-da-escala',
+    'var-inline',
+    'svg-marca',
+    'classe-dinamica',
+    'texto-estreito',
+    'primaria-como-texto',
+    'botao-solto',
+    'css-fora-do-lugar',
+    'componente-duplicado',
+  ])('o script não mantém uma segunda cópia da regra %s', (id) => {
+    expect(scriptSource).not.toContain(`id: '${id}'`)
   })
 })
