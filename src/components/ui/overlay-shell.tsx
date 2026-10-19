@@ -40,7 +40,8 @@ export function OverlayShell({
         '-mt-1 -mr-2 flex size-touch shrink-0 cursor-pointer items-center justify-center rounded-item text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:size-control-md',
         // Sem cabeçalho visível, o botão sai do header oculto e fica invisível (sem clip, para
         // receber clique e foco), aparecendo só com foco de teclado.
-        hideHeader && 'pointer-events-auto m-0 opacity-0 focus-visible:opacity-100',
+        hideHeader &&
+          'pointer-events-auto m-0 cursor-default opacity-0 focus-visible:cursor-pointer focus-visible:opacity-100',
       )}
     >
       <X className="size-icon-md" aria-hidden />
