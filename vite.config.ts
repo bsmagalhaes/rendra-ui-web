@@ -51,7 +51,8 @@ export default defineConfig({
         'src/catalog/**',
         'src/cli/**',
       ],
-      exclude: ['**/*.test.{ts,tsx}'],
+      // __snapshots__: HTML gravado pelo Vitest (identidade do caminho off do motion), não é código.
+      exclude: ['**/*.test.{ts,tsx}', '**/__snapshots__/**'],
       reporter: ['text-summary', 'html'],
       // Piso por arquivo (linhas): a cobertura de quem já tem teste não pode cair. Componente
       // novo ou alterado entra com o próprio teste (ao lado dele) e ganha uma linha aqui.
