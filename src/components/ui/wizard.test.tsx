@@ -140,7 +140,7 @@ describe('Wizard: rótulos e Pular', () => {
   it('Pular avança sem validar, chama onSkip uma vez e limpa o erro da etapa', async () => {
     const onSkip = vi.fn()
     const onValidateStep = vi.fn(() => false)
-    renderApp(
+    const { container } = renderApp(
       <Wizard steps={tres} onSkip={onSkip} onValidateStep={onValidateStep}>
         {tresConteudos}
       </Wizard>,
@@ -148,6 +148,7 @@ describe('Wizard: rótulos e Pular', () => {
     // Reprova a validação: fica na etapa 1 com o erro marcado.
     await userEvent.click(screen.getByRole('button', { name: 'Avançar' }))
     expect(screen.getByText('Revise esta etapa')).toBeInTheDocument()
+    expect(container.querySelector('.border-destructive')).toBeInTheDocument()
     expect(onValidateStep).toHaveBeenCalledTimes(1)
 
     await userEvent.click(screen.getByRole('button', { name: 'Mais ações' }))
@@ -155,6 +156,8 @@ describe('Wizard: rótulos e Pular', () => {
 
     expect(screen.getByText('Conteúdo da etapa 2')).toBeInTheDocument()
     expect(screen.queryByText('Revise esta etapa')).not.toBeInTheDocument()
+    // A etapa pulada não fica marcada com erro no stepper (statusOf).
+    expect(container.querySelector('.border-destructive')).not.toBeInTheDocument()
     expect(onValidateStep).toHaveBeenCalledTimes(1)
     expect(onSkip).toHaveBeenCalledTimes(1)
   })
