@@ -45,6 +45,7 @@ export const Agenda: Story = { args: { path: '/agenda' } }
 export const FunilKanban: Story = { args: { path: '/kanban' } }
 export const Galeria: Story = { args: { path: '/galeria' } }
 export const Vitrine: Story = { args: { path: '/componentes' } }
+export const VitrineMotion: Story = { args: { path: '/componentes-motion' } }
 export const Pagina404: Story = { args: { path: '/nao-existe' } }
 export const Login: Story = { args: { path: '/login' } }
 export const EsqueciASenha: Story = { args: { path: '/esqueci-senha' } }

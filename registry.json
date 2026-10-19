@@ -12,6 +12,7 @@
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
         "imask@^7.6.1",
+        "motion@^14.3.0",
         "tailwind-merge@^3.7.0",
         "zod@^4.6.5"
       ],
@@ -34,6 +35,51 @@
           "path": "src/lib/validators.ts",
           "type": "registry:file",
           "target": "src/lib/validators.ts"
+        },
+        {
+          "path": "src/lib/motion/count.ts",
+          "type": "registry:file",
+          "target": "src/lib/motion/count.ts"
+        },
+        {
+          "path": "src/lib/motion/features-max.ts",
+          "type": "registry:file",
+          "target": "src/lib/motion/features-max.ts"
+        },
+        {
+          "path": "src/lib/motion/index.ts",
+          "type": "registry:file",
+          "target": "src/lib/motion/index.ts"
+        },
+        {
+          "path": "src/lib/motion/motion-context.tsx",
+          "type": "registry:file",
+          "target": "src/lib/motion/motion-context.tsx"
+        },
+        {
+          "path": "src/lib/motion/native-events.ts",
+          "type": "registry:file",
+          "target": "src/lib/motion/native-events.ts"
+        },
+        {
+          "path": "src/lib/motion/presets.ts",
+          "type": "registry:file",
+          "target": "src/lib/motion/presets.ts"
+        },
+        {
+          "path": "src/lib/motion/reorder.ts",
+          "type": "registry:file",
+          "target": "src/lib/motion/reorder.ts"
+        },
+        {
+          "path": "src/lib/motion/tokens.ts",
+          "type": "registry:file",
+          "target": "src/lib/motion/tokens.ts"
+        },
+        {
+          "path": "src/lib/motion/use-motion-presets.ts",
+          "type": "registry:file",
+          "target": "src/lib/motion/use-motion-presets.ts"
         },
         {
           "path": "src/hooks/use-breakpoint.ts",
@@ -231,7 +277,7 @@
       "type": "registry:item",
       "title": "accordion",
       "description": "Componente accordion do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0", "radix-ui@^1.6.7"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -408,7 +454,7 @@
       "type": "registry:item",
       "title": "button",
       "description": "Componente button do Rendra Design System.",
-      "dependencies": ["class-variance-authority@^0.7.1", "radix-ui@^1.6.7"],
+      "dependencies": ["class-variance-authority@^0.7.1", "motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/catalog.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
@@ -472,7 +518,7 @@
       "type": "registry:item",
       "title": "chart",
       "description": "Componente chart do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0", "recharts@^3.10.1"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0", "recharts@^3.10.1"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/button.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/catalog.json",
@@ -520,7 +566,7 @@
       "type": "registry:item",
       "title": "checkbox",
       "description": "Componente checkbox do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0", "radix-ui@^1.6.7"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -652,7 +698,7 @@
       "type": "registry:item",
       "title": "drawer",
       "description": "Componente drawer do Rendra Design System.",
-      "dependencies": ["radix-ui@^1.6.7"],
+      "dependencies": ["motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/modal.json",
@@ -673,7 +719,7 @@
       "type": "registry:item",
       "title": "dropdown-menu",
       "description": "Componente dropdown-menu do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0", "radix-ui@^1.6.7"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -692,7 +738,7 @@
       "type": "registry:item",
       "title": "empty-state",
       "description": "Componente empty-state do Rendra Design System.",
-      "dependencies": [],
+      "dependencies": ["motion@^14.3.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/brand-feedback-icon.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
@@ -860,7 +906,7 @@
       "type": "registry:item",
       "title": "kanban",
       "description": "Componente kanban do Rendra Design System.",
-      "dependencies": ["date-fns@^4.4.0", "lucide-react@^1.48.0"],
+      "dependencies": ["date-fns@^4.4.0", "lucide-react@^1.48.0", "motion@^14.3.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/avatar.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/badge.json",
@@ -885,7 +931,7 @@
       "type": "registry:item",
       "title": "list",
       "description": "Componente list do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/badge.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/catalog.json",
@@ -907,7 +953,7 @@
       "type": "registry:item",
       "title": "modal",
       "description": "Componente modal do Rendra Design System.",
-      "dependencies": ["radix-ui@^1.6.7"],
+      "dependencies": ["motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/action-bar.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/brand-feedback-icon.json",
@@ -930,7 +976,7 @@
       "type": "registry:item",
       "title": "otp-input",
       "description": "Componente otp-input do Rendra Design System.",
-      "dependencies": [],
+      "dependencies": ["motion@^14.3.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -989,7 +1035,7 @@
       "type": "registry:item",
       "title": "picker-panel",
       "description": "Componente picker-panel do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0", "radix-ui@^1.6.7"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -1008,7 +1054,7 @@
       "type": "registry:item",
       "title": "popover",
       "description": "Componente popover do Rendra Design System.",
-      "dependencies": ["radix-ui@^1.6.7"],
+      "dependencies": ["motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -1066,7 +1112,7 @@
       "type": "registry:item",
       "title": "radio-group",
       "description": "Componente radio-group do Rendra Design System.",
-      "dependencies": ["radix-ui@^1.6.7"],
+      "dependencies": ["motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/catalog.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
@@ -1291,7 +1337,7 @@
       "type": "registry:item",
       "title": "stat-card",
       "description": "Componente stat-card do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/card.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
@@ -1312,7 +1358,7 @@
       "type": "registry:item",
       "title": "switch",
       "description": "Componente switch do Rendra Design System.",
-      "dependencies": ["radix-ui@^1.6.7"],
+      "dependencies": ["motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -1335,6 +1381,7 @@
         "@tanstack/react-table@^9.2.4",
         "date-fns@^4.4.0",
         "lucide-react@^1.48.0",
+        "motion@^14.3.0",
         "radix-ui@^1.6.7"
       ],
       "registryDependencies": [
@@ -1366,7 +1413,7 @@
       "type": "registry:item",
       "title": "tabs",
       "description": "Componente tabs do Rendra Design System.",
-      "dependencies": ["radix-ui@^1.6.7"],
+      "dependencies": ["motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/catalog.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
@@ -1406,7 +1453,7 @@
       "type": "registry:item",
       "title": "timeline",
       "description": "Componente timeline do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -1445,7 +1492,7 @@
       "type": "registry:item",
       "title": "tooltip",
       "description": "Componente tooltip do Rendra Design System.",
-      "dependencies": ["radix-ui@^1.6.7"],
+      "dependencies": ["motion@^14.3.0", "radix-ui@^1.6.7"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
@@ -1464,7 +1511,7 @@
       "type": "registry:item",
       "title": "upload",
       "description": "Componente upload do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/brand-feedback-icon.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/button.json",
@@ -1508,7 +1555,7 @@
       "type": "registry:item",
       "title": "wizard",
       "description": "Componente wizard do Rendra Design System.",
-      "dependencies": ["lucide-react@^1.48.0"],
+      "dependencies": ["lucide-react@^1.48.0", "motion@^14.3.0"],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/action-bar.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
@@ -1534,13 +1581,15 @@
         "@testing-library/react@^16.3.3",
         "@testing-library/user-event@^14.6.7",
         "jsdom@^30.1.1",
+        "motion@^14.3.0",
         "react-router@^8.4.0",
         "vitest@^5.0.2"
       ],
       "registryDependencies": ["https://bsmagalhaes.github.io/rendra-ui-web/r/tooltip.json"],
       "files": [
         { "path": "src/test/setup.ts", "type": "registry:file", "target": "src/test/setup.ts" },
-        { "path": "src/test/render.tsx", "type": "registry:file", "target": "src/test/render.tsx" }
+        { "path": "src/test/render.tsx", "type": "registry:file", "target": "src/test/render.tsx" },
+        { "path": "src/test/motion.ts", "type": "registry:file", "target": "src/test/motion.ts" }
       ]
     },
     {
@@ -1555,6 +1604,7 @@
       ],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/accordion.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
       "files": [
@@ -1736,6 +1786,7 @@
       ],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/button.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
       "files": [
@@ -1847,6 +1898,7 @@
       ],
       "registryDependencies": [
         "https://bsmagalhaes.github.io/rendra-ui-web/r/checkbox.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
       "files": [
@@ -1936,6 +1988,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/date-picker.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -1980,6 +2033,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/drawer.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -1999,9 +2053,11 @@
       "devDependencies": [
         "@testing-library/react@^16.3.3",
         "@testing-library/user-event@^14.6.7",
+        "radix-ui@^1.6.7",
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/dropdown-menu.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2020,6 +2076,7 @@
       "description": "Testes de comportamento do empty-state, com Vitest e Testing Library.",
       "devDependencies": ["@testing-library/react@^16.3.3", "vitest@^5.0.2"],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/empty-state.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2193,6 +2250,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/kanban.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2216,6 +2274,7 @@
       "description": "Testes de comportamento do list, com Vitest e Testing Library.",
       "devDependencies": ["@testing-library/react@^16.3.3", "vitest@^5.0.2"],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/list.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2238,6 +2297,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/modal.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2260,6 +2320,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/otp-input.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2301,9 +2362,11 @@
       "devDependencies": [
         "@testing-library/react@^16.3.3",
         "@testing-library/user-event@^14.6.7",
+        "radix-ui@^1.6.7",
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/popover.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2363,6 +2426,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/radio-group.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2470,7 +2534,11 @@
         "@testing-library/user-event@^14.6.7",
         "vitest@^5.0.2"
       ],
-      "registryDependencies": ["https://bsmagalhaes.github.io/rendra-ui-web/r/select.json"],
+      "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/select.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
+      ],
       "files": [
         {
           "path": "src/components/ui/select.test.tsx",
@@ -2560,8 +2628,13 @@
       "type": "registry:item",
       "title": "stat-card (teste)",
       "description": "Testes de comportamento do stat-card, com Vitest e Testing Library.",
-      "devDependencies": ["@testing-library/react@^16.3.3", "vitest@^5.0.2"],
+      "devDependencies": [
+        "@testing-library/react@^16.3.3",
+        "@testing-library/user-event@^14.6.7",
+        "vitest@^5.0.2"
+      ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/stat-card.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2584,6 +2657,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/switch.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2606,6 +2680,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/table.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2628,6 +2703,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tabs.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json"
       ],
@@ -2668,6 +2744,7 @@
       "description": "Testes de comportamento do timeline, com Vitest e Testing Library.",
       "devDependencies": ["@testing-library/react@^16.3.3", "vitest@^5.0.2"],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/timeline.json"
       ],
@@ -2712,6 +2789,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tooltip.json"
       ],
@@ -2730,6 +2808,7 @@
       "description": "Testes de comportamento do upload, com Vitest e Testing Library.",
       "devDependencies": ["@testing-library/react@^16.3.3", "vitest@^5.0.2"],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/upload.json"
       ],
@@ -2774,6 +2853,7 @@
         "vitest@^5.0.2"
       ],
       "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/test-utils.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/wizard.json"
       ],

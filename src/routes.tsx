@@ -86,6 +86,11 @@ export const routes: RouteObject[] = [
             lazy: page(() => import('@/pages/components-page'), 'ComponentsPage'),
           },
           {
+            path: 'componentes-motion',
+            handle: h('Componentes com motion'),
+            lazy: page(() => import('@/pages/components-motion-page'), 'ComponentsMotionPage'),
+          },
+          {
             path: 'galeria',
             handle: h('Galeria'),
             lazy: page(() => import('@/pages/gallery-page'), 'GalleryPage'),
