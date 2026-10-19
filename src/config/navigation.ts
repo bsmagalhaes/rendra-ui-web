@@ -96,9 +96,16 @@ export const navigation: NavGroup[] = [
     items: [
       {
         title: 'Componentes',
-        to: '/componentes',
         icon: Blocks,
         description: 'Vitrine com variantes e estados.',
+        children: [
+          { title: 'Vitrine', to: '/componentes', description: 'Variantes e estados.' },
+          {
+            title: 'Com motion',
+            to: '/componentes-motion',
+            description: 'As animações do Motion, ligadas e desligadas.',
+          },
+        ],
       },
       {
         title: 'Tokens',

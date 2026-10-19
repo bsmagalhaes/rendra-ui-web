@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { navigation } from './navigation'
 import { experimentalRoutes, publicRoutes } from './routes-list'
 
 /*
@@ -10,5 +11,18 @@ describe('rota experimental de motion', () => {
   it('está em experimentalRoutes e não em publicRoutes', () => {
     expect(experimentalRoutes).toContain('/componentes-motion')
     expect(publicRoutes).not.toContain('/componentes-motion' as never)
+  })
+
+  it('o menu a traz como subitem de Componentes, logo abaixo da vitrine (sem ícone novo na barra recolhida)', () => {
+    const sistema = navigation.find((g) => g.title === 'Sistema')!
+    const componentes = sistema.items.find((i) => i.title === 'Componentes')!
+    expect(componentes.children?.map((c) => c.to)).toEqual(['/componentes', '/componentes-motion'])
+    // nenhum item novo no nível de cima: a barra recolhida segue com os mesmos ícones
+    expect(sistema.items.map((i) => i.title)).toEqual([
+      'Componentes',
+      'Tokens',
+      'Galeria',
+      'Configurações',
+    ])
   })
 })
