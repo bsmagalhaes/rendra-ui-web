@@ -1,10 +1,12 @@
 import { ChevronRight } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { m } from 'motion/react'
+import type { ElementType, ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { useRendraLink } from '@/components/rendra-provider'
 import { Badge } from '@/components/ui/badge'
 import { SortableHandle } from '@/components/ui/sortable-handle'
 import { cn } from '@/lib/cn'
+import { layoutEnabled, useMotionMode, useMotionPresets } from '@/lib/motion'
 import { useSortable } from '@/lib/sortable'
 
 export interface ListItem {
@@ -73,6 +75,18 @@ export function List({
     onReorder: onReorder && ((sorted) => onReorder(sorted.map((s) => s.data))),
   })
   const sortableEnabled = Boolean(onReorder)
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
+  // Em `on` o item anima o layout, mas só fora do arraste: sob o ponteiro a ordem muda a cada
+  // passo e animar atrasaria a linha atrás do cursor. Pelo teclado (moveBy) o layout anima.
+  const Item: ElementType = motion === 'on' ? m.li : 'li'
+  const itemMotion =
+    motion === 'on'
+      ? {
+          layout: layoutEnabled({ mode: motion, dragging: sortable.draggingId !== null }),
+          transition: presets.layout,
+        }
+      : {}
   const code = resolveCatalogCode('List', { sortable: sortableEnabled })
 
   if (items.length === 0 && empty) return <>{empty}</>
@@ -112,9 +126,10 @@ export function List({
           <SortableHandle id={it.id} label={`Reordenar ${label}`} sortable={sortable} />
         )
         return (
-          <li
+          <Item
             key={it.id}
             {...(sortableEnabled ? sortable.itemProps(it.id) : {})}
+            {...itemMotion}
             className={cn(
               'flex min-w-0 items-center gap-1',
               sortable.draggingId === it.id && 'opacity-50',
@@ -132,7 +147,7 @@ export function List({
             ) : (
               <div className={cls}>{body}</div>
             )}
-          </li>
+          </Item>
         )
       })}
     </ul>

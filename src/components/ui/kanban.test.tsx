@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { StrictMode, useState } from 'react'
+import { StrictMode, useState, type ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderApp } from '@/test/render'
 import {
@@ -11,6 +11,7 @@ import {
   type KanbanColumn,
   type KanbanDropTarget,
 } from './kanban'
+import { MotionProvider } from '@/lib/motion'
 
 const setViewportWidth = (w: number) =>
   (globalThis as unknown as { setViewportWidth: (w: number) => void }).setViewportWidth(w)
@@ -314,5 +315,75 @@ describe('Kanban', () => {
 
     expect(onDropTarget).toHaveBeenCalledTimes(1)
     expect(screen.queryAllByText('Empresa X')).toHaveLength(0)
+  })
+})
+
+describe('Kanban com motion', () => {
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+
+  it('em on, o arraste nativo (dragStart, dragOver, drop) chama onCardMove com os argumentos certos e a ordem renderizada muda', () => {
+    const onCardMove = vi.fn()
+    function Controlado() {
+      const [list, setList] = useState<KanbanCard[]>([
+        { id: '1', columnId: 'novo', title: 'Empresa X' },
+        { id: '2', columnId: 'novo', title: 'Empresa Y' },
+      ])
+      return (
+        <Kanban
+          aria-label="Funil"
+          columns={columns}
+          cards={list}
+          onCardMove={(id, to, index) => {
+            onCardMove(id, to, index)
+            setList((l) => moveKanbanCard(l, id, to, index))
+          }}
+        />
+      )
+    }
+    emOn(<Controlado />)
+    const card = screen.getByText('Empresa Y').closest('li')!
+    expect(card).toHaveAttribute('draggable', 'true')
+    const dataTransfer = { effectAllowed: '', setData: vi.fn() }
+    fireEvent.dragStart(card, { dataTransfer })
+    expect(dataTransfer.setData).toHaveBeenCalledWith('text/plain', '2')
+    expect(dataTransfer.effectAllowed).toBe('move')
+    // Sobre a metade de cima do primeiro card: o card arrastado entra antes dele.
+    const alvo = screen.getByText('Empresa X').closest('li')!
+    fireEvent.dragOver(alvo)
+    fireEvent.drop(alvo)
+    expect(onCardMove).toHaveBeenCalledWith('2', 'novo', 0)
+    const ordem = within(screen.getByRole('list', { name: 'Cards em Novo' }))
+      .getAllByRole('listitem')
+      .map((li) => li.textContent)
+    expect(ordem[0]).toContain('Empresa Y')
+    expect(ordem[1]).toContain('Empresa X')
+  })
+
+  it('em on, arrastar para outra coluna move o card visível na coluna de destino', () => {
+    emOn(<ControlledKanban initial={cards} />)
+    const card = screen.getByText('Empresa X').closest('li')!
+    fireEvent.dragStart(card, { dataTransfer: { effectAllowed: '', setData: vi.fn() } })
+    const destino = screen.getByRole('list', { name: 'Cards em Ganho' })
+    fireEvent.dragOver(destino)
+    fireEvent.drop(destino)
+    expect(within(destino).getByText('Empresa X')).toBeInTheDocument()
+  })
+
+  it('em on, o fim do arraste (dragEnd) limpa o estado: o card volta a ficar sem opacidade reduzida', () => {
+    emOn(<ControlledKanban initial={cards} />)
+    const card = screen.getByText('Empresa X').closest('li')!
+    fireEvent.dragStart(card, { dataTransfer: { effectAllowed: '', setData: vi.fn() } })
+    expect(card).toHaveClass('opacity-50')
+    fireEvent.dragEnd(card)
+    expect(card).not.toHaveClass('opacity-50')
+  })
+
+  it('em on, "Mover para" pelo menu move o card', async () => {
+    emOn(<ControlledKanban initial={cards} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Ações do card Empresa X' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Ganho' }))
+    expect(
+      within(screen.getByRole('list', { name: 'Cards em Ganho' })).getByText('Empresa X'),
+    ).toBeInTheDocument()
   })
 })

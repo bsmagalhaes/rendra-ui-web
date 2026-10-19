@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { RendraProvider, type RendraLinkProps } from '@/components/rendra-provider'
 import { renderApp } from '@/test/render'
 import { List, type ListItem } from './list'
+import type { ReactNode } from 'react'
+import { MotionProvider } from '@/lib/motion'
 
 /** Lista controlada: aplica onReorder de verdade, para o teste ver a ordem na tela mudar. */
 function ControlledList({ initial }: { initial: ListItem[] }) {
@@ -163,5 +165,54 @@ describe('List', () => {
       key: 'ArrowDown',
     })
     expect(visibleOrder()).toEqual(['Cliente A', 'Cliente B'])
+  })
+})
+
+describe('List com motion', () => {
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const tres: ListItem[] = [
+    { id: '1', title: 'Cliente A' },
+    { id: '2', title: 'Cliente B' },
+    { id: '3', title: 'Cliente C' },
+  ]
+
+  it('em on, a seta ↓ da alça reordena e onReorder recebe a lista na nova ordem', () => {
+    const onReorder = vi.fn()
+    function Controlada() {
+      const [items, setItems] = useState(tres)
+      return (
+        <List
+          items={items}
+          onReorder={(next) => {
+            onReorder(next.map((i) => i.id))
+            setItems(next)
+          }}
+        />
+      )
+    }
+    emOn(<Controlada />)
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Reordenar Cliente A' }), {
+      key: 'ArrowDown',
+    })
+    expect(visibleOrder()).toEqual(['Cliente B', 'Cliente A', 'Cliente C'])
+    expect(onReorder).toHaveBeenLastCalledWith(['2', '1', '3'])
+  })
+
+  it('em on, arrastar a alça pelo ponteiro reordena igual a off', () => {
+    emOn(<ControlledList initial={tres} />)
+    const targetRow = screen.getByText('Cliente C').closest('[data-sortable-id]')!
+    targetRow.getBoundingClientRect = () => ({ top: 100, height: 40, bottom: 140 }) as DOMRect
+    document.elementFromPoint = (() => targetRow) as typeof document.elementFromPoint
+    const handle = screen.getByRole('button', { name: 'Reordenar Cliente A' })
+    fireEvent.pointerDown(handle, { pointerId: 1 })
+    fireEvent.pointerMove(window, { clientX: 0, clientY: 105, pointerId: 1 })
+    fireEvent.pointerUp(window, { pointerId: 1 })
+    expect(visibleOrder()).toEqual(['Cliente B', 'Cliente A', 'Cliente C'])
+  })
+
+  it('em on, sem onReorder a lista segue só leitura e usa LIST-001', () => {
+    emOn(<List items={tres} />)
+    expect(screen.queryByRole('button', { name: /Reordenar/ })).not.toBeInTheDocument()
+    expect(screen.getByText('Cliente A').closest('[data-rendra="LIST-001"]')).toBeInTheDocument()
   })
 })

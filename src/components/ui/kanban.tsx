@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { m } from 'motion/react'
 import {
   ArrowRightLeft,
   CalendarDays,
@@ -14,6 +15,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type DragEvent as ReactDragEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
@@ -33,6 +35,7 @@ import { Tabs } from '@/components/ui/tabs'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { useFillHeight } from '@/hooks/use-fill-height'
 import { cn } from '@/lib/cn'
+import { layoutEnabled, useMotionMode, useMotionPresets } from '@/lib/motion'
 import { bindPointerDrag, findDragTarget, resolveDropIndex } from '@/lib/sortable'
 
 /*
@@ -288,6 +291,8 @@ export function Kanban({
 }: KanbanProps) {
   const code = resolveCatalogCode('Kanban', { hasDropTargets: Boolean(dropTargets?.length) })
   const { isMobile } = useBreakpoint()
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
   const boardRef = useFillHeight()
   // Touchpad: o gesto lateral leva o quadro para o mesmo lado dos dedos (esquerda move o
   // quadro para a esquerda). A rolagem vertical segue normal dentro de cada etapa.
@@ -468,34 +473,34 @@ export function Kanban({
   const canTouchDrag = Boolean(onCardMove) || Boolean(dropTargets?.length && onDropTarget)
   const showHandle = isMobile && canTouchDrag
 
-  const cardItem = (card: KanbanCard, index: number) => (
-    <li
-      key={card.id}
-      data-kanban-card={card.id}
-      draggable={!isMobile && Boolean(onCardMove)}
-      onDragStart={(e) => {
-        setDragging(card.id)
-        e.dataTransfer.effectAllowed = 'move'
-        e.dataTransfer.setData('text/plain', card.id)
-      }}
-      onDragEnd={() => {
-        setDragging(null)
-        setOver(null)
-      }}
-      onDragOver={(e) => {
+  const cardItem = (card: KanbanCard, index: number) => {
+    const dragStart = (dataTransfer: DataTransfer | null) => {
+      setDragging(card.id)
+      if (!dataTransfer) return
+      dataTransfer.effectAllowed = 'move'
+      dataTransfer.setData('text/plain', card.id)
+    }
+    const dragEnd = () => {
+      setDragging(null)
+      setOver(null)
+    }
+    const common = {
+      'data-kanban-card': card.id,
+      draggable: !isMobile && Boolean(onCardMove),
+      onDragOver: (e: ReactDragEvent<HTMLLIElement>) => {
         if (!dragging) return
         e.preventDefault()
         e.stopPropagation()
         const r = e.currentTarget.getBoundingClientRect()
         const after = e.clientY > r.top + r.height / 2
         setOver({ column: card.columnId, index: index + (after ? 1 : 0) })
-      }}
-      onDrop={(e) => {
+      },
+      onDrop: (e: ReactDragEvent<HTMLLIElement>) => {
         e.preventDefault()
         e.stopPropagation()
         if (over) drop(over.column, over.index)
-      }}
-      className={cn(
+      },
+      className: cn(
         'relative flex rounded-block border bg-card p-3 shadow-sm transition-[box-shadow,opacity]',
         !isMobile && onCardMove && 'cursor-grab active:cursor-grabbing',
         (dragging === card.id || touchDrag?.cardId === card.id) && 'opacity-50',
@@ -503,52 +508,92 @@ export function Kanban({
           over.index === index &&
           dragging !== card.id &&
           'ring-2 ring-ring ring-offset-2 ring-offset-muted',
-      )}
-    >
-      {onCardClick ? (
-        <button
-          type="button"
-          onClick={() => onCardClick(card)}
-          className="flex min-w-0 flex-1 cursor-pointer flex-col gap-2 rounded-block text-left outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring"
+      ),
+    }
+    const body = (
+      <>
+        {onCardClick ? (
+          <button
+            type="button"
+            onClick={() => onCardClick(card)}
+            className="flex min-w-0 flex-1 cursor-pointer flex-col gap-2 rounded-block text-left outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {renderCard ? (
+              renderCard(card)
+            ) : (
+              <CardBody
+                card={card}
+                valueFields={valueFields}
+                formatValue={formatValue}
+                withHandle={showHandle}
+              />
+            )}
+          </button>
+        ) : (
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            {renderCard ? (
+              renderCard(card)
+            ) : (
+              <CardBody
+                card={card}
+                valueFields={valueFields}
+                formatValue={formatValue}
+                withHandle={showHandle}
+              />
+            )}
+          </div>
+        )}
+        {showHandle && (
+          <button
+            type="button"
+            aria-label={`Arrastar ${card.title}`}
+            className="absolute top-2 left-2 z-10 flex size-touch touch-none items-center justify-center rounded-item text-muted-foreground active:cursor-grabbing"
+            onPointerDown={(e) => startTouchDrag(card, e)}
+          >
+            <GripVertical className="size-icon-sm" aria-hidden />
+          </button>
+        )}
+        <span className="absolute top-2 right-2 z-10">{moveMenu(card)}</span>
+      </>
+    )
+
+    if (motion === 'on') {
+      // O Motion toma `onDragStart`/`onDragEnd` para o gesto de arraste dele e os tira do DOM.
+      // O arraste nativo (HTML5) do desktop segue por ouvintes `dragstart`/`dragend` ligados
+      // direto no elemento; o layout só liga fora do arraste por toque (o arraste nativo não
+      // muda a ordem até soltar, e ao soltar o layout anima o resultado).
+      return (
+        <m.li
+          key={card.id}
+          ref={(el) => {
+            if (!el) return
+            const onStart = (e: DragEvent) => dragStart(e.dataTransfer)
+            el.addEventListener('dragstart', onStart)
+            el.addEventListener('dragend', dragEnd)
+            return () => {
+              el.removeEventListener('dragstart', onStart)
+              el.removeEventListener('dragend', dragEnd)
+            }
+          }}
+          layout={layoutEnabled({ mode: motion, dragging: touchDrag !== null })}
+          transition={presets.layout}
+          {...common}
         >
-          {renderCard ? (
-            renderCard(card)
-          ) : (
-            <CardBody
-              card={card}
-              valueFields={valueFields}
-              formatValue={formatValue}
-              withHandle={showHandle}
-            />
-          )}
-        </button>
-      ) : (
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          {renderCard ? (
-            renderCard(card)
-          ) : (
-            <CardBody
-              card={card}
-              valueFields={valueFields}
-              formatValue={formatValue}
-              withHandle={showHandle}
-            />
-          )}
-        </div>
-      )}
-      {showHandle && (
-        <button
-          type="button"
-          aria-label={`Arrastar ${card.title}`}
-          className="absolute top-2 left-2 z-10 flex size-touch touch-none items-center justify-center rounded-item text-muted-foreground active:cursor-grabbing"
-          onPointerDown={(e) => startTouchDrag(card, e)}
-        >
-          <GripVertical className="size-icon-sm" aria-hidden />
-        </button>
-      )}
-      <span className="absolute top-2 right-2 z-10">{moveMenu(card)}</span>
-    </li>
-  )
+          {body}
+        </m.li>
+      )
+    }
+    return (
+      <li
+        key={card.id}
+        onDragStart={(e) => dragStart(e.dataTransfer)}
+        onDragEnd={dragEnd}
+        {...common}
+      >
+        {body}
+      </li>
+    )
+  }
 
   const totals = (col: KanbanColumn) =>
     (valueFields ?? []).slice(0, 2).map((f) => ({
