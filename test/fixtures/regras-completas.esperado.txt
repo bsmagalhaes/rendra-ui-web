@@ -1,0 +1,54 @@
+
+src/brand/marca.ts:1  [variavel-sem-prefixo-rendra] Variável própria do Rendra sem o prefixo --rendra-. Use var(--rendra-primary).
+    export const proprio = 'var(--primary)'
+
+src/components/CardMobile.tsx:0  [componente-duplicado] Arquivo de variante paralela ou mobile. Resolva com props no componente único.
+
+src/estilos-soltos.css:0  [css-fora-do-lugar] CSS fora de src/styles e src/brand. Estilo de componente é classe do Tailwind; token vai em globals.css; marca, em theme.css.
+
+src/pages/app/tela.tsx:4  [texto-orientativo] Instrução no subtítulo. Use help (PageHeader, CardTitle ou FormSection): ícone de informação que abre um modal.
+    description="Comece
+
+src/pages/app/tela.tsx:6  [botao-solto] Botão solto no conteúdo. Ação de card vai em CardHeader actions; da tela, no PageHeader actions ou na ActionBar.
+    <CardContent>
+
+src/pagina.tsx:6  [variavel-sem-prefixo-rendra] Variável própria do Rendra sem o prefixo --rendra-. Use var(--rendra-primary).
+    const propria = 'var(--primary)'
+
+src/pagina.tsx:2  [cor-fixa] Cor fixa em componente. Use um token semântico (bg-primary, text-muted-foreground).
+    const cor = '#ff0000'
+
+src/pagina.tsx:3  [fonte-fixa] Nome de fonte fixo. A fonte vem da variável de tema da marca (ex.: --rendra-brand-font).
+    const fonte = "Inter, sans-serif"
+
+src/pagina.tsx:4  [raio-fixo] Raio fixo. Use um token de raio por papel (rounded-control, rounded-surface, rounded-item...) ou uma variável de tema.
+    const raio = { borderRadius: 4 }
+
+src/pagina.tsx:8  [valor-arbitrario] Valor arbitrário do Tailwind. Use a escala de tokens ou crie um token nomeado.
+    <div className="p-[13px]" style={{ color: 'red' }}>
+
+src/pagina.tsx:8  [estilo-inline] Estilo inline. Use classes; para valor dinâmico use variável CSS (--x).
+    <div className="p-[13px]" style={{ color: 'red' }}>
+
+src/pagina.tsx:9  [100vh] Use 100dvh (h-dvh / min-h-dvh), nunca 100vh.
+    <div className="h-screen" />
+
+src/pagina.tsx:10  [fora-da-escala] Degrau fora da escala (permitidos: 0, 1, 2, 3, 4, 6, 8, 12, 16, 24). Use a escala ou um token nomeado.
+    <div className="p-5" />
+
+src/pagina.tsx:5  [var-inline] Variáveis --color-*, --radius-* etc. do Tailwind são inline e não existem no CSS. Em JS use as do tema: var(--rendra-primary), var(--rendra-chart-1), var(--rendra-shape-control).
+    const ponte = 'var(--color-primary)'
+
+src/pagina.tsx:11  [classe-dinamica] Classe montada por template string não é gerada pelo Tailwind. Escreva a classe inteira (mapa de valores) ou use variável CSS.
+    <div className={`p-${n}`} />
+
+src/pagina.tsx:12  [texto-estreito] Texto ocupa 100% da largura disponível. Limite de largura (max-w-*) em parágrafo só quando o layout pedir outra medida.
+    <p className="max-w-md text-primary">texto</p>
+
+src/pagina.tsx:12  [primaria-como-texto] Primária como texto usa text-primary-text (tom que passa AA no claro e no escuro). text-primary é só para o preenchimento.
+    <p className="max-w-md text-primary">texto</p>
+
+src/svg.tsx:1  [svg-marca] SVG de marca importado fora de src/brand. Leia o logotipo e o símbolo via useBrand().
+    import logo from '../brand/assets/logo.svg'
+
+18 violação(ões) das regras de design.
