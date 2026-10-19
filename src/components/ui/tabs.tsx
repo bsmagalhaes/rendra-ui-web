@@ -1,10 +1,13 @@
 import { m } from 'motion/react'
 import { Tabs as T } from 'radix-ui'
-import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { Select } from '@/components/ui/select'
 import { cn } from '@/lib/cn'
 import { useMotionMode, useMotionPresets } from '@/lib/motion'
+
+/** Contador de instâncias, só para o `layoutId` do indicador (ver `indicatorId`). */
+let tabsCreated = 0
 
 export interface TabItem {
   value: string
@@ -64,8 +67,10 @@ export function Tabs({
   const motion = useMotionMode()
   const presets = useMotionPresets()
   const on = motion === 'on'
-  // Um layoutId por instância: duas Tabs na mesma tela não trocam o indicador entre si.
-  const indicatorId = useId()
+  // Um layoutId por instância: duas Tabs na mesma tela não trocam o indicador entre si. Não usa
+  // `useId` de propósito: ele consome a sequência de ids do React e deslocaria os ids de tudo o
+  // que vem depois na página, mudando o HTML do caminho `off`.
+  const [indicatorId] = useState(() => `rendra-tabs-${++tabsCreated}`)
 
   const trigger = cn(
     'inline-flex min-h-touch shrink-0 cursor-pointer items-center justify-center gap-2 px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none disabled:cursor-not-allowed disabled:opacity-50 md:min-h-0 [&_svg]:size-icon-sm',
