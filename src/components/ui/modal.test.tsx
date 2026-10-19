@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -86,5 +86,64 @@ describe('Modal', () => {
     renderApp(<Harness />)
     await userEvent.keyboard('{Escape}')
     await waitFor(() => expect(screen.getByTestId('estado')).toHaveTextContent('fechado'))
+  })
+
+  describe('cancelLabel', () => {
+    it('info com cancelLabel mostra dois botões e o segundo fecha', async () => {
+      renderApp(<Harness type="info" cancelLabel="Voltar" />)
+      expect(screen.getByRole('button', { name: 'Entendi' })).toBeInTheDocument()
+      await userEvent.click(screen.getByRole('button', { name: 'Voltar' }))
+      await waitFor(() => expect(screen.getByTestId('estado')).toHaveTextContent('fechado'))
+    })
+
+    it('info sem cancelLabel continua com um botão só (além do Fechar)', () => {
+      renderApp(<Harness type="info" />)
+      const rodape = screen.getByRole('button', { name: 'Entendi' }).closest('footer')!
+      expect(within(rodape).getAllByRole('button')).toHaveLength(1)
+    })
+
+    it('confirm e destructive sem cancelLabel mantêm Cancelar', () => {
+      const { unmount } = renderApp(<Harness type="confirm" />)
+      expect(screen.getByRole('button', { name: 'Cancelar' })).toBeInTheDocument()
+      unmount()
+      renderApp(<Harness type="destructive" />)
+      expect(screen.getByRole('button', { name: 'Cancelar' })).toBeInTheDocument()
+    })
+
+    it('confirm e destructive com cancelLabel usam o texto passado', () => {
+      const { unmount } = renderApp(<Harness type="confirm" cancelLabel="Desistir" />)
+      expect(screen.getByRole('button', { name: 'Desistir' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument()
+      unmount()
+      renderApp(<Harness type="destructive" cancelLabel="Manter" />)
+      expect(screen.getByRole('button', { name: 'Manter' })).toBeInTheDocument()
+    })
+  })
+
+  describe('botão Fechar', () => {
+    it('sem cabeçalho visível, fica fora do header oculto, invisível e visível com foco de teclado', () => {
+      renderApp(<Harness type="info" />)
+      const fechar = screen.getByRole('button', { name: 'Fechar' })
+      expect(fechar.closest('header')).toBeNull()
+      expect(fechar.className).toContain('opacity-0')
+      expect(fechar.className).toContain('focus-visible:opacity-100')
+      // O título continua no header só de leitor de tela.
+      expect(
+        screen.getByRole('dialog', { name: 'Excluir cliente?' }).querySelector('header'),
+      ).toHaveClass('sr-only')
+    })
+
+    it('é o primeiro foco do modal e fecha ao clicar', async () => {
+      renderApp(<Harness type="confirm" />)
+      await userEvent.click(screen.getByRole('button', { name: 'Fechar' }))
+      await waitFor(() => expect(screen.getByTestId('estado')).toHaveTextContent('fechado'))
+    })
+
+    it('em form (cabeçalho visível) segue dentro do header, sem opacity-0', () => {
+      renderApp(<Harness type="form" />)
+      const fechar = screen.getByRole('button', { name: 'Fechar' })
+      expect(fechar.closest('header')).not.toBeNull()
+      expect(fechar.className).not.toContain('opacity-0')
+    })
   })
 })

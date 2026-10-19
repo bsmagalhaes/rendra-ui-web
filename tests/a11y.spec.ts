@@ -49,3 +49,62 @@ for (const theme of themes) {
     }
   })
 }
+
+/*
+ * Modal sem cabeçalho visível (confirm, destructive e info): o "Fechar" não pode ser
+ * coberto pelo corpo (clique) e aparece com foco de teclado. O projeto `a11y` é o que o CI
+ * roda; um spec solto nunca executaria (cada projeto do playwright.config.ts tem testMatch).
+ */
+test.describe('Modal sem cabeçalho: botão Fechar', () => {
+  test.use({ viewport: { width: 1280, height: 800 } })
+  test.beforeEach(({ page }) => useTheme(page, { brand: 'safira', mode: 'light' }))
+
+  const gatilhos = [
+    { tipo: 'info', botao: 'Informativo' },
+    { tipo: 'confirm', botao: 'Confirmação' },
+    { tipo: 'destructive', botao: 'Destrutiva' },
+  ]
+
+  for (const { tipo, botao } of gatilhos) {
+    test(`${tipo}: clicar em Fechar (sem force) fecha o modal`, async ({ page }) => {
+      await openRoute(page, '/componentes')
+      await page.getByRole('button', { name: botao, exact: true }).click()
+      await expect(page.getByRole('dialog')).toBeVisible()
+      await page.getByRole('button', { name: 'Fechar' }).click({ timeout: 5_000 })
+      await expect(page.getByRole('dialog')).toBeHidden()
+    })
+
+    test(`${tipo}: com foco de teclado o Fechar fica visível (largura mínima e opacidade 1)`, async ({
+      page,
+    }) => {
+      await openRoute(page, '/componentes')
+      await page.getByRole('button', { name: botao, exact: true }).focus()
+      await page.keyboard.press('Enter')
+      const fechar = page.getByRole('button', { name: 'Fechar' })
+      await expect(page.getByRole('dialog')).toBeVisible()
+      await expect(fechar).toBeFocused()
+      const caixa = await fechar.boundingBox()
+      expect(caixa?.width ?? 0).toBeGreaterThanOrEqual(24)
+      const opacidade = await fechar.evaluate((el) => getComputedStyle(el).opacity)
+      expect(opacidade).toBe('1')
+      // Aparece de verdade: o ponto central do botão pertence a ele, não ao corpo do modal.
+      const noTopo = await fechar.evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        const alvo = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+        return alvo !== null && el.contains(alvo)
+      })
+      expect(noTopo).toBe(true)
+    })
+  }
+
+  test('aberto com o mouse, o Fechar segue invisível (visual igual ao de hoje)', async ({
+    page,
+  }) => {
+    await openRoute(page, '/componentes')
+    await page.getByRole('button', { name: 'Informativo', exact: true }).click()
+    const fechar = page.getByRole('button', { name: 'Fechar' })
+    await expect(page.getByRole('dialog')).toBeVisible()
+    const opacidade = await fechar.evaluate((el) => getComputedStyle(el).opacity)
+    expect(opacidade).toBe('0')
+  })
+})

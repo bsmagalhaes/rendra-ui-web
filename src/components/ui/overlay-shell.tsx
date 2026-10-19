@@ -31,8 +31,29 @@ export function OverlayShell({
   onRequestClose,
   bodyClassName,
 }: OverlayShellProps) {
+  const closeButton = (
+    <button
+      type="button"
+      onClick={onRequestClose}
+      aria-label="Fechar"
+      className={cn(
+        '-mt-1 -mr-2 flex size-touch shrink-0 cursor-pointer items-center justify-center rounded-item text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:size-control-md',
+        // Sem cabeçalho visível, o botão sai do header oculto e fica invisível (sem clip, para
+        // receber clique e foco), aparecendo só com foco de teclado.
+        hideHeader && 'pointer-events-auto m-0 opacity-0 focus-visible:opacity-100',
+      )}
+    >
+      <X className="size-icon-md" aria-hidden />
+    </button>
+  )
+
   return (
     <>
+      {hideHeader && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-end px-2 pt-safe md:px-4 md:pt-4">
+          {closeButton}
+        </div>
+      )}
       <header
         className={cn(
           'flex shrink-0 items-start gap-3 border-b px-4 pt-safe pb-4 md:px-6 md:pt-6',
@@ -57,14 +78,7 @@ export function OverlayShell({
             <Dialog.Description className="sr-only">{title}</Dialog.Description>
           )}
         </div>
-        <button
-          type="button"
-          onClick={onRequestClose}
-          aria-label="Fechar"
-          className="-mt-1 -mr-2 flex size-touch shrink-0 cursor-pointer items-center justify-center rounded-item text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:size-control-md"
-        >
-          <X className="size-icon-md" aria-hidden />
-        </button>
+        {!hideHeader && closeButton}
       </header>
       <div
         className={cn(
