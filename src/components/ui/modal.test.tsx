@@ -127,6 +127,8 @@ describe('Modal', () => {
       expect(fechar.closest('header')).toBeNull()
       expect(fechar.className).toContain('opacity-0')
       expect(fechar.className).toContain('focus-visible:opacity-100')
+      expect(fechar).toHaveClass('cursor-default', 'focus-visible:cursor-pointer')
+      expect(fechar).not.toHaveClass('cursor-pointer')
       // O título continua no header só de leitor de tela.
       expect(
         screen.getByRole('dialog', { name: 'Excluir cliente?' }).querySelector('header'),
