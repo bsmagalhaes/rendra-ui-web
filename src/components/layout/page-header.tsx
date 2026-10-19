@@ -30,8 +30,24 @@ export interface PageHeaderProps {
    * dividindo a largura; no desktop ficam à direita, com largura automática.
    */
   actions?: ReactNode
+  /**
+   * Título discreto no topo do corpo quando o cabeçalho do shell esconde o título (no celular,
+   * com `headerLogo`): `text-base` abaixo de `md` e só de leitor de tela a partir dele.
+   * `showTitle` vence. Padrão: `false`.
+   */
+  bodyTitle?: boolean
+  /**
+   * `reserve` (padrão): o bloco do título ocupa lugar mesmo quando o título é só de leitor de
+   * tela (o vão de 16 px acima das ações no celular). `none`: sem título visível e sem
+   * `description`, o bloco não é desenhado e o vão some; o `h1` segue no DOM para o leitor.
+   */
+  titleSpace?: 'reserve' | 'none'
   /** Conteúdo abaixo, como abas ou metadados. */
   children?: ReactNode
+  /**
+   * Classes extras, que vencem as do componente. Para zerar a margem negativa de baixo (que
+   * aproxima o cabeçalho do conteúdo) use `className="mb-0 md:mb-0"`.
+   */
   className?: string
 }
 
@@ -47,6 +63,8 @@ export function PageHeader({
   help,
   breadcrumb,
   actions,
+  bodyTitle = false,
+  titleSpace = 'reserve',
   children,
   className,
 }: PageHeaderProps) {
@@ -59,28 +77,41 @@ export function PageHeader({
     return () => setPageHelp(null)
   }, [help, setPageHelp])
   const inlineHelp = help && !shell
-  const visible = showTitle || description || actions || breadcrumb || children || inlineHelp
+  const visible =
+    showTitle || bodyTitle || description || actions || breadcrumb || children || inlineHelp
+  // Sem título visível e sem descrição, o bloco do título só carregaria o h1 sr-only (que não
+  // ocupa lugar); com titleSpace="none" ele nem é desenhado e o vão acima das ações some.
+  const titleOnlyForReader = !showTitle && !bodyTitle && !inlineHelp
+  const collapseTitle = titleSpace === 'none' && titleOnlyForReader && !description
+  const titleClass =
+    showTitle || inlineHelp
+      ? 'text-2xl md:text-3xl'
+      : bodyTitle
+        ? 'text-base md:sr-only'
+        : 'sr-only'
   return (
     <header
       className={cn('-mb-2 flex min-w-0 flex-col gap-4 md:-mb-4', !visible && 'sr-only', className)}
     >
       {breadcrumb && <Breadcrumb items={breadcrumb} />}
       <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
-        <div className="flex min-w-0 flex-col gap-1">
-          <div className="flex min-w-0 items-center gap-1">
-            <h1 className={showTitle || inlineHelp ? 'text-2xl md:text-3xl' : 'sr-only'}>
-              {title}
-            </h1>
-            {inlineHelp && (
-              <InfoHint title={typeof title === 'string' ? title : 'Sobre esta tela'}>
-                {help}
-              </InfoHint>
+        {collapseTitle ? (
+          <h1 className="sr-only">{title}</h1>
+        ) : (
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 items-center gap-1">
+              <h1 className={titleClass}>{title}</h1>
+              {inlineHelp && (
+                <InfoHint title={typeof title === 'string' ? title : 'Sobre esta tela'}>
+                  {help}
+                </InfoHint>
+              )}
+            </div>
+            {description && (
+              <p className="text-sm text-muted-foreground md:text-base">{description}</p>
             )}
           </div>
-          {description && (
-            <p className="text-sm text-muted-foreground md:text-base">{description}</p>
-          )}
-        </div>
+        )}
         {actions && (
           <div className="flex w-full shrink-0 gap-3 md:ml-auto md:w-auto [&>*]:flex-1 md:[&>*]:flex-none">
             {actions}

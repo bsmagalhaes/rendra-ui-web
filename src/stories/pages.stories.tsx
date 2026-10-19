@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { AppShell } from '@/components/app-shell/app-shell'
 import { Container, Grid, PageHeader, Section, Stack } from '@/components/layout'
 import { BrandLogo } from '@/components/ui/brand-logo'
+import { Button } from '@/components/ui/button'
 import { routes } from '@/routes'
 import { TokensPage } from '@/pages/tokens-page'
 
@@ -54,6 +55,27 @@ export const Tokens: Story = {
   name: 'Fundamentos: tokens e identidade',
   parameters: { router: true },
   render: () => <TokensPage />,
+}
+
+export const CabecalhoComTituloNoCorpo: Story = {
+  name: 'Layout: PageHeader com bodyTitle e titleSpace="none"',
+  parameters: { router: true, layout: 'padded' },
+  render: () => (
+    <Container padded>
+      <Stack gap="section">
+        <PageHeader
+          title="Relatório mensal"
+          bodyTitle
+          actions={<Button variant="outline">Exportar</Button>}
+        />
+        <PageHeader
+          title="Sem reservar o bloco do título"
+          titleSpace="none"
+          actions={<Button variant="outline">Exportar</Button>}
+        />
+      </Stack>
+    </Container>
+  ),
 }
 
 export const Primitivas: Story = {
