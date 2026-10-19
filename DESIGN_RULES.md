@@ -165,6 +165,8 @@ Três por template, cada um com lugar certo:
 | Formulário ou detalhe de volume médio, até cerca de 12 campos | `Drawer`                                                          |
 | Formulário longo, cadastro complexo                           | Página inteira, em seções (`FormSection`) ou em etapas (`Wizard`) |
 
+No `Modal` do tipo `info` há um botão só; o segundo botão (cancelar) aparece apenas quando `cancelLabel` é passado. Em `confirm` e `destructive` o cancelar é sempre desenhado ("Cancelar" ou o `cancelLabel`). Sem cabeçalho visível (todos os tipos menos `form`), o botão "Fechar" fica invisível e passa a aparecer com foco de teclado.
+
 Se o conteúdo rola muito ou tem muitos campos, não cabe em modal. **Nunca modal dentro de modal.** A confirmação de descarte do Drawer é a única exceção: um modal de confirmação por cima do drawer.
 
 ### Drawer

@@ -29,6 +29,10 @@ export interface ModalProps {
   /** Conteúdo do body (em form, os campos). */
   children?: ReactNode
   confirmLabel?: string
+  /**
+   * Rótulo do botão de cancelar. Em `confirm` e `destructive` o padrão é "Cancelar". Em `info`
+   * não há botão de cancelar: o segundo botão só aparece quando `cancelLabel` é passado.
+   */
   cancelLabel?: string
   /** Pode ser assíncrono: o botão mostra carregamento até terminar. */
   onConfirm?: () => void | Promise<void>
@@ -49,7 +53,7 @@ export function Modal({
   size = 'sm',
   children,
   confirmLabel = type === 'destructive' ? 'Excluir' : type === 'info' ? 'Entendi' : 'Confirmar',
-  cancelLabel = 'Cancelar',
+  cancelLabel,
   onConfirm,
   formId,
   loading,
@@ -107,7 +111,11 @@ export function Modal({
                   form: isForm ? formId : undefined,
                   onClick: isForm && formId ? undefined : confirm,
                 }}
-                cancel={type === 'info' ? undefined : { label: cancelLabel, onClick: close }}
+                cancel={
+                  type === 'info' && cancelLabel === undefined
+                    ? undefined
+                    : { label: cancelLabel ?? 'Cancelar', onClick: close }
+                }
               />
             }
           >

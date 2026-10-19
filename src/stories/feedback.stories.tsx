@@ -101,7 +101,7 @@ export const Avisos: Story = {
 
 /* ------------------------------------------------ Modal e Drawer */
 
-function ModalDemo({ type }: { type: ModalType }) {
+function ModalDemo({ type, cancelLabel }: { type: ModalType; cancelLabel?: string }) {
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -115,6 +115,7 @@ function ModalDemo({ type }: { type: ModalType }) {
         open={open}
         onOpenChange={setOpen}
         type={type}
+        cancelLabel={cancelLabel}
         title={
           type === 'destructive'
             ? 'Excluir cliente?'
@@ -150,6 +151,10 @@ export const ModalDestrutivo: Story = {
 export const ModalInformativo: Story = {
   name: 'Modal: info',
   render: () => <ModalDemo type="info" />,
+}
+export const ModalInformativoComCancelar: Story = {
+  name: 'Modal: info com cancelar (cancelLabel)',
+  render: () => <ModalDemo type="info" cancelLabel="Voltar" />,
 }
 export const ModalFormulario: Story = {
   name: 'Modal: form (até 3 campos)',
