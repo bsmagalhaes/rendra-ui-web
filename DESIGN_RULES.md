@@ -5,11 +5,12 @@ Regras obrigatórias de interface deste repositório. Foram escritas para serem 
 Três verificações automáticas garantem boa parte destas regras. Rode as três antes de entregar:
 
 ```bash
-npm run check:rules   # cor fixa, valor arbitrário, fora da escala, estilo inline, fonte fixa, 100vh,
-                       # var(--color-*) inline, SVG de marca fora de lugar, classe dinâmica, texto largo
-                       # demais, primária como texto, botão solto, componente duplicado, variável sem
-                       # --rendra-, CSS fora do lugar (15 regras), mais texto orientativo (checkGuidance)
-                       # e o prefixo --rendra- (checkVarPrefix); lista completa no scripts/check-design-rules.mjs
+npm run check:rules   # cor fixa, valor arbitrário, fora da escala, estilo inline, fonte fixa, raio fixo,
+                       # 100vh, var(--color-*) inline, SVG de marca fora de lugar, classe dinâmica, texto
+                       # largo demais, primária como texto, botão solto, componente duplicado, variável
+                       # sem --rendra-, CSS fora do lugar e texto orientativo (as 17 regras, em
+                       # src/cli/auditar.ts e src/cli/regras-extras.ts); `npx @rendra-ui/web auditar --all`
+                       # aplica as mesmas 17 num projeto de destino
 npm run lint          # TypeScript, React Hooks e acessibilidade (jsx-a11y)
 npm run test:layout   # todas as rotas, 5 larguras, 3 templates: rolagem, largura e toque de 44px
 ```

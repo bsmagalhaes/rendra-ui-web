@@ -2,6 +2,23 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
+## Não publicado
+
+`rendra auditar` ganha a varredura completa (`--all`), `--ignore`, várias pastas e o `rendra.config.json`. Só aditivo: `rendra auditar` e `rendra auditar <pasta>`, sem flag e sem `rendra.config.json`, imprimem e saem como antes.
+
+### Adicionado
+
+- **`rendra auditar --all`:** aplica no projeto de destino as 17 regras do `npm run check:rules` (as sete genéricas mais `var-inline`, `svg-marca`, `classe-dinamica`, `texto-estreito`, `primaria-como-texto`, `componente-duplicado`, `css-fora-do-lugar`, `botao-solto`, `texto-orientativo` e `variavel-sem-prefixo-rendra`). Com `--all`, `.test.`, `.stories.`, `node_modules`, `dist` e `build` não entram, e as pastas de marca só passam pelo prefixo `--rendra-`.
+- **`--ignore a,b`:** pula pastas por prefixo de pasta, relativo ao projeto (também `--ignore a --ignore b` e `--ignore=a,b`), com ou sem `--all`.
+- **Várias pastas:** `rendra auditar src extra`. Com uma pasta, ela é a base do projeto; com duas ou mais, a base é a pasta atual. Pasta fora da base dá erro claro.
+- **`rendra.config.json`** na base do projeto, opcional, com `pastas`, `ignorar`, `regras` (`{ "<id>": false }` desliga qualquer das 17 regras), `pastasMarca` e `pastasTelas`. A flag vence o config e não soma. JSON inválido, chave ou regra desconhecida e tipo errado dão mensagem em português e código de saída 1.
+- **`rendra auditar --help`** mostra a ajuda geral e sai com 0.
+
+### Alterado
+
+- **Flag desconhecida em `rendra auditar`** (`--foo`) e `--ignore` sem valor agora dão erro claro e código de saída 1, em vez de a flag ser ignorada em silêncio ou o valor virar a pasta a auditar.
+- **Onde moram as regras:** `help-length.ts` e `var-prefix.ts` foram de `scripts/lib` para `src/cli` (entram no pacote da CLI); `scripts/lib` só reexporta. O `scripts/check-design-rules.mjs` virou um chamador fino de `src/cli/auditar-tudo.ts`, com a mesma saída de antes. Quem copiou `scripts/` e `src/cli` para outro projeto copia as duas pastas de novo, e, se o `tsconfig` do projeto checa `src/cli`, ativa `allowImportingTsExtensions`.
+
 ## 2.3.0 (02/10/2026)
 
 Novidade no Select múltiplo, correção no Input secret e uma página de apresentação para o projeto. Sem quebra: quem não quer a linha "Selecionar todos" em listas longas passa `selectAll={false}`.
