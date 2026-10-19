@@ -241,6 +241,16 @@ export const EstadoVazio: Story = {
     />
   ),
 }
+export const EstadoVazioSemRespiro: Story = {
+  name: 'EmptyState sem respiro vertical (className)',
+  render: () => (
+    <EmptyState
+      title="Nenhum contrato ainda"
+      description="Dentro de um card que já tem o próprio respiro."
+      className="py-0 md:py-0"
+    />
+  ),
+}
 export const Erro404: Story = { name: 'ErrorPage 404', render: () => <ErrorPage code={404} /> }
 export const Erro500: Story = { name: 'ErrorPage 500', render: () => <ErrorPage code={500} /> }
 export const Erro404SemVoltar: Story = {
