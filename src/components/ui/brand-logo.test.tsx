@@ -64,3 +64,30 @@ describe('BrandLogo', () => {
     expect(screen.queryByTestId('logo-claro')).not.toBeInTheDocument()
   })
 })
+
+describe('BrandLogo: texto do nome do produto (label-content-name-mismatch)', () => {
+  it('o espaço entre as palavras é um nó de texto próprio, fora dos spans', () => {
+    // O axe junta o texto visível dos spans aparando o espaço da ponta ("RendraSafira") e acusa
+    // que o nome acessível do link ("Rendra Safira, ir para o painel") não o contém.
+    const { container } = renderApp(<BrandLogo on="sidebar" />)
+    const texto = container.querySelector('.truncate')!
+    const spans = texto.querySelectorAll('span')
+    expect(spans).toHaveLength(2)
+    expect(spans[0]!.textContent).toBe('Rendra')
+    expect(spans[1]!.textContent).toBe('Safira')
+    expect(Array.from(texto.childNodes).map((n) => n.nodeType)).toEqual([1, 3, 1])
+    expect(texto.childNodes[1]!.textContent).toBe(' ')
+    expect(texto.textContent).toBe('Rendra Safira')
+  })
+
+  it('o nome acessível de um link com o logo contém o texto visível', () => {
+    renderApp(
+      <a href="/" aria-label="Rendra Safira, ir para o painel">
+        <BrandLogo on="sidebar" />
+      </a>,
+    )
+    const link = screen.getByRole('link', { name: 'Rendra Safira, ir para o painel' })
+    const visivel = link.querySelector('.truncate')!.textContent ?? ''
+    expect(link.getAttribute('aria-label')).toContain(visivel)
+  })
+})
