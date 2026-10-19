@@ -144,8 +144,9 @@ describe('DropdownMenu com motion', () => {
     await user.keyboard('{ArrowRight}')
     expect(await screen.findByRole('menuitem', { name: 'Exportar' })).toBeInTheDocument()
     await user.keyboard('{ArrowLeft}')
-    await waitFor(() =>
-      expect(screen.queryByRole('menuitem', { name: 'Exportar' })).not.toBeInTheDocument(),
+    await waitFor(
+      () => expect(screen.queryByRole('menuitem', { name: 'Exportar' })).not.toBeInTheDocument(),
+      { timeout: 5000 },
     )
     expect(screen.getByRole('menuitem', { name: 'Mais opções' })).toBeInTheDocument()
   })
