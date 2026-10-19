@@ -3,6 +3,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { LayoutDashboard } from 'lucide-react'
 import { useState } from 'react'
 import { AppShell } from '@/components/app-shell/app-shell'
+import { RendraRouterBridge } from '@/components/rendra-router-bridge'
 import { Container, Grid, PageHeader, Section, Stack } from '@/components/layout'
 import { BrandLogo } from '@/components/ui/brand-logo'
 import { Button } from '@/components/ui/button'
@@ -63,16 +64,26 @@ export const CabecalhoComTituloNoCorpo: Story = {
   render: () => (
     <Container padded>
       <Stack gap="section">
-        <PageHeader
-          title="Relatório mensal"
-          bodyTitle
-          actions={<Button variant="outline">Exportar</Button>}
-        />
-        <PageHeader
-          title="Sem reservar o bloco do título"
-          titleSpace="none"
-          actions={<Button variant="outline">Exportar</Button>}
-        />
+        <div data-testid="body-title">
+          <PageHeader
+            title="Relatório mensal"
+            bodyTitle
+            actions={<Button variant="outline">Exportar</Button>}
+          />
+        </div>
+        <div data-testid="reserve">
+          <PageHeader
+            title="Reserva o bloco do título (padrão)"
+            actions={<Button variant="outline">Exportar</Button>}
+          />
+        </div>
+        <div data-testid="none">
+          <PageHeader
+            title="Sem reservar o bloco do título"
+            titleSpace="none"
+            actions={<Button variant="outline">Exportar</Button>}
+          />
+        </div>
       </Stack>
     </Container>
   ),
@@ -106,39 +117,53 @@ export const Primitivas: Story = {
   ),
 }
 
+/** AppShell com as opções novas, num roteador de dados (o header lê a trilha com useMatches). */
+function AppShellOpcoes() {
+  const [ativo, setAtivo] = useState('matriz')
+  const router = createMemoryRouter([
+    {
+      path: '*',
+      element: (
+        <RendraRouterBridge>
+          <AppShell
+            navigation={[
+              {
+                title: 'Geral',
+                items: [{ title: 'Painel', to: '/', icon: LayoutDashboard, bottomNav: true }],
+              },
+            ]}
+            user={{ name: 'Ana Souza', email: 'ana@exemplo.com.br' }}
+            workspaces={{
+              items: [
+                { id: 'matriz', label: 'Matriz' },
+                { id: 'filial', label: 'Filial Sul' },
+              ],
+              activeId: ativo,
+              onSelect: setAtivo,
+            }}
+            userMenu={{ theme: false, template: false }}
+            headerLogo={<BrandLogo on="surface" />}
+          >
+            <Container padded>
+              <p>
+                No celular o logo ocupa o lugar do título; abra o menu do usuário para ver os
+                espaços.
+              </p>
+            </Container>
+          </AppShell>
+        </RendraRouterBridge>
+      ),
+    },
+  ])
+  return (
+    <div className="h-dvh">
+      <RouterProvider router={router} />
+    </div>
+  )
+}
+
 export const AppShellEspacosLogoMenuEnxuto: Story = {
   name: 'AppShell: espaços, logo no celular e menu do usuário enxuto',
-  parameters: { router: true, layout: 'fullscreen' },
-  render: function Render() {
-    const [ativo, setAtivo] = useState('matriz')
-    return (
-      <div className="h-dvh">
-        <AppShell
-          navigation={[
-            {
-              title: 'Geral',
-              items: [{ title: 'Painel', to: '/', icon: LayoutDashboard, bottomNav: true }],
-            },
-          ]}
-          user={{ name: 'Ana Souza', email: 'ana@exemplo.com.br' }}
-          workspaces={{
-            items: [
-              { id: 'matriz', label: 'Matriz' },
-              { id: 'filial', label: 'Filial Sul' },
-            ],
-            activeId: ativo,
-            onSelect: setAtivo,
-          }}
-          userMenu={{ theme: false, template: false }}
-          headerLogo={<BrandLogo on="surface" />}
-        >
-          <Container padded>
-            <p>
-              No celular o logo ocupa o lugar do título; abra o menu do usuário para ver os espaços.
-            </p>
-          </Container>
-        </AppShell>
-      </div>
-    )
-  },
+  parameters: { router: false, layout: 'fullscreen' },
+  render: () => <AppShellOpcoes />,
 }

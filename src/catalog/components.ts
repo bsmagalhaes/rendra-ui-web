@@ -211,7 +211,7 @@ export const CATALOG: ComponentCatalogEntry[] = [
     component: 'ButtonGroup',
     file: 'components/ui/button-group.tsx',
     variantProps: { orientation: 'vertical' },
-    whenToUse: 'Para botões de ação empilhados, na largura do maior, com as bordas unidas.',
+    whenToUse: 'Para botões de ação empilhados, na largura do grupo, com as bordas unidas.',
   },
   {
     code: 'BTNG-003',

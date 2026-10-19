@@ -16,7 +16,7 @@ interface ButtonGroupProps {
   fullWidth?: boolean
   /**
    * Só no modo agrupado (`children`); o segmentado (`options`) ignora. `horizontal` (padrão):
-   * botões lado a lado. `vertical`: empilhados, na largura do maior, com as bordas unidas.
+   * botões lado a lado. `vertical`: empilhados, na largura do grupo, com as bordas unidas.
    * `responsive`: vertical abaixo de `md` e horizontal a partir dele (para três botões largos
    * que não cabem em 360 px).
    */
