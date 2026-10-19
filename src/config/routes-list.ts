@@ -27,6 +27,6 @@ export const publicRoutes = [
 /**
  * Telas navegáveis que ficam de fora das suítes de layout, acessibilidade e regressão visual
  * (elas leem só `publicRoutes`), para não exigir referências visuais novas. Hoje: a tela de
- * comparação do motion, com animações que não se prestam a captura fixa.
+ * comparação do motion e o dashboard com motion, com animações que não se prestam a captura fixa.
  */
-export const experimentalRoutes = ['/componentes-motion'] as const
+export const experimentalRoutes = ['/componentes-motion', '/dashboard-motion'] as const
