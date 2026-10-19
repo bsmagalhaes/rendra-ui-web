@@ -8,6 +8,7 @@ import type {
   ShellNotificationsConfig,
   ShellUser,
   ShellUserMenuConfig,
+  ShellWorkspacesConfig,
 } from './types'
 
 export interface ShellContextValue {
@@ -53,6 +54,8 @@ export interface ShellContextValue {
   notifications?: ShellNotificationsConfig
   /** Submenus Tema, Template e Layout do menu do avatar. Sem esta prop, os três aparecem. */
   userMenu?: ShellUserMenuConfig
+  /** Seletor de espaço no topo do menu do avatar. Sem esta prop, não aparece. */
+  workspaces?: ShellWorkspacesConfig
 }
 
 export const ShellContext = createContext<ShellContextValue | null>(null)

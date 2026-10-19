@@ -15,6 +15,7 @@ import type {
   ShellNotificationsConfig,
   ShellUser,
   ShellUserMenuConfig,
+  ShellWorkspacesConfig,
 } from './types'
 
 const LAYOUT_KEY = 'ui-shell-layout'
@@ -107,6 +108,12 @@ export interface AppShellProps {
    */
   userMenu?: ShellUserMenuConfig
   /**
+   * Seletor de espaço (empresa, unidade, workspace) no topo do menu do avatar, logo depois
+   * do usuário: um item de rádio por espaço, o de `activeId` marcado. `onSelect` recebe o
+   * `id` escolhido. Sem esta prop, o menu é o de sempre.
+   */
+  workspaces?: ShellWorkspacesConfig
+  /**
    * Permite que o usuário troque o layout pelo menu do avatar (guardado no navegador).
    * Desligue em produção se o layout do projeto for fixo.
    */
@@ -132,6 +139,7 @@ export function AppShell({
   quickActions = [],
   notifications,
   userMenu,
+  workspaces,
   userConfigurable = true,
   children,
 }: AppShellProps) {
@@ -206,6 +214,7 @@ export function AppShell({
       quickActions,
       notifications,
       userMenu,
+      workspaces,
     }
   }, [
     layout,
@@ -224,6 +233,7 @@ export function AppShell({
     quickActions,
     notifications,
     userMenu,
+    workspaces,
   ])
 
   return (
