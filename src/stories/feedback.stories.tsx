@@ -243,6 +243,10 @@ export const EstadoVazio: Story = {
 }
 export const Erro404: Story = { name: 'ErrorPage 404', render: () => <ErrorPage code={404} /> }
 export const Erro500: Story = { name: 'ErrorPage 500', render: () => <ErrorPage code={500} /> }
+export const Erro404SemVoltar: Story = {
+  name: 'ErrorPage 404 sem Voltar (back=false)',
+  render: () => <ErrorPage code={404} back={false} />,
+}
 export const Carregamento: Story = {
   name: 'Progress, Skeleton e Spinner',
   render: () => (

@@ -25,16 +25,29 @@ export interface ErrorPageProps {
   description?: string
   /** Ocupa a tela inteira (fora do AppShell). */
   fullScreen?: boolean
+  /**
+   * Mostra o botão Voltar (padrão). Com `false` só a ação principal é desenhada, na largura
+   * toda (regra "um botão = 100%").
+   */
+  back?: boolean
 }
 
 /**
  * Tela de erro única (404 e 500), com o ícone de feedback da marca animado.
  * Ações seguem a regra 30/70: secundária à esquerda, principal à direita.
  */
-export function ErrorPage({ code, title, description, fullScreen = false }: ErrorPageProps) {
+export function ErrorPage({
+  code,
+  title,
+  description,
+  fullScreen = false,
+  back = true,
+}: ErrorPageProps) {
   const Link = useRendraLink()
   const { goBack } = useRendraNavigate()
   const c = content[code]
+  // Sem o Voltar, a ação principal é o único botão: 100% da largura.
+  const principal = back ? 'col-span-7' : 'col-span-10'
 
   return (
     <div
@@ -57,21 +70,23 @@ export function ErrorPage({ code, title, description, fullScreen = false }: Erro
           <p className="text-base text-muted-foreground">{description ?? c.description}</p>
         </div>
         <div className="grid w-full grid-cols-10 gap-3">
-          <Button
-            variant="outline"
-            icon={<ArrowLeft />}
-            className="col-span-3"
-            onClick={goBack}
-            aria-label="Voltar"
-          >
-            <span className="hidden sm:inline">Voltar</span>
-          </Button>
+          {back && (
+            <Button
+              variant="outline"
+              icon={<ArrowLeft />}
+              className="col-span-3"
+              onClick={goBack}
+              aria-label="Voltar"
+            >
+              <span className="hidden sm:inline">Voltar</span>
+            </Button>
+          )}
           {code === 500 ? (
-            <Button icon={<RotateCw />} className="col-span-7" onClick={() => location.reload()}>
+            <Button icon={<RotateCw />} className={principal} onClick={() => location.reload()}>
               Tentar de novo
             </Button>
           ) : (
-            <Button asChild className="col-span-7">
+            <Button asChild className={principal}>
               <Link to="/">
                 <Home aria-hidden />
                 Ir para o painel
