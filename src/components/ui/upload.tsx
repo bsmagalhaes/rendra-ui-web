@@ -1,5 +1,14 @@
 import { FileText, ImageIcon, RotateCw, Trash2, UploadCloud, VideoIcon } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type DragEvent } from 'react'
+import { AnimatePresence, m } from 'motion/react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type DragEvent,
+  type ElementType,
+  type ReactNode,
+} from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { BrandFeedbackIcon } from '@/components/ui/brand-feedback-icon'
 import { Button } from '@/components/ui/button'
@@ -7,6 +16,7 @@ import { ImageCropper, type ImageCropperAspect } from '@/components/ui/image-cro
 import { Progress } from '@/components/ui/progress'
 import { SortableHandle } from '@/components/ui/sortable-handle'
 import { cn } from '@/lib/cn'
+import { layoutEnabled, useMotionMode, useMotionPresets } from '@/lib/motion'
 import { useSortable } from '@/lib/sortable'
 
 export interface UploadItem {
@@ -217,6 +227,27 @@ export function Upload({
       onReorder?.(sorted.map((s) => s.id))
     },
   })
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
+  // Em `on` cada item entra e sai animado (a saída segura o item até terminar) e reordena com
+  // layout, pela mesma regra da List: sem layout durante o arraste.
+  const Item: ElementType = motion === 'on' ? m.li : 'li'
+  const itemMotion =
+    motion === 'on'
+      ? {
+          ...presets.fade,
+          layout: layoutEnabled({ mode: motion, dragging: sortable.draggingId !== null }),
+          transition: { ...presets.fade.transition, layout: presets.layout },
+        }
+      : {}
+  const animated = (nodes: ReactNode) =>
+    motion === 'on' ? (
+      <AnimatePresence mode="popLayout" initial={false}>
+        {nodes}
+      </AnimatePresence>
+    ) : (
+      nodes
+    )
 
   const reachedLimit = maxItems !== undefined && items.length + pendingCrop.length >= maxItems
 
@@ -273,116 +304,54 @@ export function Upload({
 
   const listView = items.length > 0 && (
     <ul className="flex flex-col divide-y rounded-control border bg-card" aria-live="polite">
-      {items.map((it) => (
-        <li
-          key={it.id}
-          {...(onReorder ? sortable.itemProps(it.id) : {})}
-          className={cn(
-            'flex items-center gap-3 p-3',
-            sortable.draggingId === it.id && 'opacity-50',
-          )}
-        >
-          {handle(it)}
-          <span className="flex size-control-sm shrink-0 items-center justify-center rounded-item bg-muted text-muted-foreground md:size-control-md">
-            {it.kind === 'image' ? (
-              <ImageIcon className="size-icon-md" aria-hidden />
-            ) : it.kind === 'video' ? (
-              <VideoIcon className="size-icon-md" aria-hidden />
-            ) : (
-              <FileText className="size-icon-md" aria-hidden />
+      {animated(
+        items.map((it) => (
+          <Item
+            key={it.id}
+            {...(onReorder ? sortable.itemProps(it.id) : {})}
+            {...itemMotion}
+            className={cn(
+              'flex items-center gap-3 p-3',
+              sortable.draggingId === it.id && 'opacity-50',
             )}
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-medium">{it.file.name}</span>
-              {it.status === 'done' && (
-                <BrandFeedbackIcon type="success" size="sm" animated label="Enviado" />
-              )}
-              {it.status === 'error' && <BrandFeedbackIcon type="error" size="sm" label="Erro" />}
-            </div>
-            {it.status === 'error' ? (
-              <span className="text-xs font-medium text-destructive">{it.error}</span>
-            ) : it.status === 'uploading' ? (
-              <Progress
-                value={it.progress}
-                size="sm"
-                showValue
-                label={`Enviando ${it.file.name}`}
-              />
-            ) : (
-              <span className="text-xs text-muted-foreground">{formatSize(it.file.size)}</span>
-            )}
-          </div>
-          {it.status === 'error' && !it.error?.startsWith('Arquivo maior') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              iconOnly
-              aria-label={`Tentar enviar ${it.file.name} de novo`}
-              onClick={() => retry(it)}
-            >
-              <RotateCw />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            iconOnly
-            aria-label={`Remover ${it.file.name}`}
-            onClick={() => remove(it.id)}
           >
-            <Trash2 />
-          </Button>
-        </li>
-      ))}
-    </ul>
-  )
-
-  const galleryView = items.length > 0 && (
-    <ul className="grid grid-cols-2 gap-3 md:grid-cols-3">
-      {items.map((it) => (
-        <li
-          key={it.id}
-          {...(onReorder ? sortable.itemProps(it.id) : {})}
-          className={cn(
-            'relative flex aspect-square flex-col overflow-hidden rounded-control border bg-card',
-            sortable.draggingId === it.id && 'opacity-50',
-          )}
-        >
-          {it.previewUrl && it.kind === 'image' ? (
-            <img src={it.previewUrl} alt="" className="size-full object-cover" draggable={false} />
-          ) : (
-            <span className="flex flex-1 items-center justify-center text-muted-foreground">
-              {it.kind === 'video' ? (
-                <VideoIcon className="size-icon-lg" aria-hidden />
+            {handle(it)}
+            <span className="flex size-control-sm shrink-0 items-center justify-center rounded-item bg-muted text-muted-foreground md:size-control-md">
+              {it.kind === 'image' ? (
+                <ImageIcon className="size-icon-md" aria-hidden />
+              ) : it.kind === 'video' ? (
+                <VideoIcon className="size-icon-md" aria-hidden />
               ) : (
-                <FileText className="size-icon-lg" aria-hidden />
+                <FileText className="size-icon-md" aria-hidden />
               )}
             </span>
-          )}
-          <span className="truncate bg-card/90 px-2 py-1 text-xs font-medium">{it.file.name}</span>
-          {it.status === 'uploading' && (
-            <span className="absolute inset-x-2 bottom-8">
-              <Progress
-                value={it.progressPercent ?? 0}
-                size="sm"
-                label={`Enviando ${it.file.name}`}
-              />
-            </span>
-          )}
-          {it.status === 'error' && (
-            <span className="absolute inset-x-2 bottom-8 truncate rounded-item bg-destructive-soft px-2 py-1 text-xs font-medium text-destructive-soft-foreground">
-              {it.errorMessage}
-            </span>
-          )}
-          <span className="absolute top-1 right-1 flex gap-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="truncate text-sm font-medium">{it.file.name}</span>
+                {it.status === 'done' && (
+                  <BrandFeedbackIcon type="success" size="sm" animated label="Enviado" />
+                )}
+                {it.status === 'error' && <BrandFeedbackIcon type="error" size="sm" label="Erro" />}
+              </div>
+              {it.status === 'error' ? (
+                <span className="text-xs font-medium text-destructive">{it.error}</span>
+              ) : it.status === 'uploading' ? (
+                <Progress
+                  value={it.progress}
+                  size="sm"
+                  showValue
+                  label={`Enviando ${it.file.name}`}
+                />
+              ) : (
+                <span className="text-xs text-muted-foreground">{formatSize(it.file.size)}</span>
+              )}
+            </div>
             {it.status === 'error' && !it.error?.startsWith('Arquivo maior') && (
               <Button
                 variant="ghost"
                 size="sm"
                 iconOnly
                 aria-label={`Tentar enviar ${it.file.name} de novo`}
-                className="bg-card/90"
                 onClick={() => retry(it)}
               >
                 <RotateCw />
@@ -393,20 +362,95 @@ export function Upload({
               size="sm"
               iconOnly
               aria-label={`Remover ${it.file.name}`}
-              className="bg-card/90"
               onClick={() => remove(it.id)}
             >
               <Trash2 />
             </Button>
-          </span>
-          <span className="absolute top-1 left-1 flex items-center gap-1">
-            {handle(it)}
-            {it.status === 'done' && (
-              <BrandFeedbackIcon type="success" size="sm" animated label="Enviado" />
+          </Item>
+        )),
+      )}
+    </ul>
+  )
+
+  const galleryView = items.length > 0 && (
+    <ul className="grid grid-cols-2 gap-3 md:grid-cols-3">
+      {animated(
+        items.map((it) => (
+          <Item
+            key={it.id}
+            {...(onReorder ? sortable.itemProps(it.id) : {})}
+            {...itemMotion}
+            className={cn(
+              'relative flex aspect-square flex-col overflow-hidden rounded-control border bg-card',
+              sortable.draggingId === it.id && 'opacity-50',
             )}
-          </span>
-        </li>
-      ))}
+          >
+            {it.previewUrl && it.kind === 'image' ? (
+              <img
+                src={it.previewUrl}
+                alt=""
+                className="size-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              <span className="flex flex-1 items-center justify-center text-muted-foreground">
+                {it.kind === 'video' ? (
+                  <VideoIcon className="size-icon-lg" aria-hidden />
+                ) : (
+                  <FileText className="size-icon-lg" aria-hidden />
+                )}
+              </span>
+            )}
+            <span className="truncate bg-card/90 px-2 py-1 text-xs font-medium">
+              {it.file.name}
+            </span>
+            {it.status === 'uploading' && (
+              <span className="absolute inset-x-2 bottom-8">
+                <Progress
+                  value={it.progressPercent ?? 0}
+                  size="sm"
+                  label={`Enviando ${it.file.name}`}
+                />
+              </span>
+            )}
+            {it.status === 'error' && (
+              <span className="absolute inset-x-2 bottom-8 truncate rounded-item bg-destructive-soft px-2 py-1 text-xs font-medium text-destructive-soft-foreground">
+                {it.errorMessage}
+              </span>
+            )}
+            <span className="absolute top-1 right-1 flex gap-1">
+              {it.status === 'error' && !it.error?.startsWith('Arquivo maior') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  iconOnly
+                  aria-label={`Tentar enviar ${it.file.name} de novo`}
+                  className="bg-card/90"
+                  onClick={() => retry(it)}
+                >
+                  <RotateCw />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                iconOnly
+                aria-label={`Remover ${it.file.name}`}
+                className="bg-card/90"
+                onClick={() => remove(it.id)}
+              >
+                <Trash2 />
+              </Button>
+            </span>
+            <span className="absolute top-1 left-1 flex items-center gap-1">
+              {handle(it)}
+              {it.status === 'done' && (
+                <BrandFeedbackIcon type="success" size="sm" animated label="Enviado" />
+              )}
+            </span>
+          </Item>
+        )),
+      )}
     </ul>
   )
 

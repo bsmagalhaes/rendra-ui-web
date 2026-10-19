@@ -3,6 +3,8 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Upload } from './upload'
+import type { ReactNode } from 'react'
+import { MotionProvider } from '@/lib/motion'
 
 // jsdom não sabe gerar um blob: real a partir do File do Node/Vitest; o componente só
 // precisa de uma string para a miniatura, então os testes substituem as duas funções.
@@ -226,5 +228,61 @@ describe('Upload', () => {
     expect(screen.queryByText('um.png')).not.toBeInTheDocument()
     expect(vi.mocked(URL.revokeObjectURL).mock.calls.length).toBeGreaterThan(revokesBefore)
     HTMLCanvasElement.prototype.getContext = original
+  })
+})
+
+describe('Upload com motion', () => {
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const pdf = (name: string) => new File(['x'], name, { type: 'application/pdf' })
+
+  it.each(['list', 'gallery'] as const)(
+    'em on (%s): adicionar mostra exatamente os arquivos e remover tira o item do DOM',
+    async (layout) => {
+      const { container } = emOn(<Upload layout={layout} />)
+      const input = container.querySelector('input[type="file"]') as HTMLInputElement
+      fireEvent.change(input, { target: { files: [pdf('a.pdf'), pdf('b.pdf')] } })
+      expect(await screen.findByText('a.pdf')).toBeInTheDocument()
+      expect(screen.getByText('b.pdf')).toBeInTheDocument()
+      // a entrada anima: o item termina com opacidade 1 (em off ele nem tem estilo)
+      const item = screen.getByText('a.pdf').closest('li')!
+      await waitFor(() => expect(item.style.opacity).toBe('1'))
+      fireEvent.click(screen.getByRole('button', { name: 'Remover a.pdf' }))
+      await waitFor(() => expect(screen.queryByText('a.pdf')).not.toBeInTheDocument())
+      expect(screen.getByText('b.pdf')).toBeInTheDocument()
+    },
+  )
+
+  it('em on, o progresso por item e o ícone de sucesso seguem funcionando', async () => {
+    let resolveUpload: () => void = () => {}
+    const onUpload = vi.fn(
+      (_file: File, onProgress: (pct: number) => void) =>
+        new Promise<void>((resolve) => {
+          onProgress(40)
+          resolveUpload = resolve
+        }),
+    )
+    const { container } = emOn(<Upload layout="gallery" onUpload={onUpload} />)
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(input, {
+      target: { files: [new File(['a'], 'foto.png', { type: 'image/png' })] },
+    })
+    const bar = await screen.findByRole('progressbar', { name: 'Enviando foto.png' })
+    expect(bar).toHaveAttribute('aria-valuenow', '40')
+    resolveUpload()
+    expect(await screen.findByRole('img', { name: 'Enviado' })).toBeInTheDocument()
+  })
+
+  it('em on, reordenar pelo teclado troca a ordem visível e avisa onReorder', async () => {
+    const onReorder = vi.fn()
+    const { container } = emOn(<Upload onReorder={onReorder} />)
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(input, { target: { files: [pdf('a.pdf'), pdf('b.pdf')] } })
+    await screen.findByText('a.pdf')
+    expect(visibleFileNames()).toEqual(['a.pdf', 'b.pdf'])
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Reordenar a.pdf' }), {
+      key: 'ArrowDown',
+    })
+    expect(visibleFileNames()).toEqual(['b.pdf', 'a.pdf'])
+    expect(onReorder).toHaveBeenCalledWith(expect.arrayContaining([expect.any(String)]))
   })
 })
