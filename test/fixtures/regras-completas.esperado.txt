@@ -12,6 +12,12 @@ src/pages/app/tela.tsx:4  [texto-orientativo] Instrução no subtítulo. Use hel
 src/pages/app/tela.tsx:6  [botao-solto] Botão solto no conteúdo. Ação de card vai em CardHeader actions; da tela, no PageHeader actions ou na ActionBar.
     <CardContent>
 
+src/pages/app/tela.tsx:10  [valor-arbitrario] Valor arbitrário do Tailwind. Use a escala de tokens ou crie um token nomeado.
+    <div className="p-[13px]" />
+
+src/pages/app/tela.tsx:11  [primaria-como-texto] Primária como texto usa text-primary-text (tom que passa AA no claro e no escuro). text-primary é só para o preenchimento.
+    <span className="text-primary">x</span>
+
 src/pagina.tsx:6  [variavel-sem-prefixo-rendra] Variável própria do Rendra sem o prefixo --rendra-. Use var(--rendra-primary).
     const propria = 'var(--primary)'
 
@@ -51,4 +57,4 @@ src/pagina.tsx:12  [primaria-como-texto] Primária como texto usa text-primary-t
 src/svg.tsx:1  [svg-marca] SVG de marca importado fora de src/brand. Leia o logotipo e o símbolo via useBrand().
     import logo from '../brand/assets/logo.svg'
 
-18 violação(ões) das regras de design.
+20 violação(ões) das regras de design.

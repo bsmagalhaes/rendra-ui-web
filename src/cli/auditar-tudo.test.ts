@@ -59,7 +59,12 @@ describe('modo repositorio', () => {
   it('não ordena: sai na ordem da varredura e, por arquivo, na ordem das regras', () => {
     const tela = resultado.violacoes.filter((v) => v.file === 'src/pages/app/tela.tsx')
     // telas (texto-orientativo, botao-solto) antes das genéricas e das de linha
-    expect(tela.map((v) => v.rule).slice(0, 2)).toEqual(['texto-orientativo', 'botao-solto'])
+    expect(tela.map((v) => v.rule)).toEqual([
+      'texto-orientativo',
+      'botao-solto',
+      'valor-arbitrario',
+      'primaria-como-texto',
+    ])
     const pagina = resultado.violacoes.filter((v) => v.file === 'src/pagina.tsx')
     // variavel-sem-prefixo primeiro; depois as genéricas; por último as de linha
     expect(pagina[0]!.rule).toBe('variavel-sem-prefixo-rendra')
