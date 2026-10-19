@@ -88,6 +88,7 @@ export * from './components/app-shell/types'
 
 // Provider de navegação (genérico, sem depender de um roteador)
 export * from './components/rendra-provider'
+export type { MotionMode } from './lib/motion/motion-context'
 
 // Catálogo de componentes (códigos, busca)
 export * from './catalog/components'

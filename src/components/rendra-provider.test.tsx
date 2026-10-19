@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { AnchorHTMLAttributes } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { useMotionMode } from '@/lib/motion'
 import {
   RendraProvider,
   useCurrentPath,
@@ -135,6 +136,48 @@ describe('RendraProvider', () => {
 
       await userEvent.click(screen.getByRole('button', { name: 'Voltar' }))
       expect(goBack).toHaveBeenCalled()
+    })
+  })
+
+  describe('prop motion', () => {
+    const props = {
+      linkComponent: FakeLink,
+      useCurrentPath: () => '/',
+      navigate: () => {},
+      goBack: () => {},
+    }
+    function Modo() {
+      return <p>modo: {useMotionMode()}</p>
+    }
+
+    it('sem provider, o modo de motion é off', () => {
+      render(<Modo />)
+      expect(screen.getByText('modo: off')).toBeInTheDocument()
+    })
+
+    it('com o provider e sem a prop, continua off e o DOM é o de sempre', () => {
+      const semProvider = render(<p>filho</p>).container.innerHTML
+      const { container } = render(
+        <RendraProvider {...props}>
+          <p>filho</p>
+        </RendraProvider>,
+      )
+      expect(container.innerHTML).toBe(semProvider)
+      render(
+        <RendraProvider {...props}>
+          <Modo />
+        </RendraProvider>,
+      )
+      expect(screen.getByText('modo: off')).toBeInTheDocument()
+    })
+
+    it('motion="on" liga o modo para os componentes de dentro', () => {
+      render(
+        <RendraProvider {...props} motion="on">
+          <Modo />
+        </RendraProvider>,
+      )
+      expect(screen.getByText('modo: on')).toBeInTheDocument()
     })
   })
 })

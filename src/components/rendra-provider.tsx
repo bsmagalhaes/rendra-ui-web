@@ -7,6 +7,7 @@ import {
   type ComponentType,
   type ReactNode,
 } from 'react'
+import { MotionProvider, type MotionMode } from '@/lib/motion/motion-context'
 
 /**
  * Link com a mesma interface do `<a>`/`Link`: recebe `to`, `className`, `children`,
@@ -40,6 +41,11 @@ export interface RendraProviderProps {
   goBack: () => void
   /** Trilha da rota atual (ex.: via `useMatches` e `handle.crumb`). Opcional. */
   useBreadcrumbs?: () => RendraBreadcrumbItem[]
+  /**
+   * Animações dos componentes. `off` (padrão): sem nenhuma animação do Motion, a árvore e o
+   * comportamento de sempre. `on`: entradas, saídas e layout animados pelo Motion.
+   */
+  motion?: MotionMode
 }
 
 interface RendraContextValue {
@@ -114,6 +120,7 @@ export function RendraProvider({
   navigate,
   goBack,
   useBreadcrumbs,
+  motion = 'off',
 }: RendraProviderProps) {
   const value = useMemo<RendraContextValue>(
     () => ({
@@ -125,7 +132,11 @@ export function RendraProvider({
     }),
     [linkComponent, useCurrentPathProp, navigate, goBack, useBreadcrumbs],
   )
-  return <RendraContext.Provider value={value}>{children}</RendraContext.Provider>
+  return (
+    <RendraContext.Provider value={value}>
+      <MotionProvider mode={motion}>{children}</MotionProvider>
+    </RendraContext.Provider>
+  )
 }
 
 /** Componente de link do provider ativo (ou `<a href>`, sem provider). */
