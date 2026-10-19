@@ -291,6 +291,21 @@
 }
 
 /*
+ * DURAÇÕES do motion (modo `motion="on"`; o caminho `off` não as lê). Fora de camada e fora do
+ * @theme, como --rendra-shape-*: o build do pacote leva este bloco para o dist/tokens.css, e o
+ * host consegue sobrescrevê-las. As curvas são as --ease-* do @theme (src/lib/motion/tokens.ts
+ * guarda a reserva delas, porque o pacote as inlineia). Literais de duração anteriores a este
+ * bloco não migram.
+ */
+:root,
+[data-rendra-root] {
+  --rendra-duration-fast: 120ms;
+  --rendra-duration-base: 200ms;
+  --rendra-duration-slow: 320ms;
+  --rendra-duration-draw: 420ms;
+}
+
+/*
  * FORMATO: square, rounded ou pill. O padrão vem do brand.config (atributo no <html>);
  * qualquer componente sobrescreve com a prop shape, que grava data-shape nele mesmo.
  * Em pill, superfícies grandes (card, drawer) ganham raio generoso, não 100%.

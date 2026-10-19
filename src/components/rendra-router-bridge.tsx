@@ -5,6 +5,7 @@ import {
   type RendraBreadcrumbItem,
   type RendraLinkProps,
 } from '@/components/rendra-provider'
+import type { MotionMode } from '@/lib/motion/motion-context'
 
 /**
  * Metadados de rota lidos pela trilha: handle: { crumb: 'Clientes' }. Convenção do
@@ -49,7 +50,10 @@ function useBreadcrumbsFromMatches(): RendraBreadcrumbItem[] {
  * componentes de `src/components/ui` e o `AppShell` não importam `react-router` diretamente.
  * Sem `children`, renderiza `<Outlet />`, para ser usado como elemento raiz das rotas.
  */
-export function RendraRouterBridge({ children }: { children?: ReactNode } = {}) {
+export function RendraRouterBridge({
+  children,
+  motion,
+}: { children?: ReactNode; motion?: MotionMode } = {}) {
   const navigate = useNavigate()
   const go = useCallback(
     (to: string, options?: { replace?: boolean }) => navigate(to, options),
@@ -63,6 +67,7 @@ export function RendraRouterBridge({ children }: { children?: ReactNode } = {}) 
       navigate={go}
       goBack={goBack}
       useBreadcrumbs={useBreadcrumbsFromMatches}
+      motion={motion}
     >
       {children ?? <Outlet />}
     </RendraProvider>

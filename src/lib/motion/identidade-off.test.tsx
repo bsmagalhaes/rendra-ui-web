@@ -45,10 +45,12 @@ import { renderApp } from '@/test/render'
 const dir = (name: string) => `./__snapshots__/off/${name}.html`
 // `style="animation-duration: 0s;"` aparece e some conforme o instante em que o Presence do Radix
 // lê o estilo do painel (ruído de temporização do Radix, sem relação com o Rendra).
+const idShapes = new RegExp(
+  ['«r\\w+»', '_r_\\w+_', ':r\\w+:', ['radix', '[«:_a-z0-9]+'].join('-')].join('|'),
+  'gi',
+)
 const normalize = (html: string) =>
-  html
-    .replace(/«r[0-9a-z]+»|_r_[0-9a-z]+_|:r[0-9a-z]+:|radix-[«:_a-z0-9]+/gi, 'ID')
-    .replace(/ style="animation-duration: 0s;"| style=""/g, '')
+  html.replace(idShapes, 'ID').replace(/ style="animation-duration: 0s;"| style=""/g, '')
 const snap = async (name: string, html: string) =>
   expect(normalize(html)).toMatchFileSnapshot(dir(name))
 
