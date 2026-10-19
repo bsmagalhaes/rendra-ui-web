@@ -98,10 +98,10 @@ _Para os dois:_
 1. **Sim**, com até 4 atalhos: padrão.
 2. **Não**, só a gaveta.
 
-**3.7 O usuário final pode mudar o layout** pelo menu do avatar (`userConfigurable` do `AppShell`)
+**3.7 O usuário final pode mudar o layout** pelo menu do avatar
 
 1. **Sim**: padrão.
-2. **Não**: o layout do projeto é fixo.
+2. **Não**: o layout do projeto é fixo. O submenu Layout some do menu do avatar com `userMenu={{ layout: false }}`; `userConfigurable={false}` só faz o `AppShell` ignorar o layout que a pessoa guardou no navegador, sem esconder o submenu.
 
 **3.8 Conteúdo do menu** (aberta, grava em `src/config/navigation.ts`)
 
@@ -111,6 +111,9 @@ _Para os dois:_
 - Itens do menu do avatar, além de Sair (ex.: Meu perfil, Configurações; vira `userMenuItems` do `AppShell`):
 - Ações rápidas da busca global, se houver (ex.: "Novo cliente"; vira `quickActions`):
 - Notificações: o sino aparece? De onde vêm os itens, id, tipo, título, hora e lida (vira `notifications`)?
+- Seletor de espaço (empresa, unidade) no topo do menu do avatar? Quais espaços (id e nome) e o que acontece ao trocar (vira `workspaces`)?
+- Logo da marca no header do celular, no lugar do título e da trilha? (vira `headerLogo`; com seta de voltar, prefira o símbolo)
+- Tirar Tema, Template ou Layout do menu do avatar? (vira `userMenu`)
 
 ## 4. Tema (fluxo guiado)
 
@@ -200,22 +203,23 @@ Cada componente do design system, e cada variante visual dele (não tamanho, nã
 
 Veja todos com `npm run dev`, abra `/componentes` e olhe o selo ao lado de cada exemplo (ou rode `npx @rendra-ui/web codigos`): todo código do catálogo tem selo na vitrine, e a lista completa e sempre atualizada é `src/catalog/components.ts`, nunca este documento. Diga, para cada situação abaixo, qual código quer (ou "não sei, sugira": o padrão já é uma sugestão fundamentada). O que não estiver na tabela é porque o componente **só tem um código** (é a variante única dele, sem escolha a fazer); ainda assim vale conferir o exemplo na vitrine.
 
-| Situação                                          | Código padrão                                                                   | Outras opções do mesmo componente                                                                                      |
-| ------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Ação principal de uma tela ou formulário          | `BTN-001` (primário)                                                            | `BTN-002` secundário, `BTN-003` contornado, `BTN-004` fantasma, `BTN-005` destrutivo, `BTN-006` link                   |
-| Dividir o conteúdo de uma tela em seções          | `ABA-001` (linha, com sublinhado)                                               | `ABA-002` pílula (mais destaque visual)                                                                                |
-| Confirmar uma ação (principal e cancelar)         | `MOD-001` (confirmação; `type="destructive"` usa o mesmo código, só muda a cor) | `MOD-003` informativo (um botão só, de largura total, quando não há decisão)                                           |
-| Só informar algo, sem decisão a tomar             | `MOD-003` (informativo, um botão de largura total)                              | `MOD-001` confirmação, quando houver o que decidir                                                                     |
-| Cadastro rápido de até 3 campos, sem sair da tela | `MOD-002` (formulário)                                                          | nenhuma (código único)                                                                                                 |
-| Escolher uma entre poucas opções simples          | `RDO-001` (lista, com bolinha)                                                  | `RDO-002` cartões (com ícone e descrição, mais destaque)                                                               |
-| Trilha de navegação dentro do corpo da página     | `BRD-001` (responsiva: trilha no desktop, botão voltar no celular)              | `BRD-002` sempre em texto (usada no header do AppShell, não é escolha de tela)                                         |
-| Gráfico de um indicador                           | `CHT-001` linha                                                                 | `CHT-002` barras, `CHT-003` área, `CHT-004` pizza, `CHT-005` combinado, `CHT-006` velocímetro de meta, `CHT-007` funil |
-| Mostrar uma pessoa, ou várias sobrepostas         | `AVT-001` (avatar)                                                              | `AVT-002` em grupo (com contador do excedente)                                                                         |
-| Uma escolha independente, ligada ou desligada     | `CHK-001` (caixa de seleção)                                                    | `CHK-002` grupo de caixas (com "selecionar todos")                                                                     |
-| Linhas simples, com título, descrição e ação      | `LIST-001` (lista)                                                              | `LIST-002` reordenável (arraste e teclado, com `onReorder`)                                                            |
-| Nota rápida de satisfação                         | `RTG-001` (estrelas)                                                            | `RTG-002` em escala (0 a 10, tipo NPS)                                                                                 |
-| Arrastar e soltar ou escolher arquivos            | `UPL-001` (lista)                                                               | `UPL-002` em galeria (miniaturas, para fotos e vídeos)                                                                 |
-| Quadro kanban                                     | `KANB-001` (padrão)                                                             | `KANB-002` com destinos de arraste, além das colunas (`dropTargets`)                                                   |
+| Situação                                                                    | Código padrão                                                                   | Outras opções do mesmo componente                                                                                      |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Ação principal de uma tela ou formulário                                    | `BTN-001` (primário)                                                            | `BTN-002` secundário, `BTN-003` contornado, `BTN-004` fantasma, `BTN-005` destrutivo, `BTN-006` link                   |
+| Dividir o conteúdo de uma tela em seções                                    | `ABA-001` (linha, com sublinhado)                                               | `ABA-002` pílula (mais destaque visual)                                                                                |
+| Dois ou três botões largos juntos, fora da `ActionBar` (ações de um cartão) | `BTNG-001` (lado a lado)                                                        | `BTNG-002` empilhados; `BTNG-003` empilhados no celular e lado a lado a partir do tablet                               |
+| Confirmar uma ação (principal e cancelar)                                   | `MOD-001` (confirmação; `type="destructive"` usa o mesmo código, só muda a cor) | `MOD-003` informativo (um botão só, de largura total, quando não há decisão)                                           |
+| Só informar algo, sem decisão a tomar                                       | `MOD-003` (informativo, um botão de largura total)                              | `MOD-001` confirmação, quando houver o que decidir                                                                     |
+| Cadastro rápido de até 3 campos, sem sair da tela                           | `MOD-002` (formulário)                                                          | nenhuma (código único)                                                                                                 |
+| Escolher uma entre poucas opções simples                                    | `RDO-001` (lista, com bolinha)                                                  | `RDO-002` cartões (com ícone e descrição, mais destaque)                                                               |
+| Trilha de navegação dentro do corpo da página                               | `BRD-001` (responsiva: trilha no desktop, botão voltar no celular)              | `BRD-002` sempre em texto (usada no header do AppShell, não é escolha de tela)                                         |
+| Gráfico de um indicador                                                     | `CHT-001` linha                                                                 | `CHT-002` barras, `CHT-003` área, `CHT-004` pizza, `CHT-005` combinado, `CHT-006` velocímetro de meta, `CHT-007` funil |
+| Mostrar uma pessoa, ou várias sobrepostas                                   | `AVT-001` (avatar)                                                              | `AVT-002` em grupo (com contador do excedente)                                                                         |
+| Uma escolha independente, ligada ou desligada                               | `CHK-001` (caixa de seleção)                                                    | `CHK-002` grupo de caixas (com "selecionar todos")                                                                     |
+| Linhas simples, com título, descrição e ação                                | `LIST-001` (lista)                                                              | `LIST-002` reordenável (arraste e teclado, com `onReorder`)                                                            |
+| Nota rápida de satisfação                                                   | `RTG-001` (estrelas)                                                            | `RTG-002` em escala (0 a 10, tipo NPS)                                                                                 |
+| Arrastar e soltar ou escolher arquivos                                      | `UPL-001` (lista)                                                               | `UPL-002` em galeria (miniaturas, para fotos e vídeos)                                                                 |
+| Quadro kanban                                                               | `KANB-001` (padrão)                                                             | `KANB-002` com destinos de arraste, além das colunas (`dropTargets`)                                                   |
 
 Componentes com um código só (exemplos comuns, veja o resto na vitrine): `CAMP-001` campo de texto, `SEL-001` select, `DTP-001` seletor de data, `TAB-001` tabela, `GAV-001` gaveta (drawer), `CAL-001` calendário, `WIZ-001` wizard (`WIZ-002` para o indicador de etapas sozinho), `FLD-001` campo com rótulo e ajuda (`FLD-002` para um rótulo avulso), `FORM-001` formulário (`FORM-002` para uma seção de formulário), `CHAT-001` lista de conversas, `CHAT-002` linha do tempo da conversa e `CHAT-003` campo de mensagem, `COR-001` seletor de cor, `CROP-001` recorte de imagem, `DOC-001` visualizador de documentos, `QRC-001` código QR, `CKLT-001` lista de verificação, `REP-001` campo repetível e `SPIN-001` indicador de carregamento.
 
