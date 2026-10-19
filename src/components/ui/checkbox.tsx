@@ -1,7 +1,9 @@
 import { Check, Minus } from 'lucide-react'
+import { AnimatePresence, m } from 'motion/react'
 import { Checkbox as C } from 'radix-ui'
-import { useId, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 
 export interface CheckboxProps {
   checked?: boolean | 'indeterminate'
@@ -36,13 +38,29 @@ export function Checkbox({
 }: CheckboxProps) {
   const auto = useId()
   const cid = id ?? `cb${auto}`
+  const on = useMotionMode() === 'on'
+  const presets = useMotionPresets()
+  // Só em `on`: o estado marcado é espelhado aqui (controlado ou não) para o indicador poder
+  // sair com animação. O Radix mantém o indicador sempre presente com forceMount, então ele só
+  // existe no DOM enquanto marcado ou saindo (AnimatePresence).
+  const [inner, setInner] = useState<boolean | 'indeterminate'>(defaultChecked ?? false)
+  const state = checked ?? inner
+  const mark =
+    checked === 'indeterminate' ? (
+      <Minus className="size-3" strokeWidth={3} aria-hidden />
+    ) : (
+      <Check className="size-3" strokeWidth={3} aria-hidden />
+    )
   const box = (
     <C.Root
       id={cid}
       name={name}
-      checked={checked}
-      defaultChecked={defaultChecked}
-      onCheckedChange={(v) => onCheckedChange?.(v === true)}
+      checked={on ? state : checked}
+      defaultChecked={on ? undefined : defaultChecked}
+      onCheckedChange={(v) => {
+        if (on) setInner(v)
+        onCheckedChange?.(v === true)
+      }}
       disabled={disabled}
       aria-invalid={invalid || undefined}
       aria-label={aria['aria-label']}
@@ -56,13 +74,21 @@ export function Checkbox({
         !label && 'before:absolute before:-inset-3 md:before:hidden',
       )}
     >
-      <C.Indicator className="flex items-center justify-center data-[state=checked]:animate-in data-[state=checked]:zoom-in-50">
-        {checked === 'indeterminate' ? (
-          <Minus className="size-3" strokeWidth={3} aria-hidden />
-        ) : (
-          <Check className="size-3" strokeWidth={3} aria-hidden />
-        )}
-      </C.Indicator>
+      {on ? (
+        <AnimatePresence initial={false}>
+          {state !== false && (
+            <C.Indicator forceMount asChild>
+              <m.span className="flex items-center justify-center" {...presets.pop}>
+                {mark}
+              </m.span>
+            </C.Indicator>
+          )}
+        </AnimatePresence>
+      ) : (
+        <C.Indicator className="flex items-center justify-center data-[state=checked]:animate-in data-[state=checked]:zoom-in-50">
+          {mark}
+        </C.Indicator>
+      )}
     </C.Root>
   )
   if (!label)

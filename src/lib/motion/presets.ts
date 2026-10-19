@@ -1,5 +1,5 @@
 import type { Target, Transition } from 'motion/react'
-import { readMotionTokens, type MotionTokens } from './tokens'
+import { readMotionTokens, type Bezier, type MotionTokens } from './tokens'
 
 /*
  * Presets do caminho `on`: fade, scale, slide, pop, layout e stagger. Toda duração e toda curva
@@ -22,10 +22,16 @@ export type SlideDistance = 'full' | 'short'
 
 const SHORT_PX = 8
 const POP_FROM = 0.5
+const TAP_SCALE = 0.98
+const BUMP_FROM = 1.08
 const SCALE_FROM = 0.95
 
 export interface Presets {
   reduced: boolean
+  /** Toque discreto (botão, polegar). Sem movimento reduzido vem `undefined`. */
+  tap: Target | undefined
+  /** Salto curto de escala (célula do OTP). Estável entre renders; `undefined` se reduzido. */
+  bump: Target | undefined
   tokens: MotionTokens
   fade: MotionPreset
   scale: MotionPreset
@@ -69,6 +75,8 @@ export function createPresets(tokens: MotionTokens, reduced: boolean): Presets {
 
   return {
     reduced,
+    tap: reduced ? undefined : { scale: TAP_SCALE },
+    bump: reduced ? undefined : { scale: [BUMP_FROM, 1] },
     tokens,
     fade: make({ opacity: 0 }, { opacity: 1 }, duration.base),
     scale: make({ opacity: 0, scale: SCALE_FROM }, { opacity: 1, scale: 1 }, duration.base),
@@ -87,6 +95,16 @@ export function createPresets(tokens: MotionTokens, reduced: boolean): Presets {
       delay: reduced ? 0 : Math.min(index, limit) * (duration.fast / 2),
     }),
   }
+}
+
+/** Curva no formato do recharts: `cubic-bezier(a,b,c,d)`, sem espaços. */
+export function toCubicBezier([
+  a,
+  b,
+  c,
+  d,
+]: Bezier): `cubic-bezier(${number},${number},${number},${number})` {
+  return `cubic-bezier(${a},${b},${c},${d})`
 }
 
 /** Presets com os tokens lidos agora do documento. */

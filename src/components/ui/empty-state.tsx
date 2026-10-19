@@ -1,7 +1,9 @@
-import type { ReactNode } from 'react'
+import { m } from 'motion/react'
+import type { ElementType, ReactNode } from 'react'
 import type { FeedbackType } from '@/brand/types'
 import { BrandFeedbackIcon } from '@/components/ui/brand-feedback-icon'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 
 export interface EmptyStateProps {
   title: string
@@ -28,9 +30,14 @@ export function EmptyState({
   size = 'default',
   className,
 }: EmptyStateProps) {
+  const on = useMotionMode() === 'on'
+  const presets = useMotionPresets()
+  // Em `on` o contêiner entra com fade e deslocamento curto.
+  const Root: ElementType = on ? m.div : 'div'
   return (
-    <div
+    <Root
       data-rendra="VAZ-001"
+      {...(on ? presets.slide('bottom', 'short') : {})}
       className={cn(
         'flex flex-col items-center justify-center gap-4 text-center',
         size === 'compact' ? 'px-4 py-8' : 'px-4 py-12 md:py-16',
@@ -50,6 +57,6 @@ export function EmptyState({
         {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap justify-center gap-3">{actions}</div>}
-    </div>
+    </Root>
   )
 }

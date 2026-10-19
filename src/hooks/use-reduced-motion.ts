@@ -6,16 +6,17 @@ import { useSyncExternalStore } from 'react'
  * CSS, e assim ficar testável (mocke matchMedia para simular a preferência).
  */
 
-function subscribe(cb: () => void) {
+/** Fonte única da preferência (também usada pelo motion, que só a assina em `on`). */
+export function subscribeReducedMotion(cb: () => void) {
   const mq = matchMedia('(prefers-reduced-motion: reduce)')
   mq.addEventListener('change', cb)
   return () => mq.removeEventListener('change', cb)
 }
 
-function getCurrent() {
+export function getReducedMotion() {
   return matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 export function usePrefersReducedMotion() {
-  return useSyncExternalStore(subscribe, getCurrent, () => false)
+  return useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false)
 }

@@ -1,7 +1,9 @@
+import { m } from 'motion/react'
 import { RadioGroup as R } from 'radix-ui'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 
 export interface RadioOption {
   value: string
@@ -46,7 +48,13 @@ export function RadioGroup({
   name,
   ...aria
 }: RadioGroupProps) {
-  const dot = (
+  const on = useMotionMode() === 'on'
+  const presets = useMotionPresets()
+  // Só em `on`: o valor é espelhado aqui (controlado ou não) para a bolinha animar a escala
+  // nos dois sentidos pelos presets; o Radix segue dono da seleção.
+  const [inner, setInner] = useState(defaultValue)
+  const current = value ?? inner
+  const dotFor = (optionValue: string) => (
     <span
       aria-hidden
       className={cn(
@@ -54,7 +62,16 @@ export function RadioGroup({
         invalid && 'border-destructive',
       )}
     >
-      <span className="size-2 scale-0 rounded-full bg-primary transition-transform duration-150 group-data-[state=checked]:scale-100" />
+      {on ? (
+        <m.span
+          className="size-2 rounded-full bg-primary"
+          initial={false}
+          animate={{ scale: current === optionValue ? 1 : 0 }}
+          transition={presets.fade.transition}
+        />
+      ) : (
+        <span className="size-2 scale-0 rounded-full bg-primary transition-transform duration-150 group-data-[state=checked]:scale-100" />
+      )}
     </span>
   )
 
@@ -62,9 +79,12 @@ export function RadioGroup({
     <R.Root
       id={id}
       name={name}
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={onChange}
+      value={on ? current : value}
+      defaultValue={on ? undefined : defaultValue}
+      onValueChange={(v) => {
+        if (on) setInner(v)
+        onChange?.(v)
+      }}
       disabled={disabled}
       aria-invalid={invalid || undefined}
       aria-describedby={aria['aria-describedby']}
@@ -102,7 +122,7 @@ export function RadioGroup({
                 <span className="text-sm text-muted-foreground">{o.description}</span>
               )}
             </span>
-            {dot}
+            {dotFor(o.value)}
           </R.Item>
         ) : (
           <label
@@ -117,7 +137,7 @@ export function RadioGroup({
               disabled={o.disabled}
               className="group flex pt-px outline-none focus-visible:[&>span]:focus-ring"
             >
-              {dot}
+              {dotFor(o.value)}
             </R.Item>
             <span className="flex min-w-0 flex-col gap-1">
               <span className="text-sm font-medium">{o.label}</span>

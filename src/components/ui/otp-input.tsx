@@ -1,5 +1,13 @@
-import { useRef, type ClipboardEvent, type CSSProperties, type KeyboardEvent } from 'react'
+import { m } from 'motion/react'
+import {
+  useRef,
+  type ClipboardEvent,
+  type CSSProperties,
+  type ElementType,
+  type KeyboardEvent,
+} from 'react'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 
 export interface OtpInputProps {
   /** Quantidade de dígitos. Padrão 6. */
@@ -29,6 +37,10 @@ export function OtpInput({
   ...aria
 }: OtpInputProps) {
   const refs = useRef<(HTMLInputElement | null)[]>([])
+  const on = useMotionMode() === 'on'
+  const presets = useMotionPresets()
+  // Em `on` a célula que recebe um dígito faz um salto curto de escala.
+  const Cell: ElementType = on ? m.input : 'input'
   const digits = Array.from({ length }, (_, i) => value[i] ?? '')
 
   const set = (next: string) => {
@@ -62,8 +74,9 @@ export function OtpInput({
       style={{ '--otp': length } as CSSProperties}
     >
       {digits.map((d, i) => (
-        <input
+        <Cell
           key={i}
+          {...(on ? { animate: d ? presets.bump : undefined } : {})}
           ref={(el) => {
             refs.current[i] = el
           }}
