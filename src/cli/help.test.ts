@@ -9,6 +9,13 @@ describe('formatHelp', () => {
     expect(saida).toContain('rendra trocar')
   })
 
+  it('descreve as flags do auditar e o rendra.config.json', () => {
+    const saida = formatHelp()
+    expect(saida).toContain('--all')
+    expect(saida).toContain('--ignore')
+    expect(saida).toContain('rendra.config.json')
+  })
+
   it('termina com a linha de autoria, com site e Instagram', () => {
     const linhas = formatHelp().split('\n')
     expect(linhas.at(-1)).toBe(AUTHOR_LINE)

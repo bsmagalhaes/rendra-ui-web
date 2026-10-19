@@ -109,6 +109,9 @@ export default defineConfig({
         // src/cli/typescript-loader.ts, por import dinâmico.
         'cli/codigos': 'src/cli/codigos.ts',
         'cli/auditar': 'src/cli/auditar.ts',
+        // `rendra auditar` (argumentos, config, --all, --ignore): o bin importa só daqui; o
+        // restante (auditar-tudo, regras-extras, config...) entra como chunk compartilhado.
+        'cli/executar-auditar': 'src/cli/executar-auditar.ts',
         'cli/trocar': 'src/cli/trocar.ts',
         'cli/typescript-loader': 'src/cli/typescript-loader.ts',
         'cli/help': 'src/cli/help.ts',
