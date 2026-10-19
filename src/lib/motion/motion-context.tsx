@@ -26,15 +26,18 @@ export function MotionModeScope({ mode, children }: { mode: MotionMode; children
 const loadMax = () => import('./features-max').then((m) => m.default)
 
 /**
- * Em `off`, só o contexto (nenhum nó novo, nenhum LazyMotion). Em `on`, o `LazyMotion` com o
- * `domAnimation` síncrono (animação e gestos) e, dentro dele, um segundo `LazyMotion` que
- * carrega o `domMax` sob demanda (layout), em chunk separado.
+ * Em `off`, só o contexto (nenhum nó novo, nenhum LazyMotion). Em `on`, dois `LazyMotion`: o de
+ * fora carrega o `domMax` sob demanda (layout e arraste), em chunk separado; o de dentro traz o
+ * `domAnimation` síncrono (animação e gestos) e é o que os `m.*` enxergam. Nessa ordem o
+ * renderer síncrono já está no contexto na primeira renderização (elementos e gestos funcionam
+ * na hora), e os recursos de layout se juntam quando o chunk chega. A ordem contrária esconderia
+ * o renderer até o chunk terminar de baixar.
  */
 export function MotionProvider({ mode, children }: { mode: MotionMode; children: ReactNode }) {
   if (mode !== 'on') return <MotionModeScope mode="off">{children}</MotionModeScope>
   return (
-    <LazyMotion features={domAnimation}>
-      <LazyMotion features={loadMax}>
+    <LazyMotion features={loadMax}>
+      <LazyMotion features={domAnimation}>
         <MotionModeScope mode="on">{children}</MotionModeScope>
       </LazyMotion>
     </LazyMotion>

@@ -1,4 +1,5 @@
 import { ArrowDown, BarChart3, List as ListIcon } from 'lucide-react'
+import { m } from 'motion/react'
 import { useId, useRef, useState, type CSSProperties } from 'react'
 import {
   Area,
@@ -22,6 +23,8 @@ import { resolveCatalogCode } from '@/catalog/components'
 import { Button } from '@/components/ui/button'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { toCubicBezier } from '@/lib/motion/presets'
 
 /*
  * Gráfico único do sistema. O tipo é a prop type, nunca um componente novo:
@@ -173,6 +176,9 @@ function Gauge({
   const tone = zone?.tone ?? 'primary'
   const gradientId = useId()
   const [ex, ey] = point(frac, R - 26)
+  const on = useMotionMode() === 'on'
+  const presets = useMotionPresets()
+  const [sx, sy] = point(0, R - 26)
 
   return (
     <figure
@@ -210,16 +216,33 @@ function Gauge({
             strokeLinecap="round"
           />
           {/* Ponteiro fino, do centro até perto do arco */}
-          <line
-            x1={CX}
-            y1={CY}
-            x2={ex}
-            y2={ey}
-            stroke="var(--rendra-foreground)"
-            strokeWidth={4}
-            strokeLinecap="round"
-            className="transition-all duration-700"
-          />
+          {on ? (
+            // `on`: a agulha vai do 0% até o valor com a duração e a curva dos presets.
+            <m.line
+              x1={CX}
+              y1={CY}
+              initial={{ x2: sx, y2: sy }}
+              animate={{ x2: ex, y2: ey }}
+              transition={{
+                duration: presets.tokens.duration.draw,
+                ease: presets.tokens.ease.out,
+              }}
+              stroke="var(--rendra-foreground)"
+              strokeWidth={4}
+              strokeLinecap="round"
+            />
+          ) : (
+            <line
+              x1={CX}
+              y1={CY}
+              x2={ex}
+              y2={ey}
+              stroke="var(--rendra-foreground)"
+              strokeWidth={4}
+              strokeLinecap="round"
+              className="transition-all duration-700"
+            />
+          )}
           <circle cx={CX} cy={CY} r={9} fill="var(--rendra-foreground)" />
           <circle cx={CX} cy={CY} r={4} fill="var(--rendra-card)" />
           <text
@@ -265,6 +288,10 @@ function Gauge({
 /* ================================================================ funil */
 
 function Funnel({ stages, valueFormatter = fmtDefault, className, ...aria }: FunnelChartProps) {
+  const on = useMotionMode() === 'on'
+  const presets = useMotionPresets()
+  // Em `on` o contêiner do funil entra com fade.
+  const Root = on ? m.figure : 'figure'
   const n = stages.length
   const top = stages[0]?.value || 1
   const last = stages[n - 1]
@@ -285,10 +312,11 @@ function Funnel({ stages, valueFormatter = fmtDefault, className, ...aria }: Fun
   )
 
   return (
-    <figure
+    <Root
       data-rendra={resolveCatalogCode('Chart', { type: 'funnel' })}
       className={cn('flex min-w-0 flex-col items-center', className)}
       aria-label={aria['aria-label']}
+      {...(on ? presets.fade : {})}
     >
       <ol className="flex w-full flex-col items-center">
         {stages.map((s, i) => {
@@ -336,7 +364,7 @@ function Funnel({ stages, valueFormatter = fmtDefault, className, ...aria }: Fun
         </p>
       )}
       <figcaption className="sr-only">{aria['aria-label']}</figcaption>
-    </figure>
+    </Root>
   )
 }
 
@@ -356,6 +384,17 @@ function Cartesian({
   ...aria
 }: CartesianChartProps) {
   const { isMobile } = useBreakpoint()
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
+  // Em `on` a entrada do recharts usa a duração e a curva dos presets (em `off` não recebe
+  // prop nenhuma, como antes). O recharts aceita só `cubic-bezier(a,b,c,d)` sem espaços.
+  const draw =
+    motion === 'on'
+      ? {
+          animationDuration: Math.round(presets.tokens.duration.draw * 1000),
+          animationEasing: toCubicBezier(presets.tokens.ease.out),
+        }
+      : {}
   const [asList, setAsList] = useState(false)
   // Anima só a entrada. Se a largura muda depois (barra de rolagem que aparece, janela
   // redimensionada), o gráfico vai direto à nova forma, sem desenhar fora do card no meio do
@@ -428,6 +467,7 @@ function Cartesian({
       radius={!stacked || lastBar ? [4, 4, 0, 0] : [0, 0, 0, 0]}
       maxBarSize={40}
       isAnimationActive={animate}
+      {...draw}
     >
       {colorByCategory && data.map((_, j) => <Cell key={j} fill={colorVar(j + 1)} />)}
     </Bar>
@@ -447,6 +487,7 @@ function Cartesian({
           paddingAngle={2}
           stroke="var(--rendra-card)"
           isAnimationActive={animate}
+          {...draw}
         >
           {data.map((_, i) => (
             <Cell key={i} fill={colorVar(i + 1)} />
@@ -490,6 +531,7 @@ function Cartesian({
               dot={{ r: 3, fill: colors[i], strokeWidth: 0 }}
               activeDot={{ r: 5 }}
               isAnimationActive={animate}
+              {...draw}
             />
           ),
         )}
@@ -521,6 +563,7 @@ function Cartesian({
             strokeWidth={2}
             fill={`url(#area-${s.key})`}
             isAnimationActive={animate}
+            {...draw}
           />
         ))}
       </AreaChart>
@@ -544,6 +587,7 @@ function Cartesian({
             dot={false}
             activeDot={{ r: 4 }}
             isAnimationActive={animate}
+            {...draw}
           />
         ))}
       </LineChart>

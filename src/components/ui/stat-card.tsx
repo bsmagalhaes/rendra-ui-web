@@ -1,8 +1,11 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { animate, m, useMotionValue, useTransform } from 'motion/react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { formatLike, parseLocaleNumber, type ParsedNumber } from '@/lib/motion/count'
 
 export interface StatCardProps {
   label: string
@@ -20,6 +23,37 @@ export interface StatCardProps {
   /** Conteúdo extra no rodapé (ex.: mini gráfico). */
   footer?: ReactNode
   className?: string
+}
+
+/** Contagem de 0 até o valor, com o formato do texto original; no fim mostra o `value` exato. */
+function Counter({ parsed, value }: { parsed: ParsedNumber; value: ReactNode }) {
+  const presets = useMotionPresets()
+  const progress = useMotionValue(0)
+  const text = useTransform(progress, (n) => formatLike(parsed, n))
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    const controls = animate(progress, parsed.value, {
+      duration: presets.tokens.duration.draw,
+      ease: presets.tokens.ease.out,
+      onComplete: () => setDone(true),
+    })
+    return () => controls.stop()
+  }, [progress, parsed.value, presets.tokens])
+  return <m.span {...presets.fade}>{done ? value : text}</m.span>
+}
+
+/**
+ * O valor do card. Em `off`, o valor como sempre veio. Em `on`, número (ou texto pt-BR com
+ * número) conta até o valor; qualquer outra coisa só aparece com fade. Com "reduzir movimento"
+ * o valor final aparece direto.
+ */
+function StatValue({ value }: { value: ReactNode }) {
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
+  const parsed = useMemo(() => parseLocaleNumber(value), [value])
+  if (motion !== 'on') return <>{value}</>
+  if (!parsed || presets.reduced) return <m.span {...presets.fade}>{value}</m.span>
+  return <Counter key={String(value)} parsed={parsed} value={value} />
 }
 
 /** Card de indicador. Em grid: 1 coluna no mobile, 2 para cards pequenos. */
@@ -64,7 +98,7 @@ export function StatCard({
       ) : (
         <>
           <span className="text-2xl font-semibold tracking-tight tabular-nums @xs:text-3xl">
-            {value}
+            <StatValue value={value} />
           </span>
           {change !== undefined && (
             <span className="flex flex-wrap items-center gap-1 text-xs">

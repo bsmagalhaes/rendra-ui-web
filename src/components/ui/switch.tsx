@@ -1,6 +1,8 @@
+import { m } from 'motion/react'
 import { Switch as S } from 'radix-ui'
 import { useId, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
 
 export interface SwitchProps {
   checked?: boolean
@@ -30,22 +32,65 @@ export function Switch({
 }: SwitchProps) {
   const auto = useId()
   const sid = id ?? `sw${auto}`
-  const control = (
-    <S.Root
-      id={sid}
-      name={name}
-      checked={checked}
-      defaultChecked={defaultChecked}
-      onCheckedChange={onCheckedChange}
-      disabled={disabled}
-      aria-label={aria['aria-label']}
-      data-touch="expanded"
-      data-rendra="SWT-001"
-      className="relative inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-input transition-colors disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary max-md:before:absolute max-md:before:-inset-3"
-    >
-      <S.Thumb className="pointer-events-none block size-icon-md rounded-full bg-card shadow-sm transition-transform duration-200 ease-out data-[state=checked]:translate-x-6" />
-    </S.Root>
-  )
+  const motion = useMotionMode()
+  const presets = useMotionPresets()
+  const rootCls =
+    'relative inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-input transition-colors disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary max-md:before:absolute max-md:before:-inset-3'
+  const thumbCls =
+    'pointer-events-none block size-icon-md rounded-full bg-card shadow-sm transition-transform duration-200 ease-out data-[state=checked]:translate-x-6'
+  // `on`: o toque fica no Root (o polegar tem pointer-events-none, então um whileTap nele nunca
+  // dispararia) e chega ao polegar por variants. O deslocamento é a propriedade CSS `translate`
+  // (Tailwind v4) e o Motion grava `transform`: as duas se compõem, não se anulam.
+  const tap = presets.tap
+  const control =
+    motion === 'on' ? (
+      <S.Root
+        asChild
+        id={sid}
+        name={name}
+        checked={checked}
+        defaultChecked={defaultChecked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+        aria-label={aria['aria-label']}
+        data-touch="expanded"
+        data-rendra="SWT-001"
+      >
+        <m.button
+          type="button"
+          className={rootCls}
+          initial="rest"
+          animate="rest"
+          whileTap={tap ? 'tap' : undefined}
+        >
+          <S.Thumb asChild>
+            <m.span
+              className={thumbCls}
+              variants={{ rest: { scale: 1 }, tap: { scale: tap ? 1.15 : 1 } }}
+              transition={{
+                duration: presets.tokens.duration.fast,
+                ease: presets.tokens.ease.spring,
+              }}
+            />
+          </S.Thumb>
+        </m.button>
+      </S.Root>
+    ) : (
+      <S.Root
+        id={sid}
+        name={name}
+        checked={checked}
+        defaultChecked={defaultChecked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+        aria-label={aria['aria-label']}
+        data-touch="expanded"
+        data-rendra="SWT-001"
+        className={rootCls}
+      >
+        <S.Thumb className={thumbCls} />
+      </S.Root>
+    )
   if (!label) return control
   return (
     <label

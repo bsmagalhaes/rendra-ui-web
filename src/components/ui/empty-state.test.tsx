@@ -3,6 +3,8 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { EmptyState } from './empty-state'
+import { MotionProvider } from '@/lib/motion'
+import { expectSettled, reduceMotion } from '@/test/motion'
 
 describe('EmptyState', () => {
   it('mostra título, descrição e a ação', () => {
@@ -57,5 +59,37 @@ describe('EmptyState', () => {
       expect(el).toHaveClass('py-0', 'md:py-0')
       expect(el).not.toHaveClass('py-8')
     })
+  })
+})
+
+describe('EmptyState com motion', () => {
+  it('em on, mantém o código do catálogo, o texto e as ações, e entra com deslocamento curto', async () => {
+    const { container } = renderApp(
+      <MotionProvider mode="on">
+        <EmptyState title="Nada aqui" description="Sem dados." actions={<button>Criar</button>} />
+      </MotionProvider>,
+    )
+    const root = container.querySelector<HTMLElement>('[data-rendra="VAZ-001"]')!
+    expect(screen.getByText('Nada aqui')).toBeInTheDocument()
+    expect(screen.getByText('Sem dados.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Criar' })).toBeInTheDocument()
+    await expectSettled(root, 'none')
+  })
+
+  it('em on com movimento reduzido, só opacidade', async () => {
+    const restore = reduceMotion()
+    try {
+      const { container } = renderApp(
+        <MotionProvider mode="on">
+          <EmptyState title="Nada aqui" />
+        </MotionProvider>,
+      )
+      await expectSettled(
+        container.querySelector<HTMLElement>('[data-rendra="VAZ-001"]')!,
+        'absent',
+      )
+    } finally {
+      restore()
+    }
   })
 })

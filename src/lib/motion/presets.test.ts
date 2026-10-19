@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react'
+import { createElement, type ReactNode } from 'react'
 import { readFileSync } from 'node:fs'
-import { afterEach, describe, expect, it } from 'vitest'
-import { createPresets } from './presets'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MotionProvider } from './motion-context'
+import { createPresets, toCubicBezier } from './presets'
 import { DURATION, EASE, type MotionTokens } from './tokens'
 import { useMotionPresets } from './use-motion-presets'
 
@@ -60,28 +62,57 @@ describe('presets', () => {
   })
 })
 
+describe('tap, bump e curva do recharts', () => {
+  it('tap e bump existem e são estáveis; reduzido não tem nenhum dos dois', () => {
+    const p = createPresets(tokens, false)
+    expect(p.tap).toEqual({ scale: 0.98 })
+    expect(p.bump).toEqual({ scale: [1.08, 1] })
+    const r = createPresets(tokens, true)
+    expect(r.tap).toBeUndefined()
+    expect(r.bump).toBeUndefined()
+  })
+
+  it('toCubicBezier escreve o formato do recharts, sem espaços', () => {
+    expect(toCubicBezier(EASE.out)).toBe('cubic-bezier(0.22,1,0.36,1)')
+  })
+})
+
 describe('useMotionPresets', () => {
   const original = window.matchMedia
   afterEach(() => {
     window.matchMedia = original
   })
+  const wrapper = (mode: 'on' | 'off') =>
+    function Wrapper({ children }: { children: ReactNode }) {
+      return createElement(MotionProvider, { mode, children })
+    }
 
-  it('sem preferência de movimento reduzido, devolve os presets normais com a reserva dos tokens', () => {
-    const { result } = renderHook(() => useMotionPresets())
+  it('em on, sem preferência de movimento reduzido, devolve os presets normais com a reserva dos tokens', () => {
+    const { result } = renderHook(() => useMotionPresets(), { wrapper: wrapper('on') })
     expect(result.current.reduced).toBe(false)
     expect(result.current.fade.transition).toMatchObject({ duration: DURATION.base })
   })
 
-  it('com prefers-reduced-motion: reduce, devolve só opacidade (fonte única: o hook do projeto)', () => {
+  it('em on, com prefers-reduced-motion: reduce, devolve só opacidade (fonte única: o matchMedia do projeto)', () => {
     window.matchMedia = ((query: string) => ({
       matches: query.includes('prefers-reduced-motion'),
       media: query,
       addEventListener: () => {},
       removeEventListener: () => {},
     })) as unknown as typeof window.matchMedia
-    const { result } = renderHook(() => useMotionPresets())
+    const { result } = renderHook(() => useMotionPresets(), { wrapper: wrapper('on') })
     expect(result.current.reduced).toBe(true)
     expect(Object.keys(result.current.scale.animate)).toEqual(['opacity'])
     expect(result.current.scale.transition).toEqual({ duration: 0 })
+  })
+
+  it('em off não assina o matchMedia nem lê o documento: devolve um objeto único e inerte', () => {
+    const spy = vi.fn(original)
+    window.matchMedia = spy as unknown as typeof window.matchMedia
+    const a = renderHook(() => useMotionPresets(), { wrapper: wrapper('off') })
+    const b = renderHook(() => useMotionPresets(), { wrapper: wrapper('off') })
+    expect(a.result.current).toBe(b.result.current)
+    expect(a.result.current.reduced).toBe(false)
+    expect(spy).not.toHaveBeenCalled()
   })
 })

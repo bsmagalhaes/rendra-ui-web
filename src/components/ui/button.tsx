@@ -1,9 +1,12 @@
 import { cva, type VariantProps } from 'class-variance-authority'
+import { m } from 'motion/react'
 import { Slot } from 'radix-ui'
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode, type Ref } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/cn'
+import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { bindNativeEvents, splitNativeEvents } from '@/lib/motion/native-events'
 
 /**
  * Botão único do sistema. Variantes, tamanho, ícone, só ícone, carregamento e
@@ -65,6 +68,38 @@ export interface ButtonProps
   asChild?: boolean
 }
 
+type MotionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
+  children: ReactNode
+}
+
+/**
+ * O botão de `on`: `m.button` com toque discreto (whileTap). Os eventos que o Motion toma
+ * (`onDrag*` e `onAnimationStart`) saem das props dele e viram ouvintes nativos no elemento,
+ * então o consumidor continua recebendo o evento. Só existe em `on`; por isso os hooks de motion
+ * moram aqui e o `off` não paga nada.
+ */
+const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
+  function MotionButton(props, ref) {
+    const presets = useMotionPresets()
+    const { native, rest } = splitNativeEvents(props)
+    const attach = (el: HTMLButtonElement | null) => {
+      assignRef(ref, el)
+      if (!el) return
+      const unbind = bindNativeEvents(el, native)
+      return () => {
+        unbind()
+        assignRef(ref, null)
+      }
+    }
+    return <m.button ref={attach} whileTap={presets.tap} {...rest} />
+  },
+)
+
+function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
+  if (typeof ref === 'function') ref(value)
+  else if (ref) ref.current = value
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     className,
@@ -86,7 +121,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   if (import.meta.env.DEV && iconOnly && !props['aria-label']) {
     console.warn('Button com iconOnly precisa de aria-label.')
   }
-  const classes = cn(buttonVariants({ variant, size, iconOnly, fullWidth }), className)
+  const on = useMotionMode() === 'on'
+  // Em `on` o toque é do whileTap: a classe `active:scale-98` sairia somando com ele.
+  const classes = cn(
+    buttonVariants({ variant, size, iconOnly, fullWidth }),
+    on && !asChild && 'active:scale-100',
+    className,
+  )
   const code = resolveCatalogCode('Button', { variant: variant ?? 'primary' })
 
   if (asChild) {
@@ -100,6 +141,23 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   // Ícone dentro do botão segue o tamanho do próprio botão (sm/md -> sm, lg -> md, como o
   // [&_svg]:size-icon-* de buttonVariants já fazia com o Loader2 solto).
   const leading = loading ? <Spinner size={size === 'lg' ? 'md' : 'sm'} /> : icon
+  if (on) {
+    return (
+      <MotionButton
+        ref={ref}
+        type={type}
+        data-rendra={code}
+        className={classes}
+        disabled={disabled || loading}
+        aria-busy={loading || undefined}
+        {...props}
+      >
+        {leading}
+        {iconOnly ? (loading ? null : children) : children}
+        {!iconOnly && iconRight}
+      </MotionButton>
+    )
+  }
   return (
     <button
       ref={ref}
