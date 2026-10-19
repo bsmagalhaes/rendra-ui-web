@@ -1,27 +1,47 @@
 import { cva, type VariantProps } from 'class-variance-authority'
+import { CircleCheck, CircleX, Info, TriangleAlert, type LucideIcon } from 'lucide-react'
 import type { SVGProps } from 'react'
 import { useBrand } from '@/brand/use-brand'
 import type { FeedbackType } from '@/brand/types'
 import { cn } from '@/lib/cn'
 
+const sizes = {
+  sm: 'size-icon-sm',
+  md: 'size-icon-md',
+  lg: 'size-icon-lg',
+  xl: 'size-12',
+  '2xl': 'size-16',
+} as const
+
 const iconVariants = cva('relative inline-flex shrink-0', {
-  variants: {
-    type: {
-      success: 'text-success',
-      error: 'text-destructive',
-      warning: 'text-warning',
-      info: 'text-info',
-    },
-    size: {
-      sm: 'size-icon-sm',
-      md: 'size-icon-md',
-      lg: 'size-icon-lg',
-      xl: 'size-12',
-      '2xl': 'size-16',
-    },
-  },
-  defaultVariants: { type: 'info', size: 'md' },
+  variants: { size: sizes },
+  defaultVariants: { size: 'md' },
 })
+
+/** Cor do estado (tinge o símbolo e, em statusBadge, o ícone ao lado). */
+const stateText: Record<FeedbackType, string> = {
+  success: 'text-success',
+  error: 'text-destructive',
+  warning: 'text-warning',
+  info: 'text-info',
+}
+
+/** Ícone Lucide do selo ao lado do símbolo (statusBadge). */
+const badgeIcons: Record<FeedbackType, LucideIcon> = {
+  success: CircleCheck,
+  error: CircleX,
+  warning: TriangleAlert,
+  info: Info,
+}
+
+/** Tamanho do ícone ao lado, proporcional ao do símbolo. */
+const badgeIconSize: Record<keyof typeof sizes, string> = {
+  sm: 'size-3',
+  md: 'size-icon-sm',
+  lg: 'size-icon-md',
+  xl: 'size-icon-lg',
+  '2xl': 'size-icon-lg',
+}
 
 const badgeTone: Record<FeedbackType, string> = {
   success: 'bg-success text-success-foreground',
@@ -85,7 +105,7 @@ function StatusGlyph({
   }
 }
 
-export interface BrandFeedbackIconProps extends Omit<VariantProps<typeof iconVariants>, 'type'> {
+export interface BrandFeedbackIconProps extends VariantProps<typeof iconVariants> {
   type: FeedbackType
   /** Texto para leitores de tela. Sem ele o ícone é decorativo (o texto ao lado informa). */
   label?: string
@@ -95,6 +115,24 @@ export interface BrandFeedbackIconProps extends Omit<VariantProps<typeof iconVar
    * Troque a key do componente para repetir a animação.
    */
   animated?: boolean
+  /**
+   * Cor do símbolo. `state` (padrão): a cor do estado (verde, vermelho, amarelo, azul).
+   * `brand`: a cor primária da marca (`text-primary-text`); o selo de estado mantém a cor do
+   * estado, para o significado não depender só da cor.
+   */
+  symbolTone?: 'state' | 'brand'
+  /**
+   * `false` (padrão): selo de estado sobreposto ao símbolo. `true`: o ícone do estado
+   * (Lucide, na cor do estado) fica ao lado do símbolo, no lugar do selo sobreposto. Com um
+   * SVG próprio em `brand.feedbackIcons[type]`, o SVG vence e nenhum selo é desenhado.
+   */
+  statusBadge?: boolean
+  /**
+   * Só vale com `animated`. `pop` (padrão): entra com mola, o glifo se desenha e o erro
+   * treme. `encaixe`: entra em 240 ms, curva de saída suave, sem quique, sem desenho e sem
+   * tremor. Com "reduzir movimento" do sistema, nenhuma animação roda.
+   */
+  animation?: 'pop' | 'encaixe'
   className?: string
 }
 
@@ -108,6 +146,9 @@ export function BrandFeedbackIcon({
   size,
   label,
   animated = false,
+  symbolTone = 'state',
+  statusBadge = false,
+  animation = 'pop',
   className,
 }: BrandFeedbackIconProps) {
   const { brand } = useBrand()
@@ -116,31 +157,48 @@ export function BrandFeedbackIcon({
   const a11y = label
     ? ({ role: 'img', 'aria-label': label } as const)
     : ({ 'aria-hidden': true } as const)
+  const encaixe = animation === 'encaixe'
+  // Com `symbolTone="state"` o texto do estado fica na raiz (como sempre); com `brand` sai da raiz.
+  const rootTone = symbolTone === 'state' ? stateText[type] : undefined
+  const symbolTonal = symbolTone === 'brand' && 'text-primary-text'
+  const symbolAnim = animated && (encaixe ? 'animate-encaixe' : 'animate-pop')
+  const badgeAnim = animated && (encaixe ? 'animate-encaixe' : 'animate-pop anim-delay-1')
+  const BadgeIcon = badgeIcons[type]
+  const sideBadge = statusBadge && !Custom
 
   return (
     <span
       data-slot="feedback-icon"
       data-rendra="BFI-001"
       className={cn(
-        iconVariants({ type, size }),
-        animated && type === 'error' && 'animate-shake',
+        sideBadge ? 'relative inline-flex shrink-0 items-center gap-1' : iconVariants({ size }),
+        rootTone,
+        animated && !encaixe && type === 'error' && 'animate-shake',
         className,
       )}
       {...a11y}
     >
       {Custom ? (
-        <Custom className={cn('size-full', animated && 'animate-pop')} />
+        <Custom className={cn('size-full', symbolTonal, symbolAnim)} />
+      ) : sideBadge ? (
+        <>
+          <Symbol className={cn(sizes[size ?? 'md'], symbolTonal, symbolAnim)} />
+          <BadgeIcon
+            aria-hidden
+            className={cn('shrink-0', badgeIconSize[size ?? 'md'], stateText[type], badgeAnim)}
+          />
+        </>
       ) : (
         <>
-          <Symbol className={cn('size-full mask-status-cutout', animated && 'animate-pop')} />
+          <Symbol className={cn('size-full mask-status-cutout', symbolTonal, symbolAnim)} />
           <span
             className={cn(
               'absolute right-0 bottom-0 flex size-1/2 items-center justify-center rounded-full',
               badgeTone[type],
-              animated && 'animate-pop anim-delay-1',
+              badgeAnim,
             )}
           >
-            <StatusGlyph type={type} animated={animated} className="size-full" />
+            <StatusGlyph type={type} animated={animated && !encaixe} className="size-full" />
           </span>
         </>
       )}

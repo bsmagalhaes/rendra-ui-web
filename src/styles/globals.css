@@ -103,6 +103,7 @@
   --animate-draw: rd-draw 420ms var(--ease-out) 200ms both;
   --animate-pop: rd-pop 420ms var(--ease-spring) both;
   --animate-shake: rd-shake 420ms var(--ease-in-out) 620ms both;
+  --animate-encaixe: rd-encaixe 240ms var(--ease-out) both;
 
   @keyframes rd-draw {
     from {
@@ -122,6 +123,16 @@
       transform: scale(1.12);
     }
     100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes rd-encaixe {
+    from {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+    to {
       opacity: 1;
       transform: scale(1);
     }
