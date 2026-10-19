@@ -326,7 +326,7 @@ A sidebar tem z-index maior que o header. O item ativo do menu é sempre o desti
 
 ## 9. Acessibilidade
 
-Teclado em tudo; foco visível (`:focus-visible` global com `--rendra-ring`); contraste AA; rótulo em todo campo; `aria-label` em botão só com ícone (`iconOnly`); um `h1` por página; textos da interface em **português do Brasil**; datas em DD/MM/AAAA; valores em R$ 1.250,00.
+Teclado em tudo; foco visível (`:focus-visible` global com `--rendra-ring`); contraste AA; rótulo em todo campo; `aria-label` em botão só com ícone (`iconOnly`); botão que mostra texto visível (como as iniciais do avatar) tem o rótulo começando por esse texto (WCAG 2.5.3), como "AS, menu de Ana Souza"; um `h1` por página; textos da interface em **português do Brasil**; datas em DD/MM/AAAA; valores em R$ 1.250,00.
 
 ## 10. O que é proibido
 

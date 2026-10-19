@@ -28,7 +28,10 @@ for (const theme of themes) {
     for (const route of publicRoutes) {
       test(`${route}`, async ({ page }) => {
         await openRoute(page, route)
+        // options() substitui o objeto inteiro: vem antes de withTags(), senão descarta o runOnly.
+        // label-content-name-mismatch (WCAG 2.5.3) não está nas tags acima: liga-se à parte.
         const { violations } = await new AxeBuilder({ page })
+          .options({ rules: { 'label-content-name-mismatch': { enabled: true } } })
           .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
           .analyze()
         const report = violations.map(

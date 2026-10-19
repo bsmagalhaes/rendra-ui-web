@@ -37,6 +37,7 @@ import {
 import { InfoHint } from '@/components/ui/info-hint'
 import { Tooltip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/cn'
+import { initials } from '@/lib/initials'
 import { shapeLabels } from '@/lib/shape'
 import { layoutOptions, type ShellLayout } from './layout'
 import { MegaMenu } from './mega-menu'
@@ -149,7 +150,11 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" iconOnly aria-label={`Menu de ${user.name}`}>
+        <Button
+          variant="ghost"
+          iconOnly
+          aria-label={`${initials(user.name)}, menu de ${user.name}`}
+        >
           <Avatar name={user.name} src={user.avatarUrl} />
         </Button>
       </DropdownMenuTrigger>

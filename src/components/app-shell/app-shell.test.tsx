@@ -72,7 +72,7 @@ describe('AppShell', () => {
     renderShell()
     expect(screen.getByText('Conteúdo da tela')).toBeInTheDocument()
     expect(screen.getAllByText('Painel').length).toBeGreaterThan(0)
-    expect(screen.getByLabelText('Menu de Ana Ribeiro')).toBeInTheDocument()
+    expect(screen.getByLabelText(/menu de Ana Ribeiro/i)).toBeInTheDocument()
   })
 
   it('sem a prop notifications, o sino não aparece', () => {
@@ -94,7 +94,7 @@ describe('AppShell', () => {
     const onLogout = vi.fn()
     renderShell({ onLogout })
     const user = userEvent.setup()
-    await user.click(screen.getByLabelText('Menu de Ana Ribeiro'))
+    await user.click(screen.getByLabelText(/menu de Ana Ribeiro/i))
     await user.click(await screen.findByText('Sair'))
     expect(onLogout).toHaveBeenCalledTimes(1)
   })
@@ -112,7 +112,7 @@ describe('AppShell', () => {
   it('userMenuItems vêm da prop (padrão vazio)', async () => {
     renderShell({ userMenuItems: [{ label: 'Meu perfil', to: '/configuracoes' }] })
     const user = userEvent.setup()
-    await user.click(screen.getByLabelText('Menu de Ana Ribeiro'))
+    await user.click(screen.getByLabelText(/menu de Ana Ribeiro/i))
     expect(await screen.findByText('Meu perfil')).toBeInTheDocument()
   })
 })

@@ -20,6 +20,7 @@
         { "path": "src/lib/cn.ts", "type": "registry:file", "target": "src/lib/cn.ts" },
         { "path": "src/lib/contrast.ts", "type": "registry:file", "target": "src/lib/contrast.ts" },
         { "path": "src/lib/control.ts", "type": "registry:file", "target": "src/lib/control.ts" },
+        { "path": "src/lib/initials.ts", "type": "registry:file", "target": "src/lib/initials.ts" },
         { "path": "src/lib/lookup.ts", "type": "registry:file", "target": "src/lib/lookup.ts" },
         { "path": "src/lib/masks.ts", "type": "registry:file", "target": "src/lib/masks.ts" },
         {

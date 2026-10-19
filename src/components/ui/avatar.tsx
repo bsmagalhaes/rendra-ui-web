@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Avatar as A } from 'radix-ui'
 import { cn } from '@/lib/cn'
+import { initials } from '@/lib/initials'
 
 const avatarVariants = cva(
   'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-avatar bg-primary-soft font-medium text-primary-soft-foreground select-none',
@@ -15,13 +16,6 @@ const avatarVariants = cva(
     defaultVariants: { size: 'md' },
   },
 )
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/)
-  const first = parts[0]?.charAt(0) ?? ''
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.charAt(0) ?? '') : ''
-  return (first + last).toUpperCase()
-}
 
 export interface AvatarProps extends VariantProps<typeof avatarVariants> {
   name: string
