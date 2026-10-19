@@ -85,19 +85,46 @@ function renderHeader(
 }
 
 describe('Header', () => {
+  describe('nome acessível do botão do menu do usuário (WCAG 2.5.3)', () => {
+    it('contém o texto visível (as iniciais) e continua trazendo o nome', async () => {
+      renderHeader({ user: { name: 'Ana Souza' } })
+      const botao = screen.getByRole('button', { name: /menu de Ana Souza/i })
+      const visivel = (await screen.findByText('AS')).textContent ?? ''
+      expect(botao).toHaveAccessibleName(`AS, menu de Ana Souza`)
+      expect(botao.getAttribute('aria-label')).toContain(visivel)
+    })
+
+    it('nome de uma palavra só e nome com três partes seguem a regra das iniciais', async () => {
+      renderHeader({ user: { name: 'Madonna' } })
+      expect(screen.getByRole('button', { name: 'M, menu de Madonna' })).toBeInTheDocument()
+    })
+
+    it('nome com três partes usa a primeira e a última', async () => {
+      renderHeader({ user: { name: 'maria da Silva' } })
+      expect(screen.getByRole('button', { name: 'MS, menu de maria da Silva' })).toBeInTheDocument()
+    })
+
+    it('com avatarUrl o rótulo continua contendo o nome do usuário', () => {
+      renderHeader({ user: { name: 'Ana Souza', avatarUrl: 'https://exemplo.test/ana.png' } })
+      expect(screen.getByRole('button', { name: /menu de Ana Souza/i })).toHaveAccessibleName(
+        'AS, menu de Ana Souza',
+      )
+    })
+  })
+
   it('mostra os itens de userMenuItems (prop), não um literal fixo', async () => {
     renderHeader({
       userMenuItems: [{ label: 'Minha conta', to: '/minha-conta', icon: Settings }],
     })
     const user = userEvent.setup()
-    await user.click(screen.getByLabelText('Menu de Marina Alves'))
+    await user.click(screen.getByLabelText(/menu de Marina Alves/i))
     expect(await screen.findByText('Minha conta')).toBeInTheDocument()
   })
 
   it('sem userMenuItems (padrão vazio), o menu não mostra itens de navegação além do próprio usuário', async () => {
     renderHeader()
     const user = userEvent.setup()
-    await user.click(screen.getByLabelText('Menu de Marina Alves'))
+    await user.click(screen.getByLabelText(/menu de Marina Alves/i))
     expect(await screen.findByText('Sair')).toBeInTheDocument()
     expect(screen.queryByText('Meu perfil')).not.toBeInTheDocument()
   })
@@ -106,7 +133,7 @@ describe('Header', () => {
     const onLogout = vi.fn()
     renderHeader({ onLogout })
     const user = userEvent.setup()
-    await user.click(screen.getByLabelText('Menu de Marina Alves'))
+    await user.click(screen.getByLabelText(/menu de Marina Alves/i))
     const sair = await screen.findByText('Sair')
     await user.click(sair)
     expect(onLogout).toHaveBeenCalledTimes(1)

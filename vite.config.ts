@@ -107,6 +107,7 @@ export default defineConfig({
         'src/components/ui/button-group.tsx': { lines: 80 },
         'src/components/ui/dropdown-menu.tsx': { lines: 60 },
         'src/lib/sortable.ts': { lines: 95 },
+        'src/lib/initials.ts': { lines: 100 },
         'src/components/ui/{list,timeline}.tsx': { lines: 95 },
         'src/components/ui/upload.tsx': { lines: 80 },
         'src/components/ui/image-cropper.tsx': { lines: 80 },
