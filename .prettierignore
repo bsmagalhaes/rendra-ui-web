@@ -15,3 +15,6 @@ public/google*.html
 .pages
 # Verificação do Google Search Console na composição do site: o conteúdo precisa ficar exatamente como veio
 docs/google*.html
+
+# Ancoragem do caminho off do motion: HTML cru de innerHTML, gravado pelo Vitest e nunca reformatado
+src/lib/motion/__snapshots__
