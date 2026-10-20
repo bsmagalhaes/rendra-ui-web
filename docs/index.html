@@ -292,6 +292,21 @@
         height: auto;
       }
 
+      .video-apresentacao {
+        border: 1px solid var(--site-line);
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--site-bg-2);
+        margin-top: 24px;
+      }
+      .video-apresentacao video {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        background: #000;
+      }
+
       section + section {
         border-top: 1px solid var(--site-line);
       }
@@ -677,6 +692,35 @@
               fetchpriority="high"
               alt="Painel administrativo do Rendra Design System no modelo Safira, com indicadores, gráficos e lista de clientes. Abrir a demo."
           /></a>
+        </div>
+      </section>
+
+      <section id="apresentacao" aria-labelledby="t-apresentacao">
+        <div class="wrap">
+          <div class="eyebrow">Apresentação</div>
+          <h2 id="t-apresentacao">Rendra Web em vídeo</h2>
+          <div class="video-apresentacao">
+            <video
+              controls
+              preload="none"
+              playsinline
+              poster="videos/rendra-web-apresentacao-poster.webp"
+              width="1920"
+              height="1080"
+              aria-label="Vídeo de apresentação do Rendra Web, com legendas em português"
+            >
+              <source src="videos/rendra-web-apresentacao.mp4" type="video/mp4" />
+              <track
+                kind="captions"
+                src="videos/rendra-web-apresentacao.vtt"
+                srclang="pt-BR"
+                label="Português"
+                default
+              />
+              Seu navegador não reproduz vídeo.
+              <a href="videos/rendra-web-apresentacao.mp4">Baixe o vídeo de apresentação</a>.
+            </video>
+          </div>
         </div>
       </section>
 
