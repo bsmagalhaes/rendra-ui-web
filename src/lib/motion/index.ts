@@ -1,8 +1,10 @@
 export {
   MotionModeScope,
   MotionProvider,
+  RevealScope,
   useLayoutReady,
   useMotionMode,
+  useRevealScope,
   type MotionMode,
 } from './motion-context'
 export { useMotionPresets } from './use-motion-presets'

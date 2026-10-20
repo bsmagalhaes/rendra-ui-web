@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
-import { m } from 'motion/react'
-import { describe, expect, it } from 'vitest'
+import { m, motion } from 'motion/react'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
+import { realAnimations, reduceMotion } from '@/test/motion'
 import { MotionModeScope, MotionProvider, useLayoutReady, useMotionMode } from './motion-context'
 
 function Probe() {
@@ -110,5 +113,94 @@ describe('MotionProvider', () => {
     )
     await new Promise((r) => setTimeout(r, 100))
     expect(screen.getByText('pronto: false')).toBeInTheDocument()
+  })
+})
+
+describe('motor: LazyMotion estrito e MotionConfig pela fonte única do reduzido (Passo 3)', () => {
+  const readAll = (dir: string): string[] =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+      const full = join(dir, e.name)
+      if (e.isDirectory()) return e.name === '__snapshots__' ? [] : readAll(full)
+      return /\.(ts|tsx)$/.test(e.name) && !/\.test\.(ts|tsx)$/.test(e.name) ? [full] : []
+    })
+
+  it('nenhum arquivo do src importa `motion` de motion/react: só `m` (com LazyMotion strict, motion.* quebraria)', () => {
+    for (const file of readAll('src')) {
+      const src = readFileSync(file, 'utf8')
+      const imports = [...src.matchAll(/import\s*\{([^}]*)\}\s*from\s*'motion\/react'/g)]
+      for (const imp of imports) {
+        const names = imp[1]!.split(',').map((n) => n.trim().split(/\s+as\s+/)[0])
+        expect(names, file).not.toContain('motion')
+      }
+    }
+  })
+
+  it('o provider é estrito: um motion.div (não `m`) dentro dele é erro, não um carregamento silencioso', () => {
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      expect(() =>
+        render(
+          <MotionProvider mode="on">
+            <motion.div>fora do padrão</motion.div>
+          </MotionProvider>,
+        ),
+      ).toThrow(/LazyMotion/)
+    } finally {
+      quiet.mockRestore()
+    }
+  })
+
+  it('o domMax (layout e arraste) só chega pelo features-max.ts, e é o único import de domMax do src', () => {
+    const donos = readAll('src').filter((f) =>
+      [
+        ...readFileSync(f, 'utf8').matchAll(
+          /(?:import|export)\s*\{([^}]*)\}\s*from\s*'motion\/react'/g,
+        ),
+      ].some((i) => /\bdomMax\b/.test(i[1]!)),
+    )
+    expect(donos.map((f) => f.replaceAll('\\', '/'))).toEqual(['src/lib/motion/features-max.ts'])
+  })
+
+  it('em on o reduzido liga o MotionConfig: a animação de x vira instantânea (sem quadro intermediário)', async () => {
+    const stop = realAnimations()
+    const restore = reduceMotion()
+    try {
+      render(
+        <MotionProvider mode="on">
+          <m.div
+            data-testid="alvo"
+            initial={{ x: 0 }}
+            animate={{ x: 100 }}
+            transition={{ duration: 5 }}
+          />
+        </MotionProvider>,
+      )
+      await new Promise((r) => setTimeout(r, 80))
+      expect(screen.getByTestId('alvo').style.transform).toBe('translateX(100px)')
+    } finally {
+      restore()
+      stop()
+    }
+  })
+
+  it('sem preferência de reduzir, a mesma animação anda de verdade (quadro intermediário)', async () => {
+    const stop = realAnimations()
+    try {
+      render(
+        <MotionProvider mode="on">
+          <m.div
+            data-testid="alvo"
+            initial={{ x: 0 }}
+            animate={{ x: 100 }}
+            transition={{ duration: 5 }}
+          />
+        </MotionProvider>,
+      )
+      await new Promise((r) => setTimeout(r, 80))
+      const t = screen.getByTestId('alvo').style.transform
+      expect(t).not.toBe('translateX(100px)')
+    } finally {
+      stop()
+    }
   })
 })
