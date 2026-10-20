@@ -1,6 +1,6 @@
 /*
  * Monta a árvore que o GitHub Pages publica (pages-stage.mjs e pages-build.mjs chamam daqui):
- *   /                página de apresentação (docs/) com images/, icon.svg e og-image.png
+ *   /                página de apresentação (docs/) com images/, videos/, icon.svg e og-image.png
  *   /demo/           a demo (build do Vite, dist/), com as páginas por rota, sitemap e llms próprios
  *   /r/              registry do shadcn (dist/r), endereço obrigatório
  *   /storybook/      Storybook (dist/storybook), quando existir
@@ -58,6 +58,8 @@ export function stageSite({
   }
   if (!existsSync(join(docsDir, 'images')))
     throw new Error('docs/images ausente: a página precisa das imagens')
+  if (!existsSync(join(docsDir, 'videos')))
+    throw new Error('docs/videos ausente: a página precisa do vídeo de apresentação')
   for (const nome of ['index.html', '404.html', 'sitemap.xml']) {
     if (!existsSync(join(distDir, nome)))
       throw new Error(`dist/${nome} ausente: rode npm run build e seo-build antes`)
@@ -70,6 +72,7 @@ export function stageSite({
   mkdirSync(outDir, { recursive: true })
   for (const nome of ARQUIVOS_DA_RAIZ) cpSync(join(docsDir, nome), join(outDir, nome))
   cpSync(join(docsDir, 'images'), join(outDir, 'images'), { recursive: true })
+  cpSync(join(docsDir, 'videos'), join(outDir, 'videos'), { recursive: true })
 
   const reservadas = [join(distDir, 'r'), join(distDir, 'storybook')]
   cpSync(distDir, join(outDir, 'demo'), {

@@ -32,6 +32,8 @@ function arranjo({ comStorybook = true } = {}) {
   }
   mkdirSync(join(docs, 'images'), { recursive: true })
   writeFileSync(join(docs, 'images', 'safira-painel.webp'), 'webp')
+  mkdirSync(join(docs, 'videos'), { recursive: true })
+  writeFileSync(join(docs, 'videos', 'rendra-web-apresentacao.mp4'), 'mp4')
   for (const nome of RAIZ) writeFileSync(join(docs, nome), `raiz:${nome}`)
   return { base, dist, docs, out: join(base, '.pages', 'rendra-ui-web') }
 }
@@ -55,6 +57,7 @@ describe('stageSite', () => {
     expect(readFileSync(join(a.out, 'r', 'select.json'), 'utf8')).toBe('{"name":"select"}')
     expect(readFileSync(join(a.out, 'storybook', 'index.html'), 'utf8')).toBe('sb')
     expect(readFileSync(join(a.out, 'images', 'safira-painel.webp'), 'utf8')).toBe('webp')
+    expect(readFileSync(join(a.out, 'videos', 'rendra-web-apresentacao.mp4'), 'utf8')).toBe('mp4')
     expect(existsSync(join(a.out, 'demo', 'r'))).toBe(false)
     expect(existsSync(join(a.out, 'demo', 'storybook'))).toBe(false)
     rmSync(a.base, { recursive: true, force: true })
@@ -139,6 +142,10 @@ describe('stageSite', () => {
     [
       'docs/images',
       (a: ReturnType<typeof arranjo>) => rmSync(join(a.docs, 'images'), { recursive: true }),
+    ],
+    [
+      'docs/videos',
+      (a: ReturnType<typeof arranjo>) => rmSync(join(a.docs, 'videos'), { recursive: true }),
     ],
     ['dist/404.html', (a: ReturnType<typeof arranjo>) => rmSync(join(a.dist, '404.html'))],
     ['dist/sitemap.xml', (a: ReturnType<typeof arranjo>) => rmSync(join(a.dist, 'sitemap.xml'))],
