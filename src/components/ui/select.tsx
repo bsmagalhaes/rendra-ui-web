@@ -270,7 +270,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
       <ChevronDown
         aria-hidden
         className={cn(
-          'size-icon-sm shrink-0 text-muted-foreground transition-transform duration-200',
+          'size-icon-sm shrink-0 text-muted-foreground transition-transform duration-(--rendra-duration-base) ease-move',
           open && 'rotate-180',
         )}
       />

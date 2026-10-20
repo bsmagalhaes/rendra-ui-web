@@ -32,7 +32,7 @@ import {
 } from 'lucide-react'
 import { AnimatePresence, m } from 'motion/react'
 import { Collapsible } from 'radix-ui'
-import { Fragment, useEffect, useMemo, useState, type ElementType, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useRendraLink } from '@/components/rendra-provider'
 import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -352,7 +352,7 @@ function MobileDetails({ children }: { children: ReactNode }) {
       <span className="group-data-[state=open]:hidden">Ver detalhes</span>
       <span className="hidden group-data-[state=open]:inline">Ocultar detalhes</span>
       <ChevronDown
-        className="size-icon-sm transition-transform duration-200 group-data-[state=open]:rotate-180"
+        className="size-icon-sm transition-transform duration-(--rendra-duration-base) ease-move group-data-[state=open]:rotate-180"
         aria-hidden
       />
     </Collapsible.Trigger>
@@ -417,11 +417,9 @@ export function Table<T>({
   const { isMobile } = useBreakpoint()
   const on = useMotionMode() === 'on'
   const presets = useMotionPresets()
-  // Em `on` as linhas e os cards entram em fade escalonado (no máximo as 10 primeiras).
-  const RowItem: ElementType = on ? m.tr : 'tr'
-  const CardItem: ElementType = on ? m.li : 'li'
-  const rowEnter = (i: number) =>
-    on ? { ...presets.fade, transition: { ...presets.fade.transition, ...presets.stagger(i) } } : {}
+  // Linhas e cards NÃO animam a entrada, em nenhum modo (W3): a tabela é tela de dezenas de
+  // vezes por dia, e a cascata a cada página, filtro ou ordenação a faria parecer lenta. O que
+  // anima aqui é só a expansão da linha (altura e opacidade), que explica uma mudança de estado.
   const columns = useMemo(
     () =>
       statusLast
@@ -685,14 +683,13 @@ export function Table<T>({
       )
     return (
       <ul className="flex flex-col divide-y">
-        {rows.map((r, index) => {
+        {rows.map((r) => {
           const row = r.original
           const [title, ...others] = primary
           return (
-            <CardItem
+            <li
               key={r.id}
               className={cn('flex flex-col gap-3 p-4', r.getIsSelected() && 'bg-primary-soft/50')}
-              {...rowEnter(index)}
             >
               <div className="flex items-start gap-3">
                 {selectable && (
@@ -739,7 +736,7 @@ export function Table<T>({
                   <RowActions row={row} actions={rowActions} mobile />
                 </div>
               )}
-            </CardItem>
+            </li>
           )
         })}
       </ul>
@@ -848,14 +845,13 @@ export function Table<T>({
                   )}
                 </tr>
               ))
-            : rows.map((r, index) => {
+            : rows.map((r) => {
                 const row = r.original
                 return (
                   <Fragment key={r.id}>
-                    <RowItem
+                    <tr
                       data-state={r.getIsSelected() ? 'selected' : undefined}
                       className="group/row transition-colors hover:bg-muted/40 data-[state=selected]:bg-primary-soft/60"
-                      {...rowEnter(index)}
                     >
                       {selectable && (
                         <td className="pr-2 pl-4">
@@ -914,7 +910,7 @@ export function Table<T>({
                           <RowActions row={row} actions={rowActions} />
                         </td>
                       )}
-                    </RowItem>
+                    </tr>
                     {expandable && !on && r.getIsExpanded() && (
                       <tr className="bg-muted/30">
                         <td

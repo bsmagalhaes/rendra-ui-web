@@ -3,18 +3,21 @@ import { Progress as P } from 'radix-ui'
 import type { CSSProperties } from 'react'
 import { cn } from '@/lib/cn'
 
-const bar = cva('h-full rounded-full transition-[width] duration-300 ease-out', {
-  variants: {
-    tone: {
-      primary: 'bg-primary',
-      brand: 'bg-gradient-accent',
-      success: 'bg-success',
-      warning: 'bg-warning',
-      error: 'bg-destructive',
+const bar = cva(
+  'h-full rounded-full transition-[width] duration-(--rendra-duration-base) ease-linear',
+  {
+    variants: {
+      tone: {
+        primary: 'bg-primary',
+        brand: 'bg-gradient-accent',
+        success: 'bg-success',
+        warning: 'bg-warning',
+        error: 'bg-destructive',
+      },
     },
+    defaultVariants: { tone: 'primary' },
   },
-  defaultVariants: { tone: 'primary' },
-})
+)
 
 export interface ProgressProps extends VariantProps<typeof bar> {
   /** 0 a 100. Sem valor: indeterminado (animado). */

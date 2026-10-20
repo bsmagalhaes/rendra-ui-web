@@ -15,6 +15,7 @@ import { formatCurrency } from '@/lib/masks'
 import {
   MotionModeScope,
   MotionProvider,
+  RevealScope,
   useMotionMode,
   useMotionPresets,
   type MotionMode,
@@ -251,7 +252,10 @@ export function DashboardMotionPage() {
         />
         <MotionProvider mode="on">
           <MotionModeScope mode={mode}>
-            <Conteudo />
+            {/* Chegada de painel: os gráficos desenham no tempo do reveal (900 ms), não no de rotina. */}
+            <RevealScope>
+              <Conteudo />
+            </RevealScope>
           </MotionModeScope>
         </MotionProvider>
       </Stack>

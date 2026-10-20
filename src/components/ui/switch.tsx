@@ -36,8 +36,15 @@ export function Switch({
   const presets = useMotionPresets()
   const rootCls =
     'relative inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent bg-input transition-colors disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary max-md:before:absolute max-md:before:-inset-3'
-  const thumbCls =
-    'pointer-events-none block size-icon-md rounded-full bg-card shadow-sm transition-transform duration-200 ease-out data-[state=checked]:translate-x-6'
+  const thumbBase =
+    'pointer-events-none block size-icon-md rounded-full bg-card shadow-sm duration-(--rendra-duration-base) ease-move data-[state=checked]:translate-x-6'
+  // `off`: o CSS anima tudo (deslocamento e escala do toque). `on`: o CSS só transiciona
+  // `translate`; o `transform` é do Motion, e uma transição de CSS nele (W1) faria cada quadro
+  // gravado virar uma transição de 200 ms e o toque chegaria mole.
+  const thumbCls = cn(
+    thumbBase,
+    motion === 'on' ? 'transition-[translate]' : 'transition-transform',
+  )
   // `on`: o toque fica no Root (o polegar tem pointer-events-none, então um whileTap nele nunca
   // dispararia) e chega ao polegar por variants. O deslocamento é a propriedade CSS `translate`
   // (Tailwind v4) e o Motion grava `transform`: as duas se compõem, não se anulam.
@@ -67,10 +74,7 @@ export function Switch({
             <m.span
               className={thumbCls}
               variants={{ rest: { scale: 1 }, tap: { scale: tap ? 1.15 : 1 } }}
-              transition={{
-                duration: presets.tokens.duration.fast,
-                ease: presets.tokens.ease.spring,
-              }}
+              transition={presets.press.transition}
             />
           </S.Thumb>
         </m.button>

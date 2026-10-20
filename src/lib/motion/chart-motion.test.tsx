@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import {
   cloneElement,
   createElement,
@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { Chart } from '@/components/ui/chart'
-import { MotionProvider } from '@/lib/motion'
+import { MotionProvider, RevealScope } from '@/lib/motion'
 import { reduceMotion } from '@/test/motion'
 import { renderApp } from '@/test/render'
 
@@ -45,7 +45,7 @@ const data = [
 const series = [{ key: 'valor', label: 'Valor' }]
 
 describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (type) => {
-  it('em on liga a entrada do recharts com a duração e a curva dos presets', () => {
+  it('em on, gráfico de rotina desenha em 420 ms (draw) com a curva dos presets', () => {
     seen.props.length = 0
     renderApp(
       <MotionProvider mode="on">
@@ -54,10 +54,39 @@ describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (t
     )
     expect(seen.props.length).toBeGreaterThan(0)
     for (const p of seen.props) {
-      expect(p.animationDuration).toBe(900)
+      expect(p.animationDuration).toBe(420)
       expect(p.animationEasing).toBe('cubic-bezier(0.22,1,0.36,1)')
       expect(p.isAnimationActive).toBe(true)
     }
+  })
+
+  it('em on, dentro de um RevealScope (chegada do dashboard) desenha em 900 ms', () => {
+    seen.props.length = 0
+    renderApp(
+      <MotionProvider mode="on">
+        <RevealScope>
+          <Chart type={type} aria-label="Vendas" data={data} xKey="mes" series={series} />
+        </RevealScope>
+      </MotionProvider>,
+    )
+    expect(seen.props.length).toBeGreaterThan(0)
+    for (const p of seen.props) expect(p.animationDuration).toBe(900)
+  })
+
+  it('em on, depois do primeiro desenho trocar os dados não redesenha (W11)', () => {
+    seen.props.length = 0
+    const ui = (d: typeof data) => (
+      <MotionProvider mode="on">
+        <Chart type={type} aria-label="Vendas" data={d} xKey="mes" series={series} />
+      </MotionProvider>
+    )
+    const { rerender } = renderApp(ui(data))
+    const ultimo = () => seen.props[seen.props.length - 1]!
+    expect(ultimo().isAnimationActive).toBe(true)
+    // o recharts avisa que terminou de desenhar (uma série: uma chamada)
+    act(() => (ultimo().onAnimationEnd as () => void)())
+    rerender(ui([{ mes: 'Jan', valor: 99 }, ...data.slice(1)]))
+    expect(ultimo().isAnimationActive).toBe(false)
   })
 
   it('em off não recebe nenhuma prop nova de animação', () => {

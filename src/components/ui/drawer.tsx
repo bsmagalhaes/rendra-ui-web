@@ -109,7 +109,7 @@ export function Drawer({
                   data-rendra="GAV-001"
                   className={cn(panelCls, sizes[size])}
                 >
-                  <m.div {...presets.slide('right')}>{shell}</m.div>
+                  <m.div {...presets.sheet('right')}>{shell}</m.div>
                 </Dialog.Content>
               </Dialog.Portal>
             )}
@@ -119,7 +119,7 @@ export function Drawer({
             <Dialog.Overlay
               className={cn(
                 overlayCls,
-                'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
+                'data-[state=closed]:animate-out data-[state=closed]:duration-(--rendra-duration-fast) data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
               )}
             />
             <Dialog.Content
@@ -128,7 +128,7 @@ export function Drawer({
               data-rendra="GAV-001"
               className={cn(
                 panelCls,
-                'data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:animate-in data-[state=open]:slide-in-from-right',
+                'data-[state=closed]:animate-out data-[state=closed]:duration-(--rendra-duration-fast) data-[state=closed]:slide-out-to-right data-[state=open]:animate-in data-[state=open]:slide-in-from-right',
                 sizes[size],
               )}
             >

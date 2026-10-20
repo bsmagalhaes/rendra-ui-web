@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Tabs } from './tabs'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
 
 const items = [
   { value: 'dados', label: 'Dados', content: <p>Conteúdo dos dados</p> },
@@ -100,16 +99,11 @@ describe('Tabs com motion', () => {
     expect(indicators()).toHaveLength(0)
   })
 
-  it('em on, o painel entra por transform e, com movimento reduzido, só por opacidade', async () => {
+  it('em on, o painel não anima a entrada (W4): o conteúdo é filho direto do painel do Radix, sem m.div', () => {
     emOn(<Tabs aria-label="Cliente" items={items} />)
-    await expectSettled(screen.getByText('Conteúdo dos dados').parentElement!, 'none')
-    cleanup()
-    const restore = reduceMotion()
-    try {
-      emOn(<Tabs aria-label="Cliente" items={items} />)
-      await expectSettled(screen.getByText('Conteúdo dos dados').parentElement!, 'absent')
-    } finally {
-      restore()
-    }
+    const filho = screen.getByText('Conteúdo dos dados')
+    expect(filho.parentElement).toBe(screen.getByRole('tabpanel'))
+    expect(filho.style.opacity).toBe('')
+    expect(filho.style.transform).toBe('')
   })
 })

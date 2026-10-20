@@ -238,7 +238,7 @@ export function Upload({
       ? {
           ...presets.fade,
           layout: layoutEnabled({ mode: motion, ready, dragging: sortable.draggingId !== null }),
-          transition: { ...presets.fade.transition, layout: presets.layout },
+          transition: { ...presets.fade.transition, layout: presets.move },
         }
       : {}
   const animated = (nodes: ReactNode) =>

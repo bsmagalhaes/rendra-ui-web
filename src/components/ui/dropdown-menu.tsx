@@ -58,11 +58,12 @@ export function DropdownMenuSub(props: ComponentProps<typeof D.Sub>) {
 }
 export const DropdownMenuRadioGroup = D.RadioGroup
 
+// O menu e o submenu nascem do gatilho (W6); a saída é mais curta que a entrada (W5).
 const panelBase =
-  'z-50 w-max min-w-3xs max-w-popover overflow-hidden rounded-surface border bg-popover p-1 text-popover-foreground shadow-md'
+  'z-50 w-max min-w-3xs max-w-popover origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-surface border bg-popover p-1 text-popover-foreground shadow-md'
 const panelOff = cn(
   panelBase,
-  'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+  'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:duration-(--rendra-duration-fast) data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
 )
 
 // Itens com 44px no mobile (toque) e compactos a partir de md.
@@ -94,7 +95,7 @@ export function DropdownMenuContent({
               className={cn(panelBase, className)}
               {...props}
             >
-              <m.div {...presets.scale}>{children}</m.div>
+              <m.div {...presets.open()}>{children}</m.div>
             </D.Content>
           </D.Portal>
         )}
@@ -219,7 +220,7 @@ export function DropdownMenuSubContent({
               className={cn(panelBase, className)}
               {...props}
             >
-              <m.div {...presets.scale}>{children}</m.div>
+              <m.div {...presets.open()}>{children}</m.div>
             </D.SubContent>
           </D.Portal>
         )}

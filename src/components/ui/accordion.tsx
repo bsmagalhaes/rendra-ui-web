@@ -67,7 +67,7 @@ export function Accordion({ items, multiple, defaultValue, className }: Accordio
                 {isOpen && (
                   <A.Content forceMount asChild>
                     <m.div
-                      className="overflow-hidden text-sm text-muted-foreground"
+                      className="overflow-hidden text-sm wrap-break-word text-muted-foreground"
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -97,11 +97,11 @@ export function Accordion({ items, multiple, defaultValue, className }: Accordio
           {it.title}
           <ChevronDown
             aria-hidden
-            className="size-icon-sm shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+            className="size-icon-sm shrink-0 text-muted-foreground transition-transform duration-(--rendra-duration-base) ease-move group-data-[state=open]:rotate-180"
           />
         </A.Trigger>
       </A.Header>
-      <A.Content className="overflow-hidden text-sm text-muted-foreground data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+      <A.Content className="overflow-hidden text-sm wrap-break-word text-muted-foreground data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
         <div className="pb-4">{it.content}</div>
       </A.Content>
     </A.Item>

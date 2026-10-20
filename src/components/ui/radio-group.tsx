@@ -1,6 +1,6 @@
 import { m } from 'motion/react'
 import { RadioGroup as R } from 'radix-ui'
-import { useState, type ReactNode } from 'react'
+import { useState, type ComponentProps, type ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { cn } from '@/lib/cn'
 import { useMotionMode, useMotionPresets } from '@/lib/motion'
@@ -33,6 +33,26 @@ export interface RadioGroupProps {
 
 const cols = { 1: '', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3' } as const
 
+/**
+ * O item do Radix. Em `on` ele é um `m.button` (asChild) que responde ao toque (whileTap 0,97,
+ * em `press`); em `off` é o `R.Item` de sempre, sem nó novo.
+ */
+function Item({ on, children, ...props }: ComponentProps<typeof R.Item> & { on: boolean }) {
+  const presets = useMotionPresets()
+  if (!on) return <R.Item {...props}>{children}</R.Item>
+  return (
+    <R.Item asChild {...props}>
+      <m.button
+        type="button"
+        whileTap={presets.press.whileTap}
+        transition={presets.press.transition}
+      >
+        {children}
+      </m.button>
+    </R.Item>
+  )
+}
+
 /** Radio único: em lista ou em cards, por prop. */
 export function RadioGroup({
   options,
@@ -63,14 +83,15 @@ export function RadioGroup({
       )}
     >
       {on ? (
+        // Nunca scale(0): a bolinha vai de 0,9 com opacidade 0 até 1, em `fast`, sem quique.
         <m.span
           className="size-2 rounded-full bg-primary"
           initial={false}
-          animate={{ scale: current === optionValue ? 1 : 0 }}
-          transition={presets.fade.transition}
+          animate={current === optionValue ? presets.indicator.animate : presets.indicator.initial}
+          transition={presets.indicator.transition}
         />
       ) : (
-        <span className="size-2 scale-0 rounded-full bg-primary transition-transform duration-150 group-data-[state=checked]:scale-100" />
+        <span className="size-2 scale-90 rounded-full bg-primary opacity-0 transition-[transform,opacity] duration-(--rendra-duration-fast) ease-out group-data-[state=checked]:scale-100 group-data-[state=checked]:opacity-100" />
       )}
     </span>
   )
@@ -100,7 +121,8 @@ export function RadioGroup({
     >
       {options.map((o) =>
         variant === 'cards' ? (
-          <R.Item
+          <Item
+            on={on}
             key={o.value}
             value={o.value}
             disabled={o.disabled}
@@ -123,7 +145,7 @@ export function RadioGroup({
               )}
             </span>
             {dotFor(o.value)}
-          </R.Item>
+          </Item>
         ) : (
           <label
             key={o.value}
@@ -132,13 +154,14 @@ export function RadioGroup({
               o.disabled && 'cursor-not-allowed opacity-60',
             )}
           >
-            <R.Item
+            <Item
+              on={on}
               value={o.value}
               disabled={o.disabled}
               className="group flex pt-px outline-none focus-visible:[&>span]:focus-ring"
             >
               {dotFor(o.value)}
-            </R.Item>
+            </Item>
             <span className="flex min-w-0 flex-col gap-1">
               <span className="text-sm font-medium">{o.label}</span>
               {o.description && (

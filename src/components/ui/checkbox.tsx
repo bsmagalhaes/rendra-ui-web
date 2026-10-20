@@ -51,44 +51,52 @@ export function Checkbox({
     ) : (
       <Check className="size-3" strokeWidth={3} aria-hidden />
     )
-  const box = (
-    <C.Root
-      id={cid}
-      name={name}
-      checked={on ? state : checked}
-      defaultChecked={on ? undefined : defaultChecked}
-      onCheckedChange={(v) => {
-        if (on) setInner(v)
-        onCheckedChange?.(v === true)
-      }}
-      disabled={disabled}
-      aria-invalid={invalid || undefined}
-      aria-label={aria['aria-label']}
-      data-touch={label ? undefined : 'expanded'}
-      className={cn(
-        'peer relative flex size-icon-md shrink-0 cursor-pointer items-center justify-center rounded-item border border-input bg-card transition-colors',
-        'hover:border-primary data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        invalid && 'border-destructive',
-        // Área de toque ampliada sem mudar o desenho
-        !label && 'before:absolute before:-inset-3 md:before:hidden',
-      )}
-    >
-      {on ? (
+  const rootProps = {
+    id: cid,
+    name,
+    checked: on ? state : checked,
+    defaultChecked: on ? undefined : defaultChecked,
+    onCheckedChange: (v: boolean | 'indeterminate') => {
+      if (on) setInner(v)
+      onCheckedChange?.(v === true)
+    },
+    disabled,
+    'aria-invalid': invalid || undefined,
+    'aria-label': aria['aria-label'],
+    'data-touch': label ? undefined : 'expanded',
+    className: cn(
+      'peer relative flex size-icon-md shrink-0 cursor-pointer items-center justify-center rounded-item border border-input bg-card transition-colors',
+      'hover:border-primary data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground',
+      'disabled:cursor-not-allowed disabled:opacity-50',
+      invalid && 'border-destructive',
+      // Área de toque ampliada sem mudar o desenho
+      !label && 'before:absolute before:-inset-3 md:before:hidden',
+    ),
+  } as const
+  const box = on ? (
+    // `on`: a caixa responde ao toque (whileTap 0,97) e o indicador entra de 0,9 a 1 sem quique.
+    <C.Root asChild {...rootProps}>
+      <m.button
+        type="button"
+        whileTap={presets.press.whileTap}
+        transition={presets.press.transition}
+      >
         <AnimatePresence initial={false}>
           {state !== false && (
             <C.Indicator forceMount asChild>
-              <m.span className="flex items-center justify-center" {...presets.pop}>
+              <m.span className="flex items-center justify-center" {...presets.indicator}>
                 {mark}
               </m.span>
             </C.Indicator>
           )}
         </AnimatePresence>
-      ) : (
-        <C.Indicator className="flex items-center justify-center data-[state=checked]:animate-in data-[state=checked]:zoom-in-50">
-          {mark}
-        </C.Indicator>
-      )}
+      </m.button>
+    </C.Root>
+  ) : (
+    <C.Root {...rootProps}>
+      <C.Indicator className="flex items-center justify-center data-[state=checked]:animate-in data-[state=checked]:duration-(--rendra-duration-fast) data-[state=checked]:zoom-in-90">
+        {mark}
+      </C.Indicator>
     </C.Root>
   )
   if (!label)

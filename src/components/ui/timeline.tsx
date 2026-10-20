@@ -94,12 +94,14 @@ export function Timeline({ events, className }: { events: TimelineEvent[]; class
             </span>
             <div className="flex min-w-0 flex-1 flex-col gap-1 pt-1">
               <div className="flex min-w-0 flex-col gap-1 @sm:flex-row @sm:items-baseline @sm:justify-between @sm:gap-3">
-                <span className="text-sm font-medium">{e.title}</span>
+                <span className="text-sm font-medium wrap-break-word">{e.title}</span>
                 <time className="shrink-0 text-xs text-muted-foreground tabular-nums">
                   {e.date}
                 </time>
               </div>
-              {e.description && <p className="text-sm text-muted-foreground">{e.description}</p>}
+              {e.description && (
+                <p className="text-sm wrap-break-word text-muted-foreground">{e.description}</p>
+              )}
               {e.status && StatusIcon && (
                 <span
                   className={cn(

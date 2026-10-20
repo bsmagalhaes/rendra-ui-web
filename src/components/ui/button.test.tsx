@@ -66,22 +66,22 @@ describe('Button com motion', () => {
     expect(ref.current).toBeInstanceOf(HTMLButtonElement)
   })
 
-  it('em on a classe active:scale-98 sai (não soma com o whileTap); em off continua', () => {
+  it('em on a classe active:scale-97 sai (não soma com o whileTap); em off continua', () => {
     emOn(<Button>Salvar</Button>)
     expect(screen.getByRole('button', { name: 'Salvar' }).className).not.toContain(
-      'active:scale-98',
+      'active:scale-97',
     )
     expect(screen.getByRole('button', { name: 'Salvar' }).className).toContain('active:scale-100')
     cleanup()
     renderApp(<Button>Salvar</Button>)
-    expect(screen.getByRole('button', { name: 'Salvar' }).className).toContain('active:scale-98')
+    expect(screen.getByRole('button', { name: 'Salvar' }).className).toContain('active:scale-97')
   })
 
   it('em on o toque comprime discretamente; com movimento reduzido, não', async () => {
     emOn(<Button>Salvar</Button>)
     const button = screen.getByRole('button', { name: 'Salvar' })
     fireEvent.pointerDown(button, { pointerId: 1, button: 0, isPrimary: true })
-    await waitFor(() => expect(button.style.transform).toContain('scale(0.98)'))
+    await waitFor(() => expect(button.style.transform).toContain('scale(0.97)'))
     fireEvent.pointerUp(button, { pointerId: 1, button: 0, isPrimary: true })
     cleanup()
     const restore = reduceMotion()

@@ -14,7 +14,7 @@ import { bindNativeEvents, splitNativeEvents } from '@/lib/motion/native-events'
  * Altura vem de h-control-*: 44px ou mais no mobile, compacta a partir de md.
  */
 export const buttonVariants = cva(
-  'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-control font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out select-none active:scale-98 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 motion-reduce:active:scale-100 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-control font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,transform] duration-(--rendra-duration-press) ease-out select-none active:scale-97 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 motion-reduce:active:scale-100 [&_svg]:pointer-events-none [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -91,7 +91,14 @@ const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
         assignRef(ref, null)
       }
     }
-    return <m.button ref={attach} whileTap={presets.tap} {...rest} />
+    return (
+      <m.button
+        ref={attach}
+        whileTap={presets.press.whileTap}
+        transition={presets.press.transition}
+        {...rest}
+      />
+    )
   },
 )
 
@@ -122,10 +129,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     console.warn('Button com iconOnly precisa de aria-label.')
   }
   const on = useMotionMode() === 'on'
-  // Em `on` o toque é do whileTap: a classe `active:scale-98` sairia somando com ele.
+  // Em `on` o toque é do whileTap: a classe `active:scale-97` sairia somando com ele, e o
+  // `transform` sai da lista de transition (senão o CSS transiciona cada quadro que o Motion grava
+  // e o toque chega atrasado). Com asChild nada disso: é só CSS, como em `off`.
   const classes = cn(
     buttonVariants({ variant, size, iconOnly, fullWidth }),
-    on && !asChild && 'active:scale-100',
+    on &&
+      !asChild &&
+      'transition-[color,background-color,border-color,box-shadow] active:scale-100',
     className,
   )
   const code = resolveCatalogCode('Button', { variant: variant ?? 'primary' })

@@ -249,14 +249,17 @@ describe('Wizard com motion', () => {
     expect(container.querySelector('svg.lucide-check')).toBeInTheDocument()
   })
 
-  it('em on, a etapa nova entra por deslocamento curto; reduzido, só opacidade', async () => {
+  it('em on, a etapa nova assenta (transform none, opacidade 1, sem desfoque); reduzido, só opacidade', async () => {
     emOn(
       <Wizard steps={steps}>
         <p>Conteúdo da etapa 1</p>
         <p>Conteúdo da etapa 2</p>
       </Wizard>,
     )
-    await expectSettled(screen.getByText('Conteúdo da etapa 1').parentElement!, 'none')
+    const passo = screen.getByText('Conteúdo da etapa 1').parentElement!
+    await waitFor(() => expect(passo.style.opacity).toBe('1'))
+    expect(passo.style.transform).toBe('none')
+    expect(passo.style.filter).toBe('blur(0px)')
     cleanup()
     const restore = reduceMotion()
     try {
@@ -267,6 +270,7 @@ describe('Wizard com motion', () => {
         </Wizard>,
       )
       await expectSettled(screen.getByText('Conteúdo da etapa 1').parentElement!, 'absent')
+      expect(screen.getByText('Conteúdo da etapa 1').parentElement!.style.filter).toBe('')
     } finally {
       restore()
     }
