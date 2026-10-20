@@ -63,7 +63,7 @@ const eventos = [
 ]
 
 /**
- * Um bloco da cascata. Em ligado entra com slide curto e atraso pelo índice (na ordem visual);
+ * Um bloco da cascata. Em ligado entra com o reveal (600 ms, passo de 120 ms) e atraso pelo índice (na ordem visual);
  * em desligado é um `div` comum, sem `initial` nem `animate`.
  */
 function Bloco({
@@ -84,14 +84,14 @@ function Bloco({
       </div>
     )
   }
-  const enter = presets.slide('bottom', 'short')
+  const enter = presets.reveal('bottom')
   return (
     <m.div
       data-bloco
       className={cn('min-w-0', className)}
       initial={enter.initial}
       animate={enter.animate}
-      transition={{ ...enter.transition, ...presets.stagger(index) }}
+      transition={{ ...enter.transition, ...presets.staggerReveal(index) }}
     >
       {children}
     </m.div>

@@ -33,7 +33,7 @@ function Counter({ parsed, value }: { parsed: ParsedNumber; value: ReactNode }) 
   const [done, setDone] = useState(false)
   useEffect(() => {
     const controls = animate(progress, parsed.value, {
-      duration: presets.tokens.duration.draw,
+      duration: presets.tokens.reveal.count,
       ease: presets.tokens.ease.out,
       onComplete: () => setDone(true),
     })

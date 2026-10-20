@@ -37,14 +37,21 @@ export interface Presets {
   scale: MotionPreset
   pop: MotionPreset
   slide: (from: SlideFrom, distance?: SlideDistance) => MotionPreset
+  /**
+   * Entrada de uso único (reveal do dashboard): desloca 8 px e dura `reveal.enter`, mais lenta
+   * que `slide`. Não serve a interação repetida (overlay, tab, botão).
+   */
+  reveal: (from: SlideFrom) => MotionPreset
   /** Transição de `layout`/`layoutId`. */
   layout: Transition
   /** Atraso de entrada do item `index`, limitado a `limit` itens. */
   stagger: (index: number, limit?: number) => Transition
+  /** Atraso do bloco `index` no reveal (passo `reveal.stagger`), limitado a `limit` blocos. */
+  staggerReveal: (index: number, limit?: number) => Transition
 }
 
 export function createPresets(tokens: MotionTokens, reduced: boolean): Presets {
-  const { duration, ease } = tokens
+  const { duration, reveal, ease } = tokens
   const make = (initial: Target, animate: Target, time: number, curve = ease.out): MotionPreset => {
     if (reduced) {
       return {
@@ -90,9 +97,16 @@ export function createPresets(tokens: MotionTokens, reduced: boolean): Presets {
       const initial = offset(from, distance)
       return make(initial, settled(initial), distance === 'full' ? duration.slow : duration.base)
     },
+    reveal: (from) => {
+      const initial = offset(from, 'short')
+      return make(initial, settled(initial), reveal.enter)
+    },
     layout: reduced ? { duration: 0 } : { duration: duration.base, ease: ease.out },
     stagger: (index, limit = 10) => ({
       delay: reduced ? 0 : Math.min(index, limit) * (duration.fast / 2),
+    }),
+    staggerReveal: (index, limit = 8) => ({
+      delay: reduced ? 0 : Math.min(index, limit) * reveal.stagger,
     }),
   }
 }

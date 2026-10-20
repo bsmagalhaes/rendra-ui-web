@@ -224,7 +224,7 @@ function Gauge({
               initial={{ x2: sx, y2: sy }}
               animate={{ x2: ex, y2: ey }}
               transition={{
-                duration: presets.tokens.duration.draw,
+                duration: presets.tokens.reveal.draw,
                 ease: presets.tokens.ease.out,
               }}
               stroke="var(--rendra-foreground)"
@@ -391,7 +391,7 @@ function Cartesian({
   const draw =
     motion === 'on'
       ? {
-          animationDuration: Math.round(presets.tokens.duration.draw * 1000),
+          animationDuration: Math.round(presets.tokens.reveal.draw * 1000),
           animationEasing: toCubicBezier(presets.tokens.ease.out),
         }
       : {}

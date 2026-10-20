@@ -303,6 +303,11 @@
   --rendra-duration-base: 200ms;
   --rendra-duration-slow: 320ms;
   --rendra-duration-draw: 420ms;
+  /* Reveal: entrada de uso único (bloco, cascata, contador e gráfico do dashboard), mais lenta. */
+  --rendra-reveal-enter: 600ms;
+  --rendra-reveal-stagger: 120ms;
+  --rendra-reveal-count: 1200ms;
+  --rendra-reveal-draw: 900ms;
 }
 
 /*

@@ -74,6 +74,18 @@ describe('DashboardMotionPage', () => {
     for (let i = 0; i < ops.length - 1; i++) expect(ops[i]).toBeGreaterThanOrEqual(ops[i + 1]!)
   })
 
+  it('a entrada é lenta: depois de 800 ms o último bloco ainda está entrando e o contador ainda sobe', async () => {
+    restaurar = realAnimations()
+    renderApp(<DashboardMotionPage />)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 800))
+    })
+    const lista = blocos()
+    expect(Number(lista[lista.length - 1]!.style.opacity)).toBeLessThan(1)
+    expect(valor()).not.toBe(final)
+    await waitFor(() => expect(valor()).toBe(final), { timeout: 3000 })
+  })
+
   it('em desligado, nenhum bloco tem opacidade nem transform do Motion, mesmo com animações reais', async () => {
     restaurar = realAnimations()
     renderApp(<DashboardMotionPage />)

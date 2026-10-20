@@ -54,7 +54,7 @@ describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (t
     )
     expect(seen.props.length).toBeGreaterThan(0)
     for (const p of seen.props) {
-      expect(p.animationDuration).toBe(420)
+      expect(p.animationDuration).toBe(900)
       expect(p.animationEasing).toBe('cubic-bezier(0.22,1,0.36,1)')
       expect(p.isAnimationActive).toBe(true)
     }

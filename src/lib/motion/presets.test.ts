@@ -10,6 +10,7 @@ import { useMotionPresets } from './use-motion-presets'
 
 const tokens: MotionTokens = {
   duration: { fast: 0.11, base: 0.22, slow: 0.33, draw: 0.44 },
+  reveal: { enter: 0.55, stagger: 0.11, count: 1.1, draw: 0.88 },
   ease: EASE,
 }
 
@@ -47,6 +48,21 @@ describe('presets', () => {
     expect(p.stagger(4).delay).toBeCloseTo(4 * 0.055)
     expect(p.stagger(50, 10).delay).toBeCloseTo(10 * 0.055)
     expect(createPresets(tokens, true).stagger(4)).toEqual({ delay: 0 })
+  })
+
+  it('reveal: entrada de uso único usa reveal.enter (mais lenta que slide) e a cascata usa reveal.stagger', () => {
+    const p = createPresets(tokens, false)
+    expect(p.reveal('bottom').transition).toMatchObject({ duration: 0.55, ease: EASE.out })
+    expect(p.reveal('bottom').initial).toMatchObject({ y: 8, opacity: 0 })
+    expect(p.reveal('bottom').exit).toEqual(p.reveal('bottom').initial)
+    expect(p.reveal('bottom').transition.duration).toBeGreaterThan(
+      p.slide('bottom', 'short').transition.duration as number,
+    )
+    expect(p.staggerReveal(0)).toEqual({ delay: 0 })
+    expect(p.staggerReveal(3).delay).toBeCloseTo(3 * 0.11)
+    expect(p.staggerReveal(50, 8).delay).toBeCloseTo(8 * 0.11)
+    expect(createPresets(tokens, true).staggerReveal(4)).toEqual({ delay: 0 })
+    expect(createPresets(tokens, true).reveal('bottom').transition).toEqual({ duration: 0 })
   })
 
   it('com movimento reduzido todos perdem x, y e scale e têm duração 0', () => {
