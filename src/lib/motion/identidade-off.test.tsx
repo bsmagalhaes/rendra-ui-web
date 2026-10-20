@@ -36,9 +36,15 @@ import { Wizard } from '@/components/ui/wizard'
 import { renderApp } from '@/test/render'
 
 /*
- * Ancoragem do caminho `off` (motion desligado, o padrão): o HTML de cada componente, gravado
- * antes de qualquer mudança da frente de motion, nunca é regenerado. Qualquer diferença nestes
- * arquivos em `__snapshots__/off/` é regressão do caminho `off`, que precisa continuar idêntico.
+ * Ancoragem do caminho `off` (motion desligado, o padrão): o HTML de cada componente. Até a
+ * segunda rodada de motion este arquivo nunca era regenerado. Em 20/10/2026 o dono mandou
+ * CORRIGIR também o `off` (decisão registrada em `processo/decisoes-motion-v2.md`): tempo, curva,
+ * origem e estado intermediário passam a seguir a linguagem única. A regeneração é só deste
+ * arquivo (`vitest run src/lib/motion/identidade-off.test.tsx -u`) e cada diferença nos HTML de
+ * `__snapshots__/off/` tem de ter uma linha na tabela fechada do parecer (B4), conferida em
+ * `linguagem-unica.test.ts`: diferença sem linha é bug. Mudança de elemento, de atributo que não
+ * seja classe de tempo e de ordem de nó continua proibida no `off`; as 152 capturas de
+ * `tests/__screenshots__/linux/` seguem idênticas, porque o que mudou não aparece em quadro parado.
  * Os ids de `useId` são normalizados, porque dependem da ordem de montagem.
  */
 
