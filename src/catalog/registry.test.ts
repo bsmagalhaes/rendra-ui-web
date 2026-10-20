@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { CATALOG, CATALOG_EXCLUDED_FILES } from './components'
@@ -34,5 +34,16 @@ describe('registry.json: meta.codes (etapa 1.2.0-alpha.3)', () => {
       const expected = CATALOG.filter((entry) => entry.file === file).map((entry) => entry.code)
       expect(item.meta?.codes ?? []).toEqual(expected)
     }
+  })
+})
+
+describe('registry.json: motion (linguagem única)', () => {
+  it('lista todos os arquivos de src/lib/motion que não são teste (API pública só acrescenta)', () => {
+    const registro = readFileSync(join(process.cwd(), 'registry.json'), 'utf8')
+    const arquivos = readdirSync(join(process.cwd(), 'src/lib/motion')).filter(
+      (f) => /\.(ts|tsx)$/.test(f) && !/\.test\.(ts|tsx)$/.test(f),
+    )
+    expect(arquivos.length).toBeGreaterThanOrEqual(9)
+    for (const f of arquivos) expect(registro, f).toContain(`"src/lib/motion/${f}"`)
   })
 })

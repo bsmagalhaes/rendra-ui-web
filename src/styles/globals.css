@@ -94,16 +94,26 @@
   --tracking-normal: 0em;
   --tracking-wide: 0.04em;
 
-  /* Animação */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /*
+   * Animação. Os nomes do Tailwind (ease-out, ease-move...) são alias das curvas
+   * --rendra-ease-* do bloco :root mais abaixo: o valor mora lá, onde o host o sobrescreve.
+   */
+  --ease-out: var(--rendra-ease-out);
+  --ease-in-out: var(--rendra-ease-in-out);
+  --ease-spring: var(--rendra-ease-spring);
+  --ease-move: var(--rendra-ease-move);
+  --ease-drawer: var(--rendra-ease-drawer);
 
-  /* Ícones animados: traço se desenhando, entrada com mola, tremor de erro */
-  --animate-draw: rd-draw 420ms var(--ease-out) 200ms both;
-  --animate-pop: rd-pop 420ms var(--ease-spring) both;
-  --animate-shake: rd-shake 420ms var(--ease-in-out) 620ms both;
-  --animate-encaixe: rd-encaixe 240ms var(--ease-out) both;
+  /*
+   * Ícones animados: traço se desenhando, entrada com mola, tremor de erro. Tempos pelos tokens
+   * --rendra-duration-* (draw 420, base 200, fast x 2 = 240), sem literal.
+   */
+  --animate-draw: rd-draw var(--rendra-duration-draw) var(--ease-out) var(--rendra-duration-base)
+    both;
+  --animate-pop: rd-pop var(--rendra-duration-draw) var(--ease-spring) both;
+  --animate-shake: rd-shake var(--rendra-duration-draw) var(--ease-in-out)
+    calc(var(--rendra-duration-draw) + var(--rendra-duration-base)) both;
+  --animate-encaixe: rd-encaixe calc(var(--rendra-duration-fast) * 2) var(--ease-out) both;
 
   @keyframes rd-draw {
     from {
@@ -116,7 +126,7 @@
   @keyframes rd-pop {
     0% {
       opacity: 0;
-      transform: scale(0.4);
+      transform: scale(0.8);
     }
     60% {
       opacity: 1;
@@ -293,16 +303,30 @@
 /*
  * DURAÇÕES do motion (modo `motion="on"`; o caminho `off` não as lê). Fora de camada e fora do
  * @theme, como --rendra-shape-*: o build do pacote leva este bloco para o dist/tokens.css, e o
- * host consegue sobrescrevê-las. As curvas são as --ease-* do @theme (src/lib/motion/tokens.ts
- * guarda a reserva delas, porque o pacote as inlineia). Literais de duração anteriores a este
- * bloco não migram.
+ * host consegue sobrescrevê-las. As curvas moram aqui também (--rendra-ease-*), e os nomes do
+ * Tailwind (--ease-out, --ease-move...) no @theme são alias delas; src/lib/motion/tokens.ts
+ * guarda a reserva de cada valor, e tokens.test.ts confere que batem.
+ * Linguagem única de movimento (web e app): press (toque), hover, fast (saída), base (entrada),
+ * move (deslocamento na tela), slow (gaveta e folha) e draw (desenho).
  */
 :root,
 [data-rendra-root] {
+  --rendra-duration-press: 120ms;
+  --rendra-duration-hover: 150ms;
   --rendra-duration-fast: 120ms;
   --rendra-duration-base: 200ms;
+  --rendra-duration-move: 250ms;
   --rendra-duration-slow: 320ms;
   --rendra-duration-draw: 420ms;
+  /* Pulso do skeleton (brilho que cruza o bloco); o app usa o mesmo 1000. */
+  --rendra-duration-pulse: 1000ms;
+  --rendra-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Fica como está (R4): alimenta o tremor do erro. O deslocamento usa --rendra-ease-move. */
+  --rendra-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* "Back": tem quique. Só para a cota rara de encanto. */
+  --rendra-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --rendra-ease-move: cubic-bezier(0.77, 0, 0.175, 1);
+  --rendra-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   /* Reveal: entrada de uso único (bloco, cascata, contador e gráfico do dashboard), mais lenta. */
   --rendra-reveal-enter: 600ms;
   --rendra-reveal-stagger: 120ms;
@@ -407,6 +431,14 @@
     color: var(--rendra-primary-soft-foreground);
   }
 
+  /*
+   * Reduzir movimento: menos e mais suave, não zero. Transições de CSS e os outros keyframes
+   * (rd-*, spin, pulse) seguem cortados. Os overlays do `off` (tw-animate: animate-in e
+   * animate-out) só esmaecem: as variáveis de deslocamento, escala, rotação e desfoque do pacote
+   * são neutralizadas, e as animações de elementos com data-state (o que o Radix abre e fecha)
+   * ganham a duração base, para a opacidade ainda explicar a abertura. No `on`, o reduzido vem
+   * dos presets (src/lib/motion/presets.ts).
+   */
   @media (prefers-reduced-motion: reduce) {
     *,
     ::before,
@@ -415,6 +447,42 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+      --tw-enter-scale: 1 !important;
+      --tw-enter-translate-x: 0 !important;
+      --tw-enter-translate-y: 0 !important;
+      --tw-enter-rotate: 0 !important;
+      --tw-enter-blur: 0 !important;
+      --tw-exit-scale: 1 !important;
+      --tw-exit-translate-x: 0 !important;
+      --tw-exit-translate-y: 0 !important;
+      --tw-exit-rotate: 0 !important;
+      --tw-exit-blur: 0 !important;
+    }
+    [data-state='open'],
+    [data-state='closed'],
+    [data-state='delayed-open'],
+    [data-state='instant-open'] {
+      animation-duration: var(--rendra-duration-base) !important;
+    }
+    /*
+     * O acordeão e o colapsável (altura) e o que mais anima a altura de um bloco com overflow
+     * escondido: sob reduzir movimento a altura salta e só a opacidade esmaece.
+     */
+    @keyframes rd-reduced-in {
+      from {
+        opacity: 0;
+      }
+    }
+    @keyframes rd-reduced-out {
+      to {
+        opacity: 0;
+      }
+    }
+    [data-state='open'].overflow-hidden {
+      animation-name: rd-reduced-in !important;
+    }
+    [data-state='closed'].overflow-hidden {
+      animation-name: rd-reduced-out !important;
     }
   }
 }
@@ -525,10 +593,57 @@
   }
 }
 @utility progress-slide {
-  animation: rd-progress-slide 1.1s ease-in-out infinite;
+  /* Movimento constante (progresso indeterminado): linear, no tempo do pulso. */
+  animation: rd-progress-slide var(--rendra-duration-pulse) linear infinite;
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
+}
+
+/*
+ * Skeleton com motion: um brilho suave cruza o bloco (transform, off main thread), no lugar do
+ * pulso de opacidade. Cor pelo token (muted-foreground a 12%), tempo e curva pelos tokens de
+ * movimento. Parado com "reduzir movimento" (o bloco continua visível, só não se mexe).
+ */
+@keyframes rd-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@utility skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--rendra-muted-foreground) 12%, transparent),
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: rd-shimmer var(--rendra-duration-pulse) var(--rendra-ease-move) infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+/*
+ * Aba ativa por clip-path: a cópia da lista (texto na cor de destaque) só aparece sobre a aba
+ * ativa. --tabs-l e --tabs-r são os recortes, em px, medidos no componente. Sem recorte (antes de
+ * medir) a cópia fica escondida (right 100%).
+ */
+@utility tabs-clip {
+  clip-path: inset(0 var(--tabs-r, 100%) 0 var(--tabs-l, 0px));
+  transition: clip-path var(--rendra-duration-move) var(--rendra-ease-move);
 }
 
 /*
