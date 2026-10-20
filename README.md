@@ -459,3 +459,10 @@ Contribuições são bem-vindas pelo fluxo descrito em [CONTRIBUTING.md](CONTRIB
 ## Créditos
 
 Construído sobre Tailwind CSS, shadcn/ui, Radix UI, Lucide, TanStack Table, cmdk, Sonner, React Hook Form, Zod, IMask, React Day Picker, Recharts, Storybook e Playwright. As fontes Poppins, Inter e DM Sans são distribuídas sob a SIL Open Font License. Os símbolos dos templates são ilustrativos. O logotipo é montado pelo componente `BrandLogo` com as cores da paleta ativa.
+
+### Ferramentas de movimento
+
+A linguagem de movimento do Rendra (tempo, curva, origem, mola e o que não anima) foi desenhada e auditada com duas skills de agente de código. Elas ficam só na máquina de quem desenvolve; o Rendra não as redistribui.
+
+- **Emil Kowalski**: as skills `emil-design-eng`, `animate`, `review-animations`, `animation-performance`, `find-animation-opportunities` e `improve-animations`, sob a licença **MIT**. Repositório de origem: [github.com/emilkowalski/skills](https://github.com/emilkowalski/skills). As regras de frequência, de assimetria entre entrada e saída, de origem do gatilho e do orçamento de tempo que o motion deste projeto segue vêm do trabalho dele.
+- **Impeccable**: a skill `impeccable` (modo Operar: `audit`, `polish`, `harden`), sob a licença **Apache 2.0**. Repositório de origem: [github.com/pbakaus/impeccable](https://github.com/pbakaus/impeccable).
