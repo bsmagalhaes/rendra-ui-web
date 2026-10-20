@@ -2,10 +2,10 @@ import { useMemo, useSyncExternalStore } from 'react'
 import { getReducedMotion, subscribeReducedMotion } from '@/hooks/use-reduced-motion'
 import { useMotionMode } from './motion-context'
 import { createPresets, presetsFromDocument, type Presets } from './presets'
-import { DURATION, EASE } from './tokens'
+import { DURATION, EASE, REVEAL } from './tokens'
 
 /** Em `off` ninguém lê o documento nem assina o matchMedia: um objeto único e inerte. */
-const OFF_PRESETS = createPresets({ duration: DURATION, ease: EASE }, false)
+const OFF_PRESETS = createPresets({ duration: DURATION, reveal: REVEAL, ease: EASE }, false)
 const noSubscribe = () => () => {}
 const never = () => false
 

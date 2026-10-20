@@ -13,6 +13,13 @@ export type Bezier = [number, number, number, number]
 export const DURATION = { fast: 0.12, base: 0.2, slow: 0.32, draw: 0.42 }
 export type DurationName = keyof typeof DURATION
 
+/**
+ * Reveal: entrada de uso único (dashboard: bloco, cascata, contador e desenho do gráfico), mais
+ * lenta que as interações do dia a dia. Reserva em segundos (SSR, ou variável ausente).
+ */
+export const REVEAL = { enter: 0.6, stagger: 0.12, count: 1.2, draw: 0.9 }
+export type RevealName = keyof typeof REVEAL
+
 /** Curvas do globals.css (`--ease-out`, `--ease-in-out`, `--ease-spring`). */
 export const EASE: Record<'out' | 'inOut' | 'spring', Bezier> = {
   out: [0.22, 1, 0.36, 1],
@@ -22,6 +29,7 @@ export const EASE: Record<'out' | 'inOut' | 'spring', Bezier> = {
 
 export interface MotionTokens {
   duration: Record<DurationName, number>
+  reveal: Record<RevealName, number>
   ease: Record<keyof typeof EASE, Bezier>
 }
 
@@ -37,12 +45,17 @@ function toSeconds(value: string): number | null {
 /** Lê as durações do documento; o que faltar (ou sem window) vem da reserva. */
 export function readMotionTokens(): MotionTokens {
   const duration = { ...DURATION }
+  const reveal = { ...REVEAL }
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     const style = getComputedStyle(document.documentElement)
     for (const name of Object.keys(DURATION) as DurationName[]) {
       const read = toSeconds(style.getPropertyValue(`--rendra-duration-${name}`))
       if (read !== null) duration[name] = read
     }
+    for (const name of Object.keys(REVEAL) as RevealName[]) {
+      const read = toSeconds(style.getPropertyValue(`--rendra-reveal-${name}`))
+      if (read !== null) reveal[name] = read
+    }
   }
-  return { duration, ease: EASE }
+  return { duration, reveal, ease: EASE }
 }

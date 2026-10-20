@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
-import { EASE, DURATION, readMotionTokens } from './tokens'
+import { EASE, DURATION, REVEAL, readMotionTokens } from './tokens'
 
 const css = readFileSync('src/styles/globals.css', 'utf8')
 
@@ -31,6 +31,37 @@ describe('tokens de duração em globals.css', () => {
   it('não cria duração sem o prefixo do Rendra nem curva nova com o prefixo', () => {
     expect(css).not.toMatch(/--duration-/)
     expect(css).not.toMatch(/--rendra-ease-/)
+  })
+})
+
+describe('tokens de reveal em globals.css (entrada de uso único, mais lenta que as interações)', () => {
+  it.each([
+    ['--rendra-reveal-enter', '600ms'],
+    ['--rendra-reveal-stagger', '120ms'],
+    ['--rendra-reveal-count', '1200ms'],
+    ['--rendra-reveal-draw', '900ms'],
+  ])('declara %s: %s', (name, value) => {
+    expect(declared(name)).toBe(value)
+  })
+
+  it('a reserva em segundos é a do dono: 0,6, 0,12, 1,2 e 0,9', () => {
+    expect(REVEAL).toEqual({ enter: 0.6, stagger: 0.12, count: 1.2, draw: 0.9 })
+  })
+
+  it('lê as variáveis do documento e cai na reserva quando faltam', () => {
+    const el = document.documentElement
+    expect(readMotionTokens().reveal).toEqual(REVEAL)
+    el.style.setProperty('--rendra-reveal-enter', '800ms')
+    try {
+      expect(readMotionTokens().reveal.enter).toBeCloseTo(0.8)
+      expect(readMotionTokens().reveal.count).toBe(REVEAL.count)
+    } finally {
+      el.style.removeProperty('--rendra-reveal-enter')
+    }
+  })
+
+  it('as durações do dia a dia não mudaram', () => {
+    expect(DURATION).toEqual({ fast: 0.12, base: 0.2, slow: 0.32, draw: 0.42 })
   })
 })
 
