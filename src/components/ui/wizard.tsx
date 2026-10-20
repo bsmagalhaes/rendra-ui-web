@@ -259,32 +259,19 @@ export function Wizard({
   const previous = useRef(current)
   const direction = current >= previous.current ? 1 : -1
   previous.current = current
-  const slideIn = (d: number) => presets.slide(d > 0 ? 'right' : 'left', 'short')
-  const variants = {
-    enter: (d: number) => slideIn(d).initial,
-    center: slideIn(1).animate,
-    exit: (d: number) => slideIn(-d).initial,
-  }
-
   const body =
     motion === 'on' ? (
-      // `on`: a etapa troca com slide curto na direção do passo; o corpo antigo sai antes.
+      // `on`: a etapa nova entra de 8 px na direção do passo e a antiga sai por opacidade com
+      // blur de 2 px, sem esperar (popLayout tira a que sai do fluxo: nada empurra a que entra).
       // A chave por etapa remonta o corpo: o estado local de campos não controlados se perde
       // (os campos do formulário do projeto são controlados, então o valor volta igual).
-      <AnimatePresence mode="wait" initial={false} custom={direction}>
-        <m.div
-          key={current}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={slideIn(1).transition}
-          className="flex min-w-0 flex-col gap-6"
-        >
-          {children[current]}
-        </m.div>
-      </AnimatePresence>
+      <div className="relative flex min-w-0 flex-col gap-6">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <m.div key={current} {...presets.swap(direction)} className="flex min-w-0 flex-col gap-6">
+            {children[current]}
+          </m.div>
+        </AnimatePresence>
+      </div>
     ) : (
       <div className="flex min-w-0 flex-col gap-6">{children[current]}</div>
     )

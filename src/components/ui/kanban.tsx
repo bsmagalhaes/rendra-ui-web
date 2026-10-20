@@ -585,7 +585,7 @@ export function Kanban({
           }}
           layout={layout}
           layoutId={layout ? `${boardId}-${card.id}` : undefined}
-          transition={presets.layout}
+          transition={presets.settle}
           {...common}
         >
           {body}

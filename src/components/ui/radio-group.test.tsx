@@ -49,7 +49,7 @@ describe('RadioGroup com motion', () => {
     { value: 'a', label: 'Plano A' },
     { value: 'b', label: 'Plano B' },
   ]
-  /** A bolinha interna de cada opção: escala 1 quando marcada, 0 quando não. */
+  /** A bolinha interna de cada opção: escala 1 quando marcada, 0,9 (e opacidade 0) quando não. */
   const dot = (name: string) =>
     screen.getByRole('radio', { name }).querySelector<HTMLElement>('.size-2')!
 
@@ -66,7 +66,7 @@ describe('RadioGroup com motion', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Plano B' }))
     expect(onChange).toHaveBeenLastCalledWith('b')
     await waitFor(() => expect(dot('Plano B').style.transform).toBe('none'))
-    await waitFor(() => expect(dot('Plano A').style.transform).toContain('scale(0)'))
+    await waitFor(() => expect(dot('Plano A').style.transform).toContain('scale(0.9)'))
   })
 
   it('em on: defaultValue nasce marcado e value controlado segue o pai', async () => {

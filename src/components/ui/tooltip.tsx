@@ -1,6 +1,6 @@
 import { AnimatePresence, m } from 'motion/react'
 import { Tooltip as T } from 'radix-ui'
-import { useState, type ReactNode } from 'react'
+import { forwardRef, useState, type ComponentPropsWithoutRef, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { useMotionMode, useMotionPresets } from '@/lib/motion'
 
@@ -24,12 +24,26 @@ interface TooltipProps {
   disabled?: boolean
 }
 
+// O tooltip nasce do gatilho (W6). A origem vem do Radix.
 const contentCls =
-  'z-50 max-w-xs rounded-control bg-foreground px-3 py-2 text-xs font-medium text-background'
+  'z-50 max-w-xs origin-(--radix-tooltip-content-transform-origin) wrap-break-word rounded-control bg-foreground px-3 py-2 text-xs font-medium text-background'
+
+/**
+ * O corpo animado do tooltip em `on`. O Radix entrega ao filho (asChild) o `data-state`, e é por
+ * ele que se sabe se o tooltip abriu "instantâneo" (`instant-open`: o usuário já estava com outro
+ * aberto, ou foi o foco do teclado). Nesse caso não anima: depois do primeiro, os outros abrem sem
+ * atraso e sem animação, e a barra inteira parece mais rápida (W7).
+ */
+const TooltipBody = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<typeof m.div>>(
+  function TooltipBody(props, ref) {
+    const presets = useMotionPresets()
+    const instant = (props as { 'data-state'?: string })['data-state'] === 'instant-open'
+    return <m.div ref={ref} {...props} {...presets.tooltip(instant)} />
+  },
+)
 
 export function Tooltip({ content, children, side = 'top', disabled }: TooltipProps) {
   const motion = useMotionMode()
-  const presets = useMotionPresets()
   // Só em `on`: o estado aberto fica aqui para o conteúdo continuar montado durante a saída.
   // O Radix segue dono do atraso: `onOpenChange` só dispara depois do `delayDuration`.
   const [open, setOpen] = useState(false)
@@ -50,7 +64,7 @@ export function Tooltip({ content, children, side = 'top', disabled }: TooltipPr
                 data-rendra="TIP-001"
                 className={contentCls}
               >
-                <m.div {...presets.scale}>{content}</m.div>
+                <TooltipBody>{content}</TooltipBody>
               </T.Content>
             </T.Portal>
           )}
@@ -69,7 +83,8 @@ export function Tooltip({ content, children, side = 'top', disabled }: TooltipPr
           data-rendra="TIP-001"
           className={cn(
             contentCls,
-            'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
+            // `instant-open` não anima; a saída é mais curta que a entrada (W5, W7).
+            'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:duration-(--rendra-duration-fast) data-[state=closed]:fade-out-0 data-[state=instant-open]:animate-none',
           )}
         >
           {content}

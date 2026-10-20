@@ -37,8 +37,10 @@ function show(type: FeedbackType, title: string, opts: ToastOptions = {}) {
       >
         <BrandFeedbackIcon type={type} size="lg" animated className="mt-px" />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="text-sm font-semibold">{title}</p>
-          {opts.description && <p className="text-sm text-muted-foreground">{opts.description}</p>}
+          <p className="text-sm font-semibold wrap-break-word">{title}</p>
+          {opts.description && (
+            <p className="text-sm wrap-break-word text-muted-foreground">{opts.description}</p>
+          )}
         </div>
         {opts.action && (
           <button

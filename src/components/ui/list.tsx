@@ -85,7 +85,7 @@ export function List({
     motion === 'on'
       ? {
           layout: layoutEnabled({ mode: motion, ready, dragging: sortable.draggingId !== null }),
-          transition: presets.layout,
+          transition: presets.move,
         }
       : {}
   const code = resolveCatalogCode('List', { sortable: sortableEnabled })

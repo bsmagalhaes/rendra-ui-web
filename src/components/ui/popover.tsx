@@ -53,8 +53,9 @@ export function PopoverContent({
   const open = useContext(PopoverOpenContext)
   const motion = useMotionMode()
   const presets = useMotionPresets()
+  // O popover nasce do gatilho, não do centro (W6): a origem vem do Radix.
   const base = cn(
-    'z-50 rounded-surface border bg-popover text-popover-foreground shadow-md outline-none',
+    'z-50 origin-(--radix-popover-content-transform-origin) rounded-surface border bg-popover text-popover-foreground shadow-md outline-none',
     width === 'sm' ? 'w-popover-sm' : 'w-popover',
   )
 
@@ -73,7 +74,7 @@ export function PopoverContent({
               className={cn(base, className)}
               {...props}
             >
-              <m.div {...presets.scale}>{children}</m.div>
+              <m.div {...presets.open()}>{children}</m.div>
             </P.Content>
           </P.Portal>
         )}
@@ -90,7 +91,8 @@ export function PopoverContent({
         data-rendra="POP-001"
         className={cn(
           base,
-          'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+          // A saída é mais curta que a entrada (W5): o usuário já decidiu fechar.
+          'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:duration-(--rendra-duration-fast) data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
           className,
         )}
         asChild={asChild}

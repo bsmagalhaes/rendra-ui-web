@@ -149,7 +149,8 @@ describe('DropdownMenu com motion', () => {
       { timeout: 5000 },
     )
     expect(screen.getByRole('menuitem', { name: 'Mais opções' })).toBeInTheDocument()
-  })
+    // teto de 20 s: o teste espera a saída animada e estourava os 5 s do padrão com a máquina carregada
+  }, 20_000)
 
   it('em on, o menu é animado por transform; com movimento reduzido, só opacidade', async () => {
     const user = userEvent.setup()

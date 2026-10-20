@@ -32,31 +32,50 @@ export function EmptyState({
 }: EmptyStateProps) {
   const on = useMotionMode() === 'on'
   const presets = useMotionPresets()
-  // Em `on` o contêiner entra com fade e deslocamento curto.
-  const Root: ElementType = on ? m.div : 'div'
+  // Em `on` as quatro partes (ícone, título, descrição e ações) sobem em cascata de 60 ms, cada
+  // uma com o deslize curto; a raiz em si não anima. Estado vazio é cota de encanto: ocasional,
+  // sem teclado no caminho. Em `off` o HTML é o de sempre.
+  const Icon: ElementType = on ? m.span : 'span'
+  const Title: ElementType = on ? m.p : 'p'
+  const Description: ElementType = on ? m.p : 'p'
+  const Actions: ElementType = on ? m.div : 'div'
+  const part = (index: number) => {
+    if (!on) return {}
+    const enter = presets.slide('bottom', 'short')
+    return { ...enter, transition: { ...enter.transition, ...presets.stagger(index) } }
+  }
   return (
-    <Root
+    <div
       data-rendra="VAZ-001"
-      {...(on ? presets.slide('bottom', 'short') : {})}
       className={cn(
         'flex flex-col items-center justify-center gap-4 text-center',
         size === 'compact' ? 'px-4 py-8' : 'px-4 py-12 md:py-16',
         className,
       )}
     >
-      <span className="relative flex items-center justify-center">
+      <Icon className="relative flex items-center justify-center" {...part(0)}>
         <span aria-hidden className="absolute size-16 rounded-full bg-gradient-soft" />
         <BrandFeedbackIcon
           type={type}
           size={size === 'compact' ? 'xl' : '2xl'}
           className="relative"
         />
-      </span>
+      </Icon>
       <div className="flex w-full flex-col gap-1">
-        <p className="text-base font-semibold">{title}</p>
-        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        <Title className="text-base font-semibold wrap-break-word" {...part(1)}>
+          {title}
+        </Title>
+        {description && (
+          <Description className="text-sm wrap-break-word text-muted-foreground" {...part(2)}>
+            {description}
+          </Description>
+        )}
       </div>
-      {actions && <div className="flex flex-wrap justify-center gap-3">{actions}</div>}
-    </Root>
+      {actions && (
+        <Actions className="flex flex-wrap justify-center gap-3" {...part(3)}>
+          {actions}
+        </Actions>
+      )}
+    </div>
   )
 }

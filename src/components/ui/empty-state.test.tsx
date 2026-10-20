@@ -63,7 +63,7 @@ describe('EmptyState', () => {
 })
 
 describe('EmptyState com motion', () => {
-  it('em on, mantém o código do catálogo, o texto e as ações, e entra com deslocamento curto', async () => {
+  it('em on, mantém o código do catálogo, o texto e as ações, e as partes assentam (opacidade 1, transform none)', async () => {
     const { container } = renderApp(
       <MotionProvider mode="on">
         <EmptyState title="Nada aqui" description="Sem dados." actions={<button>Criar</button>} />
@@ -73,21 +73,21 @@ describe('EmptyState com motion', () => {
     expect(screen.getByText('Nada aqui')).toBeInTheDocument()
     expect(screen.getByText('Sem dados.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Criar' })).toBeInTheDocument()
-    await expectSettled(root, 'none')
+    await expectSettled(screen.getByText('Nada aqui'), 'none')
+    await expectSettled(screen.getByText('Sem dados.'), 'none')
+    await expectSettled(screen.getByRole('button', { name: 'Criar' }).parentElement!, 'none')
+    expect(root.style.opacity).toBe('')
   })
 
   it('em on com movimento reduzido, só opacidade', async () => {
     const restore = reduceMotion()
     try {
-      const { container } = renderApp(
+      renderApp(
         <MotionProvider mode="on">
           <EmptyState title="Nada aqui" />
         </MotionProvider>,
       )
-      await expectSettled(
-        container.querySelector<HTMLElement>('[data-rendra="VAZ-001"]')!,
-        'absent',
-      )
+      await expectSettled(screen.getByText('Nada aqui'), 'absent')
     } finally {
       restore()
     }

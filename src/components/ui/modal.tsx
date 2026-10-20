@@ -5,6 +5,7 @@ import { resolveCatalogCode } from '@/catalog/components'
 import { BrandFeedbackIcon } from '@/components/ui/brand-feedback-icon'
 import { ActionBar } from '@/components/ui/action-bar'
 import { cn } from '@/lib/cn'
+import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { useMotionMode, useMotionPresets } from '@/lib/motion'
 import { OverlayShell } from './overlay-shell'
 
@@ -48,7 +49,7 @@ export interface ModalProps {
 const overlayCls = 'fixed inset-0 z-50 bg-overlay'
 const overlayOffCls = cn(
   overlayCls,
-  'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
+  'data-[state=closed]:animate-out data-[state=closed]:duration-(--rendra-duration-fast) data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
 )
 const contentCls = cn(
   // Mobile: tela inteira. Desktop: centralizado.
@@ -87,6 +88,7 @@ export function Modal({
   const isForm = type === 'form'
   const motion = useMotionMode()
   const presets = useMotionPresets()
+  const { isMobile } = useBreakpoint()
 
   // destructive tem o mesmo formato do confirm (só muda a cor): mesmo código, MOD-001.
   // O desvio fica explícito de propósito: sem ele, destructive só cairia em MOD-001
@@ -126,8 +128,10 @@ export function Modal({
         <>
           <BrandFeedbackIcon type={feedback[type as keyof typeof feedback]} size="2xl" animated />
           <div className="flex flex-col gap-2">
-            <p className="text-lg font-semibold">{title}</p>
-            {description && <p className="text-sm text-muted-foreground">{description}</p>}
+            <p className="text-lg font-semibold wrap-anywhere">{title}</p>
+            {description && (
+              <p className="text-sm wrap-anywhere text-muted-foreground">{description}</p>
+            )}
           </div>
           {children}
         </>
@@ -153,7 +157,8 @@ export function Modal({
                 data-rendra={code}
                 className={cn(contentCls, sizeCls)}
               >
-                <m.div {...presets.scale}>{shell}</m.div>
+                {/* Em tela cheia (celular) a escala do centro perde o sentido: entra de baixo, 8 px. */}
+                <m.div {...presets.open(isMobile ? { y: 8 } : undefined)}>{shell}</m.div>
               </Dialog.Content>
             </Dialog.Portal>
           )}
@@ -170,7 +175,7 @@ export function Modal({
           data-rendra={code}
           className={cn(
             contentCls,
-            'data-[state=open]:animate-in data-[state=open]:fade-in-0 md:data-[state=open]:zoom-in-95',
+            'data-[state=closed]:animate-out data-[state=closed]:duration-(--rendra-duration-fast) data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 md:data-[state=open]:zoom-in-95',
             sizeCls,
           )}
         >

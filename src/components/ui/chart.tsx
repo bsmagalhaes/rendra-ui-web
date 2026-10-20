@@ -23,7 +23,7 @@ import { resolveCatalogCode } from '@/catalog/components'
 import { Button } from '@/components/ui/button'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionMode, useMotionPresets, useRevealScope } from '@/lib/motion'
 import { toCubicBezier } from '@/lib/motion/presets'
 
 /*
@@ -178,6 +178,7 @@ function Gauge({
   const [ex, ey] = point(frac, R - 26)
   const on = useMotionMode() === 'on'
   const presets = useMotionPresets()
+  const reveal = useRevealScope()
   const [sx, sy] = point(0, R - 26)
 
   return (
@@ -224,7 +225,7 @@ function Gauge({
               initial={{ x2: sx, y2: sy }}
               animate={{ x2: ex, y2: ey }}
               transition={{
-                duration: presets.tokens.reveal.draw,
+                duration: reveal ? presets.tokens.reveal.draw : presets.tokens.duration.draw,
                 ease: presets.tokens.ease.out,
               }}
               stroke="var(--rendra-foreground)"
@@ -232,6 +233,10 @@ function Gauge({
               strokeLinecap="round"
             />
           ) : (
+            // `off`: a agulha vai direto ao valor. Antes havia aqui uma transição de CSS em "all"
+            // com 700 ms, que era letra morta: x2 e y2 do <line> não são propriedades de CSS (o
+            // Chromium não cria transição nenhuma; provado em tests/motion.spec.ts), e "all" é
+            // proibido pela linguagem de movimento.
             <line
               x1={CX}
               y1={CY}
@@ -240,7 +245,6 @@ function Gauge({
               stroke="var(--rendra-foreground)"
               strokeWidth={4}
               strokeLinecap="round"
-              className="transition-all duration-700"
             />
           )}
           <circle cx={CX} cy={CY} r={9} fill="var(--rendra-foreground)" />
@@ -386,13 +390,27 @@ function Cartesian({
   const { isMobile } = useBreakpoint()
   const motion = useMotionMode()
   const presets = useMotionPresets()
-  // Em `on` a entrada do recharts usa a duração e a curva dos presets (em `off` não recebe
-  // prop nenhuma, como antes). O recharts aceita só `cubic-bezier(a,b,c,d)` sem espaços.
+  const reveal = useRevealScope()
+  // Gráfico é dado que o usuário lê: desenha uma vez, na primeira montagem, e rápido (`draw`,
+  // 420 ms). Trocar período ou filtro não o redesenha (W11). Só dentro de um RevealScope (a
+  // chegada do dashboard) o desenho dura o tempo do reveal (900 ms). O recharts aceita a curva só
+  // no formato de toCubicBezier (quatro números, sem espaços). Em `off` não recebe prop nenhuma,
+  // como antes.
+  const [drawn, setDrawn] = useState(false)
+  const ended = useRef(0)
+  const animated = type === 'pie' ? 1 : series.length
   const draw =
     motion === 'on'
       ? {
-          animationDuration: Math.round(presets.tokens.reveal.draw * 1000),
+          animationDuration: Math.round(
+            (reveal ? presets.tokens.reveal.draw : presets.tokens.duration.draw) * 1000,
+          ),
           animationEasing: toCubicBezier(presets.tokens.ease.out),
+          // Só marca "desenhado" quando todas as séries terminaram, senão uma série pararia a
+          // outra no meio do desenho.
+          onAnimationEnd: () => {
+            if (++ended.current >= animated) setDrawn(true)
+          },
         }
       : {}
   const [asList, setAsList] = useState(false)
@@ -466,7 +484,7 @@ function Cartesian({
       // Empilhadas: só a barra de cima tem os cantos arredondados.
       radius={!stacked || lastBar ? [4, 4, 0, 0] : [0, 0, 0, 0]}
       maxBarSize={40}
-      isAnimationActive={animate}
+      isAnimationActive={animate && !drawn}
       {...draw}
     >
       {colorByCategory && data.map((_, j) => <Cell key={j} fill={colorVar(j + 1)} />)}
@@ -486,7 +504,7 @@ function Cartesian({
           outerRadius="85%"
           paddingAngle={2}
           stroke="var(--rendra-card)"
-          isAnimationActive={animate}
+          isAnimationActive={animate && !drawn}
           {...draw}
         >
           {data.map((_, i) => (
@@ -530,7 +548,7 @@ function Cartesian({
               strokeWidth={2}
               dot={{ r: 3, fill: colors[i], strokeWidth: 0 }}
               activeDot={{ r: 5 }}
-              isAnimationActive={animate}
+              isAnimationActive={animate && !drawn}
               {...draw}
             />
           ),
@@ -562,7 +580,7 @@ function Cartesian({
             stroke={colors[i]}
             strokeWidth={2}
             fill={`url(#area-${s.key})`}
-            isAnimationActive={animate}
+            isAnimationActive={animate && !drawn}
             {...draw}
           />
         ))}
@@ -586,7 +604,7 @@ function Cartesian({
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4 }}
-            isAnimationActive={animate}
+            isAnimationActive={animate && !drawn}
             {...draw}
           />
         ))}

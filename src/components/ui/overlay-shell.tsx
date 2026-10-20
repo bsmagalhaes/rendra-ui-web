@@ -70,9 +70,9 @@ export function OverlayShell({
           </span>
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-1 pt-1">
-          <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
+          <Dialog.Title className="text-lg font-semibold wrap-break-word">{title}</Dialog.Title>
           {description ? (
-            <Dialog.Description className="text-sm text-muted-foreground">
+            <Dialog.Description className="text-sm wrap-break-word text-muted-foreground">
               {description}
             </Dialog.Description>
           ) : (

@@ -87,9 +87,11 @@ describe('Drawer com motion', () => {
     expect(screen.getByTestId('estado')).toHaveTextContent('fechado')
   })
 
-  it('em on, o painel desliza por transform; com movimento reduzido, só opacidade', async () => {
+  it('em on, o painel só desliza pela borda (transform, sem opacidade); com movimento reduzido, só opacidade', async () => {
     emOn()
-    await expectSettled(screen.getByRole('dialog'), 'none')
+    const painel = screen.getByRole('dialog')
+    await waitFor(() => expect(painel.style.transform).toBe('none'))
+    expect(painel.style.opacity).toBe('')
     cleanup()
     const restore = reduceMotion()
     try {
