@@ -32,7 +32,12 @@ jobs:
       - name: Unitários e de componente, com cobertura mínima por arquivo
         run: npm run test:coverage
       - run: npm run build
+      # Logo depois do build do app (o build:lib apaga dist/): o Motion fora do bundle inicial.
+      - name: Vitrine sem o motor do Motion no bundle inicial
+        run: npm run verify:bundle:app
       - run: npm run build:lib
+      - name: Pacote sem import de motion fora do subcaminho motion
+        run: npm run verify:bundle:lib
       - run: npm run verify:pack
       - name: Paletas em dia (rode npm run palettes:build e faça commit do palettes.css)
         run: npm run palettes:build -- --check

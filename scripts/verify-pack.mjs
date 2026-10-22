@@ -32,6 +32,12 @@
  *      cobre de uma vez o namespace inteiro do Tailwind que vazava para o host antes desta
  *      correção (--spacing-*, --text-*, --font-weight-*, --tracking-*, --container-*,
  *      --ease-*, --animate-*, --default-*), corrigido em scripts/build-lib.mjs.
+ *   6. O Motion só custa bytes a quem liga o `on`: nenhuma entrada do pacote, exceto
+ *      `@rendra-ui/web/motion`, tem no fecho estático um import de `motion` além de
+ *      LazyMotion, MotionConfig e PresenceContext (scripts/bundle-inicial.mjs); a entrada
+ *      `motion` exporta `rendraMotion`, e componentes renderizam no servidor com
+ *      `motion={rendraMotion}` (on) e com `motion="on"` (texto: o HTML do off, que a
+ *      hidratação reaproveita).
  *
  * Dois caminhos: primeiro tenta instalar o tarball com `npm install --prefer-offline` num
  * projeto novo fora do repositório (prova a resolução de dependências de verdade, com o
@@ -43,7 +49,8 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { analisarLib } from './bundle-inicial.mjs'
 import { packageBanner } from './lib/pkg-banner.ts'
 import { binFieldError, privateFieldError } from './lib/verify-pack-checks.ts'
 
@@ -87,15 +94,22 @@ if (binError) fail(binError)
 // hook) e Checkbox (usa useId), pelo react/react-dom desse mesmo lugar. Um marcador único
 // na saída evita que um aviso do React em stdout atrapalhe o parse do resultado.
 const RENDER_MARKER = 'VERIFY_PACK_RESULT:'
-function renderRunnerScript(pkgSpecifier) {
+function renderRunnerScript(pkgSpecifier, motionSpecifier) {
   return `import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { Button, Checkbox } from ${JSON.stringify(pkgSpecifier)}
+import { Button, Checkbox, RendraProvider } from ${JSON.stringify(pkgSpecifier)}
+import { rendraMotion } from ${JSON.stringify(motionSpecifier)}
 
 try {
   const button = renderToStaticMarkup(createElement(Button, {}, 'Verificar pacote'))
   const checkbox = renderToStaticMarkup(createElement(Checkbox, { label: 'Verificar', defaultChecked: true }))
-  console.log('${RENDER_MARKER}' + JSON.stringify({ ok: true, button, checkbox }))
+  const comMotion = (motion, filho) =>
+    renderToStaticMarkup(createElement(RendraProvider, { motion }, filho))
+  const buttonOn = comMotion(rendraMotion, createElement(Button, {}, 'Verificar pacote'))
+  const checkboxOn = comMotion(rendraMotion, createElement(Checkbox, { label: 'Verificar', defaultChecked: true }))
+  const buttonTexto = comMotion('on', createElement(Button, {}, 'Verificar pacote'))
+  const motor = Object.keys(rendraMotion).sort()
+  console.log('${RENDER_MARKER}' + JSON.stringify({ ok: true, button, checkbox, buttonOn, checkboxOn, buttonTexto, motor }))
 } catch (error) {
   console.log('${RENDER_MARKER}' + JSON.stringify({ ok: false, message: String(error?.stack ?? error) }))
 }
@@ -114,6 +128,31 @@ function assertRenderResult(stdout) {
   assert(
     result.checkbox.includes('Verificar') && /role="checkbox"/.test(result.checkbox),
     'Checkbox (usa useId) renderiza HTML.',
+  )
+  // O `on` por objeto (síncrono, também no servidor) e por texto (o HTML do off).
+  assert(
+    [
+      'AnimatePresence',
+      'animate',
+      'domAnimation',
+      'm',
+      'useDragControls',
+      'useMotionValue',
+      'useTransform',
+    ].every((k) => result.motor.includes(k)),
+    'rendraMotion (@rendra-ui/web/motion) entrega m, AnimatePresence, animate, domAnimation e os hooks.',
+  )
+  assert(
+    result.buttonOn.includes('<button') && result.buttonOn.includes('Verificar pacote'),
+    'Button renderiza no servidor com motion={rendraMotion} (m.button no LazyMotion estrito).',
+  )
+  assert(
+    /role="checkbox"/.test(result.checkboxOn),
+    'Checkbox renderiza no servidor com motion={rendraMotion}.',
+  )
+  assert(
+    result.buttonTexto === result.button,
+    'motion="on" (texto) renderiza no servidor o HTML do off (a hidratação bate).',
   )
 }
 
@@ -300,6 +339,14 @@ assert(existsSync(entryJsPath), 'dist/index.js está no pacote publicado.')
 const entryJs = readFileSync(entryJsPath, 'utf8')
 assert(entryJs.includes(BANNER), `dist/index.js contém o banner "${BANNER}".`)
 
+// Asserção 6: o fecho estático de cada entrada do pacote publicado (instalado ou descompactado).
+const bundle = analisarLib(dirname(entryJsPath))
+for (const linha of bundle.linhas) console.log(`  ${linha}`)
+assert(
+  bundle.problemas.length === 0,
+  `O Motion só entra no bundle de quem liga o on${bundle.problemas.length ? `: ${bundle.problemas.join('; ')}` : ' (nenhuma entrada, exceto motion, importa mais que LazyMotion, MotionConfig e PresenceContext).'}`,
+)
+
 // Asserção 4: dist/types não arrasta a marca de demonstração (brand.config, examples/).
 assert(
   !existsSync(join(typesDirForAssertions, 'brand', 'brand.config.d.ts')),
@@ -314,13 +361,14 @@ assert(
 // react/react-dom de quem consome o pacote (nunca o deste repositório).
 if (path === 'instalação') {
   const runnerPath = join(consumerDir, 'render-test.mjs')
-  writeFileSync(runnerPath, renderRunnerScript(realPkg.name))
+  writeFileSync(runnerPath, renderRunnerScript(realPkg.name, `${realPkg.name}/motion`))
   const stdout = execFileSync('node', [runnerPath], { cwd: consumerDir, encoding: 'utf8' })
   assertRenderResult(stdout)
 } else {
   const runnerPath = join(EXTRACT_DIR, 'render-test.mjs')
   const pkgEntry = join(EXTRACT_DIR, 'package', 'dist', 'index.js').split('\\').join('/')
-  writeFileSync(runnerPath, renderRunnerScript(`file://${pkgEntry}`))
+  const motionEntry = join(EXTRACT_DIR, 'package', 'dist', 'motion.js').split('\\').join('/')
+  writeFileSync(runnerPath, renderRunnerScript(`file://${pkgEntry}`, `file://${motionEntry}`))
   const stdout = execFileSync('node', [runnerPath], { cwd: ROOT, encoding: 'utf8' })
   assertRenderResult(stdout)
 }

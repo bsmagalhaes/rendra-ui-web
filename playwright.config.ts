@@ -6,6 +6,7 @@ import { defineConfig } from '@playwright/test'
  *   npm run test:a11y     acessibilidade (axe-core, WCAG 2.1 AA)
  *   npm run test:visual   regressão visual contra as referências aprovadas
  *   npm run test:motion   movimento no navegador (tempo, escala, origem, gesto): /componentes-motion
+ *   npm run test:lazy     o motor do Motion só é baixado por quem liga o `on`
  */
 export default defineConfig({
   testDir: './tests',
@@ -31,6 +32,8 @@ export default defineConfig({
     { name: 'motion', testMatch: 'motion.spec.ts', fullyParallel: false },
     // Estados (vazio, carregando, erro, desabilitado) e texto longo nos componentes que se movem.
     { name: 'estados', testMatch: 'motion-estados.spec.ts' },
+    // Motion sob demanda: o motor do Motion só é baixado por quem liga o `on` (tests/motion-lazy.spec.ts).
+    { name: 'lazy', testMatch: 'motion-lazy.spec.ts' },
     // CSS em camadas (C4, etapa 2.0.0-alpha.8): tests/css-layers.spec.ts.
     { name: 'css-layers', testMatch: 'css-layers.spec.ts' },
   ],
