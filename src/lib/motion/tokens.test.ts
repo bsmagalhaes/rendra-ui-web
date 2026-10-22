@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { EASE, DURATION, REVEAL, SPRING, readMotionTokens } from './tokens'
 
 const css = readFileSync('src/styles/globals.css', 'utf8')
@@ -192,13 +192,13 @@ describe('readMotionTokens', () => {
 
 describe('readMotionTokens sem window', () => {
   it('não lança e devolve a reserva', async () => {
-    const win = globalThis.window
-    // @ts-expect-error simula o servidor
-    delete globalThis.window
+    // stubGlobal restaura o window no unstubAllGlobals, mesmo se o teste falhar: com
+    // --isolate=false o jsdom é compartilhado e apagar o window à mão derrubava outros arquivos.
+    vi.stubGlobal('window', undefined)
     try {
       expect(readMotionTokens().duration).toEqual(DURATION)
     } finally {
-      globalThis.window = win
+      vi.unstubAllGlobals()
     }
   })
 })

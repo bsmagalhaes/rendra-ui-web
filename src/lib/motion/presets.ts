@@ -67,7 +67,7 @@ export interface Presets {
    * Entra em mola criticamente amortecida (sem quique) em `base` e sai em `fast`, em opacidade.
    */
   open: (from?: number | { y: number }) => MotionPreset
-  /** Gaveta e folha: entram de `from` em `slow` com `ease.drawer`, saem em `base` pelo mesmo lado. */
+  /** Gaveta e folha: entram de `from` em `slow` com `ease.drawer`, saem em `fast` pelo mesmo lado. */
   sheet: (from: SlideFrom) => MotionPreset
   /** Tooltip: escala 0,97 em `fast`; aberto em `instant-open` não anima. */
   tooltip: (instant: boolean) => MotionPreset
@@ -181,7 +181,7 @@ export function createPresets(tokens: MotionTokens, reduced: boolean): Presets {
     return {
       initial: away,
       animate: { [axis]: 0 },
-      exit: { ...away, transition: { duration: duration.base, ease: ease.drawer } },
+      exit: { ...away, transition: { duration: duration.fast, ease: ease.drawer } },
       transition: { duration: duration.slow, ease: ease.drawer },
     }
   }

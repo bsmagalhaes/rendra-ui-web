@@ -277,6 +277,22 @@ describe('EmptyState: cascata de 60 ms entre ícone, título, descrição e aç�
   })
 })
 
+describe('Progress: a barra indeterminada corre dentro de um trilho que recorta (PROG-001)', () => {
+  it.each(['on', 'off'] as const)(
+    'o trilho recorta e está marcado como contêiner que pode transbordar (%s)',
+    (modo) => {
+      renderApp(
+        <MotionProvider mode={modo}>
+          <Progress value={null} label="Importando" />
+        </MotionProvider>,
+      )
+      const trilho = screen.getByRole('progressbar')
+      expect(trilho.className).toContain('overflow-hidden')
+      expect(trilho).toHaveAttribute('data-allow-overflow')
+    },
+  )
+})
+
 describe('Skeleton e Progress: brilho suave e tempos pelos tokens (W14)', () => {
   it('em on, o skeleton tem o brilho (skeleton-shimmer) e perde o animate-pulse', () => {
     emOn(<Skeleton className="h-4 w-24" />)

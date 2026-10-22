@@ -37,6 +37,9 @@ export function Progress({ value, size = 'md', tone, showValue, label, className
       <P.Root
         value={indeterminate ? null : value}
         aria-label={label}
+        // A barra indeterminada corre além do trilho e o trilho a recorta (overflow-hidden):
+        // a auditoria de layout não deve tratá-la como elemento fora da tela.
+        data-allow-overflow
         className={cn(
           'relative w-full overflow-hidden rounded-full bg-muted',
           size === 'sm' ? 'h-1' : 'h-2',
