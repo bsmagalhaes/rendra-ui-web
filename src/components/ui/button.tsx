@@ -1,11 +1,10 @@
 import { cva, type VariantProps } from 'class-variance-authority'
-import { m } from 'motion/react'
 import { Slot } from 'radix-ui'
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode, type Ref } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionMode, useMotionOn, useMotionPresets } from '@/lib/motion'
 import { bindNativeEvents, splitNativeEvents } from '@/lib/motion/native-events'
 
 /**
@@ -80,6 +79,7 @@ type MotionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children
  */
 const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
   function MotionButton(props, ref) {
+    const { m } = useMotionOn()
     const presets = useMotionPresets()
     const { native, rest } = splitNativeEvents(props)
     const attach = (el: HTMLButtonElement | null) => {

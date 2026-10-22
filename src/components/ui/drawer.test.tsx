@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Drawer } from './drawer'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 function Harness({ dirty }: { dirty?: boolean }) {
   const [open, setOpen] = useState(true)
@@ -48,7 +48,7 @@ describe('Drawer', () => {
 describe('Drawer com motion', () => {
   const emOn = (dirty?: boolean) =>
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Harness dirty={dirty} />
       </MotionProvider>,
     )

@@ -7,7 +7,7 @@ import { renderApp } from '@/test/render'
 import { List, type ListItem } from './list'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { settleLayout } from '@/test/motion'
+import { motionOn, settleLayout } from '@/test/motion'
 
 /** Lista controlada: aplica onReorder de verdade, para o teste ver a ordem na tela mudar. */
 function ControlledList({ initial }: { initial: ListItem[] }) {
@@ -171,7 +171,7 @@ describe('List', () => {
 
 describe('List com motion', () => {
   const emOn = async (ui: ReactNode) => {
-    const r = renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+    const r = renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
     await settleLayout()
     return r
   }

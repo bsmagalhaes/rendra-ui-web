@@ -1,9 +1,8 @@
-import { AnimatePresence, m } from 'motion/react'
 import { Dialog } from 'radix-ui'
 import { useState, type ReactNode } from 'react'
 import { Modal } from '@/components/ui/modal'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionPresets } from '@/lib/motion'
 import { OverlayShell } from './overlay-shell'
 
 /*
@@ -69,7 +68,7 @@ export function Drawer({
 }: DrawerProps) {
   const [confirming, setConfirming] = useState(false)
   const requestClose = () => (dirty ? setConfirming(true) : onOpenChange(false))
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
 
   const keepOpenIfDirty = (e: { preventDefault: () => void }) => {
@@ -93,13 +92,13 @@ export function Drawer({
   return (
     <>
       <Dialog.Root open={open} onOpenChange={(o) => (o ? onOpenChange(true) : requestClose())}>
-        {motion === 'on' ? (
+        {lib ? (
           // `on`: o painel só existe enquanto aberto ou saindo; o Radix fica com forceMount.
-          <AnimatePresence>
+          <lib.AnimatePresence>
             {open && (
               <Dialog.Portal forceMount key="drawer">
                 <Dialog.Overlay forceMount asChild>
-                  <m.div className={overlayCls} {...presets.fade} />
+                  <lib.m.div className={overlayCls} {...presets.fade} />
                 </Dialog.Overlay>
                 <Dialog.Content
                   forceMount
@@ -109,11 +108,11 @@ export function Drawer({
                   data-rendra="GAV-001"
                   className={cn(panelCls, sizes[size])}
                 >
-                  <m.div {...presets.sheet('right')}>{shell}</m.div>
+                  <lib.m.div {...presets.sheet('right')}>{shell}</lib.m.div>
                 </Dialog.Content>
               </Dialog.Portal>
             )}
-          </AnimatePresence>
+          </lib.AnimatePresence>
         ) : (
           <Dialog.Portal>
             <Dialog.Overlay

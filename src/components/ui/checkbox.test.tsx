@@ -7,7 +7,7 @@ import { Checkbox, CheckboxGroup } from './checkbox'
 import { useState, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 describe('Checkbox e CheckboxGroup', () => {
   it('marca pelo rótulo', async () => {
@@ -42,7 +42,7 @@ describe('Checkbox e CheckboxGroup', () => {
 })
 
 describe('Checkbox com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
   const indicator = () => document.querySelector('[data-state="checked"] svg, svg.lucide-check')
 
   it('em on: marcar mostra o indicador, desmarcar o tira do DOM (não controlado)', async () => {
@@ -112,7 +112,7 @@ describe('Checkbox com motion', () => {
     expect(() => renderToStaticMarkup(<Checkbox label="A" defaultChecked />)).not.toThrow()
     expect(() =>
       renderToStaticMarkup(
-        <MotionProvider mode="on">
+        <MotionProvider mode={motionOn}>
           <Checkbox label="A" defaultChecked />
         </MotionProvider>,
       ),

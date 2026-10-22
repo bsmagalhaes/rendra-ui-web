@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { List, type ListItem } from '@/components/ui/list'
 import { MotionProvider } from '@/lib/motion'
 import { renderApp } from '@/test/render'
+import { motionOn } from '@/test/motion'
 
 /*
  * O `layout` do Motion não deixa marca no DOM do jsdom (não há geometria), então a regra "layout
@@ -28,7 +29,7 @@ const tres: ListItem[] = [
   { id: '3', title: 'Cliente C' },
 ]
 
-function Controlada({ mode }: { mode: 'on' | 'off' }) {
+function Controlada({ mode }: { mode: 'off' | typeof motionOn }) {
   const [items, setItems] = useState(tres)
   return (
     <MotionProvider mode={mode}>
@@ -39,7 +40,7 @@ function Controlada({ mode }: { mode: 'on' | 'off' }) {
 
 describe('regra do layout na List', () => {
   it('em on o layout fica ligado em repouso, desliga durante o arraste e volta ao soltar', async () => {
-    renderApp(<Controlada mode="on" />)
+    renderApp(<Controlada mode={motionOn} />)
     // antes de o chunk do domMax chegar o layout fica desligado; depois, ligado em repouso
     expect(seen.layout[0]).toBe(false)
     await waitFor(() => expect(seen.layout.at(-1)).toBe(true))

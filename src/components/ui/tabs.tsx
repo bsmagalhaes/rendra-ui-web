@@ -1,10 +1,9 @@
-import { m } from 'motion/react'
 import { Tabs as T } from 'radix-ui'
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { Select } from '@/components/ui/select'
 import { cn } from '@/lib/cn'
-import { useLayoutReady, useMotionPresets } from '@/lib/motion'
+import { useLayoutReady, useMotionLib, useMotionPresets } from '@/lib/motion'
 
 /** Contador de instâncias, só para o `layoutId` do indicador (ver `indicatorId`). */
 let tabsCreated = 0
@@ -68,6 +67,7 @@ export function Tabs({
   // O indicador deslizante (layoutId) só existe com o domMax carregado: um elemento com layoutId
   // criado antes disso não ganha projeção. Até lá vale o destaque em CSS de sempre.
   const on = useLayoutReady()
+  const lib = useMotionLib()
 
   // Em `on`, a cor do texto da aba ativa troca por clip-path: uma cópia da lista, com o texto na
   // cor de destaque, recortada só sobre a aba ativa; o recorte desliza junto com o indicador.
@@ -106,8 +106,8 @@ export function Tabs({
         ? 'relative isolate rounded-item py-2 text-muted-foreground hover:bg-card/60 hover:text-foreground'
         : 'rounded-item py-2 text-muted-foreground hover:bg-card/60 hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm',
   )
-  const indicator = (
-    <m.span
+  const indicator = lib && (
+    <lib.m.span
       layoutId={indicatorId}
       data-indicator="tabs"
       aria-hidden

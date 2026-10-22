@@ -6,6 +6,7 @@ import { renderApp } from '@/test/render'
 import { RadioGroup } from './radio-group'
 import { useState, type ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
+import { motionOn } from '@/test/motion'
 
 describe('RadioGroup', () => {
   it('escolhe uma opção', async () => {
@@ -44,7 +45,7 @@ describe('RadioGroup', () => {
 })
 
 describe('RadioGroup com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
   const options = [
     { value: 'a', label: 'Plano A' },
     { value: 'b', label: 'Plano B' },

@@ -1,10 +1,9 @@
 import { X } from 'lucide-react'
-import { AnimatePresence, animate, m, useDragControls } from 'motion/react'
 import { Dialog, Popover } from 'radix-ui'
 import { useRef, type ReactNode } from 'react'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { cn } from '@/lib/cn'
-import { useLayoutReady, useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useLayoutReady, useMotionLib, useMotionOn, useMotionPresets } from '@/lib/motion'
 
 /*
  * Painel de escolha usado por Select e DatePicker (não é para uso direto nas telas).
@@ -59,6 +58,7 @@ interface MobileSheetProps {
  * fundo é gravado direto no elemento (sem render por quadro).
  */
 function MobileSheet({ open, onOpenChange, trigger, adornment, head, rest }: MobileSheetProps) {
+  const { AnimatePresence, animate, m, useDragControls } = useMotionOn()
   const presets = useMotionPresets()
   const ready = useLayoutReady()
   const controls = useDragControls()
@@ -156,9 +156,9 @@ export function PickerPanel({
   align = 'start',
 }: PickerPanelProps) {
   const { isMobile } = useBreakpoint()
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
-  const on = motion === 'on'
+  const on = lib !== null
 
   // Conteúdo interno do sheet (mobile) e do painel (desktop), igual nos dois modos. A alça e o
   // título ficam à parte porque, em `on`, só eles começam o arraste da folha.
@@ -223,7 +223,7 @@ export function PickerPanel({
         <Anchor adornment={adornment}>
           <Popover.Trigger asChild>{trigger}</Popover.Trigger>
         </Anchor>
-        <AnimatePresence>
+        <lib.AnimatePresence>
           {open && (
             <Popover.Portal forceMount key="panel">
               <Popover.Content
@@ -234,11 +234,11 @@ export function PickerPanel({
                 collisionPadding={16}
                 className={panelCls}
               >
-                <m.div {...presets.open()}>{panelBody}</m.div>
+                <lib.m.div {...presets.open()}>{panelBody}</lib.m.div>
               </Popover.Content>
             </Popover.Portal>
           )}
-        </AnimatePresence>
+        </lib.AnimatePresence>
       </Popover.Root>
     )
   }

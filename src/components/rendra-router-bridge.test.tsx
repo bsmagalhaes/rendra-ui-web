@@ -9,6 +9,7 @@ import {
   useRendraNavigate,
 } from '@/components/rendra-provider'
 import { useMotionMode } from '@/lib/motion'
+import { motionOn } from '@/test/motion'
 import { RendraRouterBridge } from './rendra-router-bridge'
 
 function Crumbs() {
@@ -134,7 +135,7 @@ describe('RendraRouterBridge', () => {
     function Modo() {
       return <span>modo: {useMotionMode()}</span>
     }
-    const monta = (motion?: 'on') =>
+    const monta = (motion?: typeof motionOn) =>
       render(
         <RouterProvider
           router={createMemoryRouter([
@@ -147,7 +148,7 @@ describe('RendraRouterBridge', () => {
       )
     monta()
     expect(screen.getByText('modo: off')).toBeInTheDocument()
-    monta('on')
+    monta(motionOn)
     expect(screen.getByText('modo: on')).toBeInTheDocument()
   })
 })

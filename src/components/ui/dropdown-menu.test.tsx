@@ -15,7 +15,7 @@ import {
 } from './dropdown-menu'
 import { DropdownMenu as D } from 'radix-ui'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 describe('DropdownMenuContent', () => {
   it('abre e usa o código do catálogo', async () => {
@@ -73,7 +73,7 @@ describe('DropdownMenu com subitens', () => {
 })
 
 describe('DropdownMenu com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 
   it('os Roots aceitam exatamente as props do Radix (mesmos tipos)', () => {
     expectTypeOf<ComponentProps<typeof DropdownMenu>>().toEqualTypeOf<

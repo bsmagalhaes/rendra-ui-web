@@ -46,4 +46,42 @@ describe('registry.json: motion (linguagem única)', () => {
     expect(arquivos.length).toBeGreaterThanOrEqual(9)
     for (const f of arquivos) expect(registro, f).toContain(`"src/lib/motion/${f}"`)
   })
+
+  it('o motor do Motion (motion-on.tsx) vai no núcleo, que leva o `motion`; os componentes de interface não o declaram à parte', () => {
+    const registro = JSON.parse(readFileSync(join(process.cwd(), 'registry.json'), 'utf8')) as {
+      items: {
+        name: string
+        dependencies?: string[]
+        registryDependencies?: string[]
+        files: { path: string }[]
+      }[]
+    }
+    const core = registro.items.find((i) => i.name === 'core')!
+    expect(core.files.map((f) => f.path)).toContain('src/lib/motion/motion-on.tsx')
+    expect(core.dependencies?.some((d) => d.startsWith('motion@'))).toBe(true)
+    for (const nome of ['button', 'checkbox', 'stat-card', 'tooltip', 'picker-panel']) {
+      const item = registro.items.find((i) => i.name === nome)!
+      expect(
+        item.dependencies?.some((d) => d.startsWith('motion@')),
+        nome,
+      ).toBeFalsy()
+      expect(item.registryDependencies?.join(' '), nome).toContain('core')
+    }
+  })
+
+  it('o subcaminho @rendra-ui/web/motion existe no package.json, no formato das outras entradas, e o `motion` segue em dependencies', () => {
+    const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as {
+      exports: Record<string, unknown>
+      dependencies: Record<string, string>
+    }
+    expect(pkg.exports['./motion']).toEqual({
+      types: './dist/types/motion.d.ts',
+      import: './dist/motion.js',
+    })
+    expect(pkg.exports['./chart']).toEqual({
+      types: './dist/types/chart.d.ts',
+      import: './dist/chart.js',
+    })
+    expect(pkg.dependencies.motion).toBeDefined()
+  })
 })

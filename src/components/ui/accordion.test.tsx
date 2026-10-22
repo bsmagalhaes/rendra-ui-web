@@ -6,7 +6,7 @@ import { renderApp } from '@/test/render'
 import { Accordion } from './accordion'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { reduceMotion } from '@/test/motion'
+import { motionOn, reduceMotion } from '@/test/motion'
 
 describe('Accordion', () => {
   it('abre e fecha a seção pelo título', async () => {
@@ -25,7 +25,7 @@ describe('Accordion', () => {
 })
 
 describe('Accordion com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
   const items = [
     { value: 'a', title: 'Como pagar?', content: <p>Por boleto ou Pix.</p> },
     { value: 'b', title: 'Posso cancelar?', content: <p>Sim, a qualquer hora.</p> },

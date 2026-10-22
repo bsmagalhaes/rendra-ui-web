@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { MotionProvider } from '@/lib/motion'
-import { reduceMotion } from '@/test/motion'
+import { motionOn, reduceMotion } from '@/test/motion'
 import { renderApp } from '@/test/render'
 import { Button, buttonVariants } from './button'
 import { Checkbox } from './checkbox'
@@ -17,7 +17,7 @@ import { Switch } from './switch'
  * navegador aplica e o estilo que o Motion grava), nunca só a chamada.
  */
 
-const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 const down = (el: Element) =>
   fireEvent.pointerDown(el, { pointerId: 1, button: 0, isPrimary: true })
 const props = (className: string) => className.match(/(?<!\S)transition-\[[^\]]*\]/g)?.at(-1) ?? ''

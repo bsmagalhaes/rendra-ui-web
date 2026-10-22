@@ -1,9 +1,8 @@
 import { Check, Minus } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import { Checkbox as C } from 'radix-ui'
 import { useId, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionPresets } from '@/lib/motion'
 
 export interface CheckboxProps {
   checked?: boolean | 'indeterminate'
@@ -38,7 +37,8 @@ export function Checkbox({
 }: CheckboxProps) {
   const auto = useId()
   const cid = id ?? `cb${auto}`
-  const on = useMotionMode() === 'on'
+  const lib = useMotionLib()
+  const on = lib !== null
   const presets = useMotionPresets()
   // Só em `on`: o estado marcado é espelhado aqui (controlado ou não) para o indicador poder
   // sair com animação. O Radix mantém o indicador sempre presente com forceMount, então ele só
@@ -76,21 +76,21 @@ export function Checkbox({
   const box = on ? (
     // `on`: a caixa responde ao toque (whileTap 0,97) e o indicador entra de 0,9 a 1 sem quique.
     <C.Root asChild {...rootProps}>
-      <m.button
+      <lib.m.button
         type="button"
         whileTap={presets.press.whileTap}
         transition={presets.press.transition}
       >
-        <AnimatePresence initial={false}>
+        <lib.AnimatePresence initial={false}>
           {state !== false && (
             <C.Indicator forceMount asChild>
-              <m.span className="flex items-center justify-center" {...presets.indicator}>
+              <lib.m.span className="flex items-center justify-center" {...presets.indicator}>
                 {mark}
-              </m.span>
+              </lib.m.span>
             </C.Indicator>
           )}
-        </AnimatePresence>
-      </m.button>
+        </lib.AnimatePresence>
+      </lib.m.button>
     </C.Root>
   ) : (
     <C.Root {...rootProps}>

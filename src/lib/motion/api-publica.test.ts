@@ -13,10 +13,11 @@ import { DURATION, EASE, REVEAL } from './tokens'
 const indice = readFileSync('src/index.ts', 'utf8')
 
 describe('src/index.ts (pacote npm)', () => {
-  it('exporta do motion só o tipo MotionMode e o hook de reduzir movimento, como antes', () => {
+  it('exporta do motion só os tipos MotionMode e RendraMotion e o hook de reduzir movimento (só acrescenta)', () => {
     const linhas = indice.split('\n').filter((l) => /motion/i.test(l) && /^export/.test(l))
     expect(linhas).toEqual([
       "export type { MotionMode } from './lib/motion/motion-context'",
+      "export type { RendraMotion } from './lib/motion/motion-on'",
       "export * from './hooks/use-reduced-motion'",
     ])
   })
@@ -38,6 +39,7 @@ describe('nomes antigos continuam (aditivo)', () => {
       'useMotionMode',
       'useMotionPresets',
       'useLayoutReady',
+      'useMotionLib',
       'layoutEnabled',
     ])
       expect(motion, nome).toHaveProperty(nome)

@@ -1,5 +1,4 @@
 import { ArrowDown, BarChart3, List as ListIcon } from 'lucide-react'
-import { m } from 'motion/react'
 import { useId, useRef, useState, type CSSProperties } from 'react'
 import {
   Area,
@@ -23,7 +22,7 @@ import { resolveCatalogCode } from '@/catalog/components'
 import { Button } from '@/components/ui/button'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets, useRevealScope } from '@/lib/motion'
+import { useMotionLib, useMotionMode, useMotionPresets, useRevealScope } from '@/lib/motion'
 import { toCubicBezier } from '@/lib/motion/presets'
 
 /*
@@ -176,7 +175,8 @@ function Gauge({
   const tone = zone?.tone ?? 'primary'
   const gradientId = useId()
   const [ex, ey] = point(frac, R - 26)
-  const on = useMotionMode() === 'on'
+  const lib = useMotionLib()
+  const on = lib !== null
   const presets = useMotionPresets()
   const reveal = useRevealScope()
   const [sx, sy] = point(0, R - 26)
@@ -219,7 +219,7 @@ function Gauge({
           {/* Ponteiro fino, do centro até perto do arco */}
           {on ? (
             // `on`: a agulha vai do 0% até o valor com a duração e a curva dos presets.
-            <m.line
+            <lib.m.line
               x1={CX}
               y1={CY}
               initial={{ x2: sx, y2: sy }}
@@ -292,10 +292,11 @@ function Gauge({
 /* ================================================================ funil */
 
 function Funnel({ stages, valueFormatter = fmtDefault, className, ...aria }: FunnelChartProps) {
-  const on = useMotionMode() === 'on'
+  const lib = useMotionLib()
+  const on = lib !== null
   const presets = useMotionPresets()
   // Em `on` o contêiner do funil entra com fade.
-  const Root = on ? m.figure : 'figure'
+  const Root = on ? lib.m.figure : 'figure'
   const n = stages.length
   const top = stages[0]?.value || 1
   const last = stages[n - 1]
@@ -399,8 +400,11 @@ function Cartesian({
   const [drawn, setDrawn] = useState(false)
   const ended = useRef(0)
   const animated = type === 'pie' ? 1 : series.length
+  // Um gráfico que já estava na tela em `off` quando o `on` chegou (troca tardia) já desenhou, e
+  // com as props antigas: manter `draw` vazio evita que o recharts o redesenhe.
+  const [mountedOn] = useState(motion === 'on')
   const draw =
-    motion === 'on'
+    motion === 'on' && mountedOn
       ? {
           animationDuration: Math.round(
             (reveal ? presets.tokens.reveal.draw : presets.tokens.duration.draw) * 1000,

@@ -1,10 +1,9 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react'
-import { animate, m, useMotionValue, useTransform } from 'motion/react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionAdopted, useMotionLib, useMotionOn, useMotionPresets } from '@/lib/motion'
 import { formatLike, parseLocaleNumber, type ParsedNumber } from '@/lib/motion/count'
 
 export interface StatCardProps {
@@ -27,18 +26,23 @@ export interface StatCardProps {
 
 /** Contagem de 0 até o valor, com o formato do texto original; no fim mostra o `value` exato. */
 function Counter({ parsed, value }: { parsed: ParsedNumber; value: ReactNode }) {
+  const { animate, m, useMotionValue, useTransform } = useMotionOn()
   const presets = useMotionPresets()
-  const progress = useMotionValue(0)
+  // Montado na troca tardia do `off` para o `on`: o número já estava na tela com o valor final,
+  // então aparece direto, sem voltar a 0 para contar de novo.
+  const [skip] = useState(useMotionAdopted())
+  const progress = useMotionValue(skip ? parsed.value : 0)
   const text = useTransform(progress, (n) => formatLike(parsed, n))
-  const [done, setDone] = useState(false)
+  const [done, setDone] = useState(skip)
   useEffect(() => {
+    if (skip) return
     const controls = animate(progress, parsed.value, {
       duration: presets.tokens.reveal.count,
       ease: presets.tokens.ease.out,
       onComplete: () => setDone(true),
     })
     return () => controls.stop()
-  }, [progress, parsed.value, presets.tokens])
+  }, [animate, progress, parsed.value, presets.tokens, skip])
   return <m.span {...presets.fade}>{done ? value : text}</m.span>
 }
 
@@ -48,11 +52,11 @@ function Counter({ parsed, value }: { parsed: ParsedNumber; value: ReactNode }) 
  * o valor final aparece direto.
  */
 function StatValue({ value }: { value: ReactNode }) {
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
   const parsed = useMemo(() => parseLocaleNumber(value), [value])
-  if (motion !== 'on') return <>{value}</>
-  if (!parsed || presets.reduced) return <m.span {...presets.fade}>{value}</m.span>
+  if (!lib) return <>{value}</>
+  if (!parsed || presets.reduced) return <lib.m.span {...presets.fade}>{value}</lib.m.span>
   return <Counter key={String(value)} parsed={parsed} value={value} />
 }
 

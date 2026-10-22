@@ -1,9 +1,8 @@
-import { m } from 'motion/react'
 import { RadioGroup as R } from 'radix-ui'
 import { useState, type ComponentProps, type ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionPresets } from '@/lib/motion'
 
 export interface RadioOption {
   value: string
@@ -37,18 +36,19 @@ const cols = { 1: '', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3' } as const
  * O item do Radix. Em `on` ele é um `m.button` (asChild) que responde ao toque (whileTap 0,97,
  * em `press`); em `off` é o `R.Item` de sempre, sem nó novo.
  */
-function Item({ on, children, ...props }: ComponentProps<typeof R.Item> & { on: boolean }) {
+function Item({ children, ...props }: ComponentProps<typeof R.Item>) {
   const presets = useMotionPresets()
-  if (!on) return <R.Item {...props}>{children}</R.Item>
+  const lib = useMotionLib()
+  if (!lib) return <R.Item {...props}>{children}</R.Item>
   return (
     <R.Item asChild {...props}>
-      <m.button
+      <lib.m.button
         type="button"
         whileTap={presets.press.whileTap}
         transition={presets.press.transition}
       >
         {children}
-      </m.button>
+      </lib.m.button>
     </R.Item>
   )
 }
@@ -68,7 +68,8 @@ export function RadioGroup({
   name,
   ...aria
 }: RadioGroupProps) {
-  const on = useMotionMode() === 'on'
+  const lib = useMotionLib()
+  const on = lib !== null
   const presets = useMotionPresets()
   // Só em `on`: o valor é espelhado aqui (controlado ou não) para a bolinha animar a escala
   // nos dois sentidos pelos presets; o Radix segue dono da seleção.
@@ -84,7 +85,7 @@ export function RadioGroup({
     >
       {on ? (
         // Nunca scale(0): a bolinha vai de 0,9 com opacidade 0 até 1, em `fast`, sem quique.
-        <m.span
+        <lib.m.span
           className="size-2 rounded-full bg-primary"
           initial={false}
           animate={current === optionValue ? presets.indicator.animate : presets.indicator.initial}
@@ -122,7 +123,6 @@ export function RadioGroup({
       {options.map((o) =>
         variant === 'cards' ? (
           <Item
-            on={on}
             key={o.value}
             value={o.value}
             disabled={o.disabled}
@@ -155,7 +155,6 @@ export function RadioGroup({
             )}
           >
             <Item
-              on={on}
               value={o.value}
               disabled={o.disabled}
               className="group flex pt-px outline-none focus-visible:[&>span]:focus-ring"

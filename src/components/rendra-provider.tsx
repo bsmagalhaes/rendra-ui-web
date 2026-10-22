@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { MotionProvider, type MotionMode } from '@/lib/motion/motion-context'
+import type { RendraMotion } from '@/lib/motion/motion-on'
 
 /**
  * Link com a mesma interface do `<a>`/`Link`: recebe `to`, `className`, `children`,
@@ -43,9 +44,13 @@ export interface RendraProviderProps {
   useBreadcrumbs?: () => RendraBreadcrumbItem[]
   /**
    * Animações dos componentes. `off` (padrão): sem nenhuma animação do Motion, a árvore e o
-   * comportamento de sempre. `on`: entradas, saídas e layout animados pelo Motion.
+   * comportamento de sempre, e o Motion fora do bundle inicial. `'on'`: entradas, saídas e layout
+   * animados pelo Motion, que vem de um chunk carregado depois do primeiro quadro (até ele chegar
+   * a tela fica em `off` e depois liga, sem remontar nada e sem repetir a entrada de quem já
+   * estava na tela). `rendraMotion` (de `@rendra-ui/web/motion`): `on` desde o primeiro quadro e
+   * no servidor, com o Motion no bundle de quem importa o objeto.
    */
-  motion?: MotionMode
+  motion?: MotionMode | RendraMotion
 }
 
 interface RendraContextValue {

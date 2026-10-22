@@ -6,6 +6,7 @@ import {
   type RendraLinkProps,
 } from '@/components/rendra-provider'
 import type { MotionMode } from '@/lib/motion/motion-context'
+import type { RendraMotion } from '@/lib/motion/motion-on'
 
 /**
  * Metadados de rota lidos pela trilha: handle: { crumb: 'Clientes' }. Convenção do
@@ -53,7 +54,7 @@ function useBreadcrumbsFromMatches(): RendraBreadcrumbItem[] {
 export function RendraRouterBridge({
   children,
   motion,
-}: { children?: ReactNode; motion?: MotionMode } = {}) {
+}: { children?: ReactNode; motion?: MotionMode | RendraMotion } = {}) {
   const navigate = useNavigate()
   const go = useCallback(
     (to: string, options?: { replace?: boolean }) => navigate(to, options),

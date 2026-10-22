@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MotionProvider } from '@/lib/motion'
-import { realAnimations, reduceMotion } from '@/test/motion'
+import { motionOn, realAnimations, reduceMotion } from '@/test/motion'
 import { renderApp } from '@/test/render'
 import { EmptyState } from './empty-state'
 import { Progress } from './progress'
@@ -20,7 +20,7 @@ import { Wizard } from './wizard'
  * Os testes que ligam as animações de verdade usam realAnimations.
  */
 
-const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 const setViewportWidth = (w: number) =>
   (globalThis as unknown as { setViewportWidth: (w: number) => void }).setViewportWidth(w)
 let stop: (() => void) | undefined

@@ -1,10 +1,9 @@
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import { useRef, useState, type ReactNode } from 'react'
 import { ActionBar } from '@/components/ui/action-bar'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionPresets } from '@/lib/motion'
 
 export interface WizardStep {
   id: string
@@ -53,7 +52,7 @@ export function Stepper({
   className,
 }: StepperProps) {
   const step = steps[current]
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
   return (
     <div data-rendra="WIZ-002" className={cn('min-w-0', className)}>
@@ -97,11 +96,11 @@ export function Stepper({
               )}
             >
               {st === 'complete' ? (
-                motion === 'on' ? (
+                lib ? (
                   // O check da etapa concluída entra com o pop.
-                  <m.span className="flex" {...presets.pop}>
+                  <lib.m.span className="flex" {...presets.pop}>
                     <Check className="size-icon-sm" strokeWidth={3} aria-hidden />
-                  </m.span>
+                  </lib.m.span>
                 ) : (
                   <Check className="size-icon-sm" strokeWidth={3} aria-hidden />
                 )
@@ -253,28 +252,31 @@ export function Wizard({
     onSkip?.()
   }
 
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
   // Direção do passo (1 avança, -1 volta), guardada para a saída usar o sentido certo.
   const previous = useRef(current)
   const direction = current >= previous.current ? 1 : -1
   previous.current = current
-  const body =
-    motion === 'on' ? (
-      // `on`: a etapa nova entra de 8 px na direção do passo e a antiga sai por opacidade com
-      // blur de 2 px, sem esperar (popLayout tira a que sai do fluxo: nada empurra a que entra).
-      // A chave por etapa remonta o corpo: o estado local de campos não controlados se perde
-      // (os campos do formulário do projeto são controlados, então o valor volta igual).
-      <div className="relative flex min-w-0 flex-col gap-6">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <m.div key={current} {...presets.swap(direction)} className="flex min-w-0 flex-col gap-6">
-            {children[current]}
-          </m.div>
-        </AnimatePresence>
-      </div>
-    ) : (
-      <div className="flex min-w-0 flex-col gap-6">{children[current]}</div>
-    )
+  const body = lib ? (
+    // `on`: a etapa nova entra de 8 px na direção do passo e a antiga sai por opacidade com
+    // blur de 2 px, sem esperar (popLayout tira a que sai do fluxo: nada empurra a que entra).
+    // A chave por etapa remonta o corpo: o estado local de campos não controlados se perde
+    // (os campos do formulário do projeto são controlados, então o valor volta igual).
+    <div className="relative flex min-w-0 flex-col gap-6">
+      <lib.AnimatePresence mode="popLayout" initial={false}>
+        <lib.m.div
+          key={current}
+          {...presets.swap(direction)}
+          className="flex min-w-0 flex-col gap-6"
+        >
+          {children[current]}
+        </lib.m.div>
+      </lib.AnimatePresence>
+    </div>
+  ) : (
+    <div className="flex min-w-0 flex-col gap-6">{children[current]}</div>
+  )
 
   return (
     <div

@@ -20,6 +20,7 @@ import {
   useMotionPresets,
   type MotionMode,
 } from '@/lib/motion'
+import { rendraMotion } from '@/lib/motion/motion-on'
 import { bySegment, clients, monthly, statusTone } from '@/mocks/clients'
 
 /*
@@ -250,7 +251,7 @@ export function DashboardMotionPage() {
             />
           }
         />
-        <MotionProvider mode="on">
+        <MotionProvider mode={rendraMotion}>
           <MotionModeScope mode={mode}>
             {/* Chegada de painel: os gráficos desenham no tempo do reveal (900 ms), não no de rotina. */}
             <RevealScope>

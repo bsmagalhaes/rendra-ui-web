@@ -7,7 +7,7 @@ import { renderApp } from '@/test/render'
 import { OtpInput } from './otp-input'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { reduceMotion } from '@/test/motion'
+import { motionOn, reduceMotion } from '@/test/motion'
 
 describe('OtpInput', () => {
   it('colar o código preenche tudo e completa', async () => {
@@ -52,7 +52,7 @@ describe('OtpInput', () => {
 })
 
 describe('OtpInput com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
   function Harness({ onComplete }: { onComplete?: (v: string) => void }) {
     const [v, setV] = useState('')
     return <OtpInput value={v} onChange={setV} onComplete={onComplete} />

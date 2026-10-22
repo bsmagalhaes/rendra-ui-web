@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { Card, CardContent } from '@/components/ui/card'
 import { MotionModeScope, MotionProvider, type MotionMode } from '@/lib/motion'
+import { rendraMotion } from '@/lib/motion/motion-on'
 import { ActionsSection } from './showcase/actions-section'
 import { CompositionSection } from './showcase/composition-section'
 import { DataSection } from './showcase/data-section'
@@ -82,7 +83,7 @@ export function ComponentsMotionPage() {
             </div>
           </nav>
 
-          <MotionProvider mode="on">
+          <MotionProvider mode={rendraMotion}>
             <MotionModeScope mode={mode}>
               <Stack gap="section" className="min-w-0 lg:col-span-3">
                 <ActionsSection />

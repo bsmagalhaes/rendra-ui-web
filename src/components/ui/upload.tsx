@@ -1,5 +1,4 @@
 import { FileText, ImageIcon, RotateCw, Trash2, UploadCloud, VideoIcon } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import {
   useEffect,
   useId,
@@ -16,7 +15,13 @@ import { ImageCropper, type ImageCropperAspect } from '@/components/ui/image-cro
 import { Progress } from '@/components/ui/progress'
 import { SortableHandle } from '@/components/ui/sortable-handle'
 import { cn } from '@/lib/cn'
-import { layoutEnabled, useLayoutReady, useMotionMode, useMotionPresets } from '@/lib/motion'
+import {
+  layoutEnabled,
+  useLayoutReady,
+  useMotionLib,
+  useMotionMode,
+  useMotionPresets,
+} from '@/lib/motion'
 import { useSortable } from '@/lib/sortable'
 
 export interface UploadItem {
@@ -228,11 +233,12 @@ export function Upload({
     },
   })
   const motion = useMotionMode()
+  const lib = useMotionLib()
   const ready = useLayoutReady()
   const presets = useMotionPresets()
   // Em `on` cada item entra e sai animado (a saída segura o item até terminar) e reordena com
   // layout, pela mesma regra da List: sem layout durante o arraste.
-  const Item: ElementType = motion === 'on' ? m.li : 'li'
+  const Item: ElementType = lib ? lib.m.li : 'li'
   const itemMotion =
     motion === 'on'
       ? {
@@ -242,10 +248,10 @@ export function Upload({
         }
       : {}
   const animated = (nodes: ReactNode) =>
-    motion === 'on' ? (
-      <AnimatePresence mode="popLayout" initial={false}>
+    lib ? (
+      <lib.AnimatePresence mode="popLayout" initial={false}>
         {nodes}
-      </AnimatePresence>
+      </lib.AnimatePresence>
     ) : (
       nodes
     )

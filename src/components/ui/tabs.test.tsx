@@ -6,6 +6,7 @@ import { renderApp } from '@/test/render'
 import { Tabs } from './tabs'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
+import { motionOn } from '@/test/motion'
 
 const items = [
   { value: 'dados', label: 'Dados', content: <p>Conteúdo dos dados</p> },
@@ -37,7 +38,7 @@ describe('Tabs', () => {
 })
 
 describe('Tabs com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
   const indicators = (root: ParentNode = document) => [
     ...root.querySelectorAll<HTMLElement>('[data-indicator="tabs"]'),
   ]

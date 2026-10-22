@@ -1,4 +1,3 @@
-import { AnimatePresence, m } from 'motion/react'
 import { Dialog } from 'radix-ui'
 import { useState, type ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
@@ -6,7 +5,7 @@ import { BrandFeedbackIcon } from '@/components/ui/brand-feedback-icon'
 import { ActionBar } from '@/components/ui/action-bar'
 import { cn } from '@/lib/cn'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionPresets } from '@/lib/motion'
 import { OverlayShell } from './overlay-shell'
 
 /*
@@ -86,7 +85,7 @@ export function Modal({
     }
   }
   const isForm = type === 'form'
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
   const { isMobile } = useBreakpoint()
 
@@ -142,14 +141,14 @@ export function Modal({
 
   // `on`: o conteúdo só existe enquanto aberto ou saindo (AnimatePresence); o Radix fica com
   // forceMount e o `m.div` entra por asChild, preservando data-rendra e o foco do Dialog.
-  if (motion === 'on') {
+  if (lib) {
     return (
       <Dialog.Root open={open} onOpenChange={onOpenChange}>
-        <AnimatePresence>
+        <lib.AnimatePresence>
           {open && (
             <Dialog.Portal forceMount key="modal">
               <Dialog.Overlay forceMount asChild>
-                <m.div className={overlayCls} {...presets.fade} />
+                <lib.m.div className={overlayCls} {...presets.fade} />
               </Dialog.Overlay>
               <Dialog.Content
                 forceMount
@@ -158,11 +157,11 @@ export function Modal({
                 className={cn(contentCls, sizeCls)}
               >
                 {/* Em tela cheia (celular) a escala do centro perde o sentido: entra de baixo, 8 px. */}
-                <m.div {...presets.open(isMobile ? { y: 8 } : undefined)}>{shell}</m.div>
+                <lib.m.div {...presets.open(isMobile ? { y: 8 } : undefined)}>{shell}</lib.m.div>
               </Dialog.Content>
             </Dialog.Portal>
           )}
-        </AnimatePresence>
+        </lib.AnimatePresence>
       </Dialog.Root>
     )
   }

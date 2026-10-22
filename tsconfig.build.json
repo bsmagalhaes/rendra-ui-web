@@ -16,6 +16,7 @@
     "src/document-viewer.ts",
     "src/rich-text-editor.ts",
     "src/chart.ts",
-    "src/widget-grid.ts"
+    "src/widget-grid.ts",
+    "src/motion.ts"
   ]
 }

@@ -64,6 +64,10 @@
       "types": "./dist/types/chart.d.ts",
       "import": "./dist/chart.js"
     },
+    "./motion": {
+      "types": "./dist/types/motion.d.ts",
+      "import": "./dist/motion.js"
+    },
     "./widget-grid": {
       "types": "./dist/types/widget-grid.d.ts",
       "import": "./dist/widget-grid.js"
@@ -94,6 +98,8 @@
     "build": "tsc -b && vite build",
     "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.build.json && node scripts/fix-dts-aliases.mjs && node scripts/build-lib.mjs",
     "verify:pack": "node scripts/verify-pack.mjs",
+    "verify:bundle:app": "node scripts/bundle-inicial.mjs --verificar --app dist",
+    "verify:bundle:lib": "node scripts/bundle-inicial.mjs --verificar --lib dist",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "lint": "eslint .",
@@ -115,6 +121,7 @@
     "test:visual": "playwright test --project=visual",
     "test:visual:update": "playwright test --project=visual --update-snapshots",
     "test:motion": "playwright test --project=motion --project=estados",
+    "test:lazy": "playwright test --project=lazy",
     "test:css-layers": "playwright test --project=css-layers",
     "test:site": "playwright test -c playwright.site.config.ts",
     "registry:build": "node scripts/build-registry.mjs",
