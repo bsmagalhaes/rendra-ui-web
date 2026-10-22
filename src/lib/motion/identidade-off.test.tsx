@@ -38,7 +38,7 @@ import { renderApp } from '@/test/render'
 /*
  * Ancoragem do caminho `off` (motion desligado, o padrão): o HTML de cada componente. Até a
  * segunda rodada de motion este arquivo nunca era regenerado. Em 20/10/2026 o dono mandou
- * CORRIGIR também o `off` (decisão registrada em `processo/decisoes-motion-v2.md`): tempo, curva,
+ * CORRIGIR também o `off`: tempo, curva,
  * origem e estado intermediário passam a seguir a linguagem única. A regeneração é só deste
  * arquivo (`vitest run src/lib/motion/identidade-off.test.tsx -u`) e cada diferença nos HTML de
  * `__snapshots__/off/` tem de ter uma linha na tabela fechada do parecer (B4), conferida em
