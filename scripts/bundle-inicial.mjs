@@ -6,7 +6,7 @@
  *  1. VITRINE (app construído, `--app <pasta>`): o fecho ESTÁTICO de imports da entrada
  *     (`index.html`: o script da entrada e os `modulepreload`) não contém o motor do Motion
  *     (animações, gestos, `animate`, `m`). Sobram só o `LazyMotion`, o `MotionConfig` e o
- *     `PresenceContext` (cerca de 0,9 kB gzip), que ficam montados desde o primeiro quadro para
+ *     `PresenceContext` (cerca de 13 kB gzip, com a base do elemento visual que o `LazyMotion` arrasta), que ficam montados desde o primeiro quadro para
  *     a chegada do chunk não remontar a árvore. As rotas lazy da demonstração (`/componentes-motion`
  *     e `/dashboard-motion`) continuam a ter o motor, fora do fecho inicial.
  *  2. PACOTE (`--lib <pasta>`, o `dist/` do `build:lib` ou o instalado do tarball): nenhuma entrada,
