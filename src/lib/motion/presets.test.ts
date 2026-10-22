@@ -197,14 +197,14 @@ describe('open: overlays entram com mola a partir da origem e saem mais rápido'
     expect(instant.exit).toMatchObject({ opacity: 0, transition: { duration: DURATION.fast } })
   })
 
-  it('sheet: gaveta e folha entram em slow com ease.drawer e saem em base, de volta pelo mesmo lado', () => {
+  it('sheet: gaveta e folha entram em slow com ease.drawer e saem em fast (mais rápido que a entrada, nos dois ramos), de volta pelo mesmo lado', () => {
     const d = real.sheet('right')
     expect(d.initial).toEqual({ x: '100%' })
     expect(d.animate).toMatchObject({ x: 0 })
     expect(d.transition).toEqual({ duration: DURATION.slow, ease: EASE.drawer })
     expect(d.exit).toMatchObject({
       x: '100%',
-      transition: { duration: DURATION.base, ease: EASE.drawer },
+      transition: { duration: DURATION.fast, ease: EASE.drawer },
     })
     expect(real.sheet('bottom').initial).toEqual({ y: '100%' })
   })

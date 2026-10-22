@@ -146,10 +146,11 @@ describe('DropdownMenu com motion', () => {
     await user.keyboard('{ArrowLeft}')
     await waitFor(
       () => expect(screen.queryByRole('menuitem', { name: 'Exportar' })).not.toBeInTheDocument(),
-      { timeout: 5000 },
+      { timeout: 15_000 },
     )
     expect(screen.getByRole('menuitem', { name: 'Mais opções' })).toBeInTheDocument()
-    // teto de 20 s: o teste espera a saída animada e estourava os 5 s do padrão com a máquina carregada
+    // O waitFor espera até 15 s a saída animada (estourava 5 s com a máquina carregada) e o teto do
+    // teste, 20 s, cobre esse tempo mais a abertura do menu.
   }, 20_000)
 
   it('em on, o menu é animado por transform; com movimento reduzido, só opacidade', async () => {

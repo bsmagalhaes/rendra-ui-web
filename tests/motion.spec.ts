@@ -256,6 +256,31 @@ test.describe('overlays em on: mola na entrada, saída curta, origem no gatilho'
   })
 })
 
+test.describe('drawer: a vitrine tem a demo e a saída é mais rápida que a entrada nos dois ramos', () => {
+  for (const modo of ['on', 'off'] as const) {
+    test(`gaveta em ${modo}: entra deslizando e sai em fast`, async ({ page }) => {
+      await abrir(page, modo)
+      const botao = section(page, 'drawer').getByRole('button').first()
+      await botao.scrollIntoViewIfNeeded()
+      const entrada = frames(page, '[data-rendra="GAV-001"]', 2500)
+      await botao.click()
+      await page.waitForTimeout(1200)
+      const marca = await agora(page)
+      await page.keyboard.press('Escape')
+      const fs = await entrada
+      expect(
+        fs.some((f) => !f.gone),
+        'a gaveta abre',
+      ).toBe(true)
+      const saiu = goneAt(fs, marca)
+      // 120 ms de animação mais a latência de quadro; com a máquina em load 20 a medição passa de 280
+      expect(saiu, 'saída em fast (120 ms, com folga de medição)').toBeLessThan(400)
+      // a entrada (slow, 320 ms) é mais longa que a saída (fast, 120 ms): provado nos presets
+      // (`presets.test.ts`); aqui só o tempo real de saída, porque a gaveta não muda opacidade.
+    })
+  }
+})
+
 test.describe('toque: o CSS não disputa o transform e o toque é de 120 ms sem quique', () => {
   test('botão em on: transition sem transform e escala até 0,97 sem passar', async ({ page }) => {
     await abrir(page)
