@@ -151,6 +151,9 @@ npm run test:coverage           # idem, com o piso de cobertura por arquivo (o C
 npm run test:layout             # Playwright: rotas x larguras x modelos, claro e escuro
 npm run test:a11y               # acessibilidade (axe-core, WCAG 2.1 AA)
 npm run test:motion             # movimento no navegador (tempo, origem, gesto; BASE_URL próprio)
+npm run test:lazy               # o motor do Motion só é baixado por quem liga o `on` (BASE_URL próprio)
+npm run verify:bundle:app       # depois do build: vitrine sem o motor do Motion no bundle inicial (lê dist/)
+npm run verify:bundle:lib       # depois do build:lib: nenhuma entrada do pacote, exceto motion, importa mais que LazyMotion/MotionConfig
 npm run test:visual             # regressão visual (referências do Linux, geradas no CI)
 npm run palettes:build          # gera src/styles/palettes.css das sementes de src/brand/palettes.ts
 npm run registry:build          # gera o registry.json (novo componente ou variante)

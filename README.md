@@ -202,13 +202,22 @@ Login, esqueci a senha, verificação em duas etapas (2FA), nova senha, cadastro
 
 ### Movimento (opcional, desligado por padrão)
 
-O `RendraProvider` (e o `RendraRouterBridge`) aceita a prop `motion`: `'off'` (o padrão) ou `'on'`. Em `'on'` os componentes animam com o Motion (`motion` 14, já em `dependencies`); em `'off'` nada do Motion é montado. A linguagem é uma só: o que se repete dezenas de vezes por dia (tabela, abas, teclado) não anima a entrada; o toque responde em 120 ms; overlays entram em mola sem quique e saem mais rápido que entram, a partir do gatilho; nada parte de `scale(0)`; movimento reduzido vira só opacidade.
+O `RendraProvider` (e o `RendraRouterBridge`) aceita a prop `motion`: `'off'` (o padrão), `'on'` ou o objeto `rendraMotion` (de `@rendra-ui/web/motion`). Ligado, os componentes animam com o Motion (`motion` 14, já em `dependencies`). Em `'off'` o Motion nem entra no bundle inicial do app: ele só custa bytes a quem liga o `on`. A linguagem é uma só: o que se repete dezenas de vezes por dia (tabela, abas, teclado) não anima a entrada; o toque responde em 120 ms; overlays entram em mola sem quique e saem mais rápido que entram, a partir do gatilho; nada parte de `scale(0)`; movimento reduzido vira só opacidade.
 
 ```tsx
+// Carrega o Motion sob demanda: o primeiro quadro sai em `off` e liga quando o chunk chega.
 <RendraProvider motion="on">{/* ... */}</RendraProvider>
 ```
 
-Com React Router, ponha a prop na ponte, que já entrega ao provider o link, o caminho atual e a navegação: `<RendraRouterBridge motion="on">`. Montando o `RendraProvider` direto, ele também exige `linkComponent`, `useCurrentPath`, `navigate` e `goBack`.
+Com `motion="on"` (texto), a tela começa em `off` (nunca fica vazia) e liga assim que o chunk do Motion chega, sem remontar nada: estado, foco, campos e overlays abertos ficam como estavam, e o que já estava na tela não repete a animação de entrada (o número de um indicador não volta a 0). Em servidor (SSR) o HTML sai em `off`, e a hidratação bate. Para ter o `on` desde o primeiro quadro e no servidor, importe o objeto do subcaminho e passe-o no lugar do texto; o Motion então vai no bundle de quem importa o objeto:
+
+```tsx
+import { rendraMotion } from '@rendra-ui/web/motion'
+
+;<RendraProvider motion={rendraMotion}>{/* ... */}</RendraProvider>
+```
+
+Com React Router, ponha a prop na ponte, que já entrega ao provider o link, o caminho atual e a navegação: `<RendraRouterBridge motion="on">` ou `<RendraRouterBridge motion={rendraMotion}>`. Montando o `RendraProvider` direto, ele também exige `linkComponent`, `useCurrentPath`, `navigate` e `goBack`. Quem testa a interface em `on` e afirma o resultado logo depois do `render` usa `motion={rendraMotion}` (síncrono); com o texto é preciso esperar o chunk.
 
 - **Tokens** (variáveis CSS que o host sobrescreve): `--rendra-duration-press|hover|fast|base|move|slow|draw|pulse`, `--rendra-reveal-enter|stagger|count|draw` (a chegada do painel, mais lenta, de uso único) e as curvas `--rendra-ease-out|in-out|spring|move|drawer`, com os aliases do Tailwind `ease-move` e `ease-drawer`.
 - **Presets** em `src/lib/motion` (`presets.ts`, `tokens.ts`; no registry do shadcn vão todos os arquivos da pasta): `press`, `open`, `sheet`, `tooltip`, `swap`, `indicator`, `move`, `settle`, `reveal`, `stagger`. Os nomes antigos (`fade`, `scale`, `pop`, `slide`, `layout`, `tap`, `bump`) continuam.
