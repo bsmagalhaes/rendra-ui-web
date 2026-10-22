@@ -2,6 +2,23 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
+## Não publicado
+
+Motion sob demanda. Versão minor, aditiva na API (nenhuma prop, export ou assinatura existente muda), mas **com uma mudança de comportamento para quem usa `motion="on"` com o texto** (veja "Alterado"). O `off`, o padrão, não muda um byte de HTML nem de pixel (as 152 capturas e os snapshots do `off` seguem iguais).
+
+### Adicionado
+
+- **Subcaminho `@rendra-ui/web/motion`** (entrada nova do pacote), que exporta `rendraMotion` e o tipo `RendraMotion`: o objeto com tudo o que os componentes usam do Motion (`m`, `AnimatePresence`, `animate`, `domAnimation` e os hooks). `motion={rendraMotion}` no `RendraProvider` e no `RendraRouterBridge` liga o `on` **síncrono**, desde o primeiro quadro e no servidor, como a 2.5.0 fazia com `motion="on"`.
+- `useMotionLib()`, `useMotionOn()` e `useMotionAdopted()` em `src/lib/motion` (uso interno dos componentes; quem copia o código-fonte leva junto o novo `motion-on.tsx`, que o registry do shadcn já entrega na pasta inteira). Tipo `RendraMotion` exportado de `@rendra-ui/web`.
+- `npm run verify:bundle:app` e `verify:bundle:lib` (`scripts/bundle-inicial.mjs`), no CI: a vitrine não leva o motor de animação do Motion no bundle inicial, e nenhuma entrada do pacote, exceto `motion`, importa mais que `LazyMotion`, `MotionConfig` e `PresenceContext`. O `verify:pack` confere o mesmo no pacote instalado e renderiza no servidor com `motion={rendraMotion}` e com `motion="on"`.
+- `npm run test:lazy` (`tests/motion-lazy.spec.ts`): o motor do Motion não é baixado em nenhuma tela em `off`.
+
+### Alterado
+
+- **Para quem usa `motion="on"` (texto):** o Motion deixa de ser carregado junto com o app. O provider baixa o motor depois do primeiro quadro: **o primeiro quadro sai em `off` e liga quando o chunk chega** (alguns milissegundos em rede boa). A ligação **não remonta nada** (estado, foco, texto digitado e overlays abertos ficam como estavam) e **o que já estava na tela não repete a entrada** (o número de um indicador não volta a 0, a agulha do gauge e o gráfico não redesenham). Efeitos práticos: (1) em servidor (SSR) o HTML sai em `off` e a hidratação bate; (2) testes que afirmam o `on` logo depois do `render` precisam esperar o chunk (`await screen.findBy...`) ou passar o objeto; (3) com `motion="on"` o componente que tem um ramo próprio para `on` (Accordion, Switch, Checkbox, Tabs, overlays) troca de elemento na hora da ligação. **Para manter o comportamento de antes, sem espera, passe `motion={rendraMotion}`** (`import { rendraMotion } from '@rendra-ui/web/motion'`).
+- **Motion fora do bundle inicial em `off`.** Os 22 componentes que importavam `m`, `AnimatePresence`, `animate` e os hooks do `motion/react` passam a ler o objeto do contexto (`useMotionLib`); `dist/index.js` e as demais entradas importam de `motion` só o `LazyMotion`, o `MotionConfig` e o `PresenceContext` (que ficam montados desde o primeiro quadro para a troca não remontar a árvore). Na vitrine em `off`, o chunk comum do Motion (87.598 B, 30.861 B gzip) sai do carregamento inicial: o bundle inicial passa de 728.607 B (228.986 B gzip) para 668.429 B (207.989 B gzip), e o motor (animações, gestos, `animate`) só é baixado por quem liga o `on` ou abre `/componentes-motion` e `/dashboard-motion`. **O que resta**: o `LazyMotion` estático arrasta a base do elemento visual do Motion (cerca de 9,8 kB gzip), porque o empacotador não separa os trechos de um mesmo módulo; ficam de fora todo o motor de animação (mais de 30 kB gzip).
+- `motion` segue em `dependencies`.
+
 ## 2.5.0 (22/10/2026)
 
 Movimento com linguagem única, opcional e desligado por padrão (`motion` no `RendraProvider`), mais as telas `/componentes-motion` e `/dashboard-motion`. Versão minor, aditiva na API: nenhuma prop, export ou nome existente muda, e o padrão continua `motion="off"`. **O caminho `off` também muda, só em tempo, curva, origem e estado intermediário** (nunca em quadro parado; as 152 capturas de regressão não mudam). Quem usa o pacote e não liga o motion só percebe isso, descrito em "Alterado".
