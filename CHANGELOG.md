@@ -2,6 +2,31 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
+## Não publicado
+
+Movimento com linguagem única, opcional e desligado por padrão (`motion` no `RendraProvider`), mais as telas `/componentes-motion` e `/dashboard-motion`. Versão minor, aditiva na API: nenhuma prop, export ou nome existente muda, e o padrão continua `motion="off"`. **O caminho `off` também muda, só em tempo, curva, origem e estado intermediário** (nunca em quadro parado; as 152 capturas de regressão não mudam). Quem usa o pacote e não liga o motion só percebe isso, descrito em "Alterado".
+
+### Adicionado
+
+- **Prop `motion` (`'off'` | `'on'`)** no `RendraProvider` e no `RendraRouterBridge`. Em `'on'` os componentes animam com o Motion; em `'off'` (padrão) nada dele é montado.
+- **Tokens** `--rendra-duration-press|hover|move|pulse` (somam-se aos `fast|base|slow|draw`), `--rendra-reveal-enter|stagger|count|draw`, e as curvas `--rendra-ease-out|in-out|spring|move|drawer` (agora no `:root`, então o host as sobrescreve); `ease-move` e `ease-drawer` no Tailwind. `--ease-in-out` não mudou de valor.
+- **Presets** em `src/lib/motion`: `press`, `open`, `sheet`, `tooltip`, `swap`, `indicator`, `move`, `settle`, `springSheet`, `reveal`/`staggerReveal`, `RevealScope`. Os nomes antigos continuam. O registry do shadcn lista todos os arquivos da pasta.
+- **Telas** `/componentes-motion` e `/dashboard-motion` (fora das suítes de layout, acessibilidade e captura) e `npm run test:motion` (tempo, escala, origem e gesto no navegador).
+- Em `on`: folha do Select/DatePicker no celular acompanha o dedo (arraste pela alça, fecha por 40% ou arremesso); aba ativa com troca de cor por recorte; skeleton com brilho; estado vazio em cascata.
+- Seção "Créditos" com Emil Kowalski (MIT) e Impeccable (Apache 2.0) no README.
+
+### Alterado
+
+- **No `off` (visual, para quem já usa a versão anterior):** o toque do botão e dos controles dura 120 ms e comprime a 0,97 (era 150 ms a 0,98); popover, menu, submenu, tooltip e painel do Select nascem do gatilho, não do centro; toda saída de overlay (modal, drawer, popover, menu, tooltip, folha) dura 120 ms (era a mesma da entrada) e o conteúdo do Modal também esmaece ao sair; tooltip aberto em sequência (`instant-open`) não anima; a bolinha do radio parte de 90% com opacidade (era `scale(0)`) e o check do checkbox de 90% (era 50%); chevrons de acordeão, Select e tabela, polegar do Switch e barra do Progress leem os tokens (Progress linear em 200 ms, indeterminado em 1.000 ms linear); o ícone de feedback da marca parte de 0,8 (era 0,4). Com **movimento reduzido**, os overlays só esmaecem em 200 ms (antes o CSS global zerava tudo, e o acordeão pulava), e o ícone da marca mantém o corte. Nenhum quadro parado muda; o HTML ganha só classes de tempo, curva e origem.
+- Em `on`: botão e polegar sem transição de CSS em `transform` (o toque chegava atrasado); tabela e painel de abas sem animação de entrada; passo do Wizard troca sem esperar a saída; gráfico de rotina desenha uma vez em 420 ms (900 ms só dentro do `RevealScope` do dashboard).
+- `MotionConfig reducedMotion` e `LazyMotion strict` no provider: um `motion.*` esquecido em vez de `m.*` passa a lançar erro em `on`.
+
+### Corrigido
+
+- Título e descrição sem espaço (e-mail, URL, nome composto) vazavam da tela a 360 px no Modal, Drawer, Toast, Tooltip, EmptyState, Timeline e Accordion: agora quebram (`wrap-anywhere` / `wrap-break-word`).
+- A barra do Progress indeterminado, que corre além do trilho recortado, deixava de pegar o teste de layout ao acaso: o trilho agora leva `data-allow-overflow`.
+- Removida a `transition-all duration-700` da agulha do gauge no `off`: era letra morta (`x2`/`y2` do `<line>` não são propriedades de CSS).
+
 ## 2.4.0 (19/10/2026)
 
 `rendra auditar` ganha a varredura completa (`--all`), `--ignore`, várias pastas e o `rendra.config.json`, e os componentes ganham opções novas: espaços e logo no AppShell, menu do usuário enxuto, `orientation` no ButtonGroup, três opções no BrandFeedbackIcon, rótulos e "Pular" no Wizard, `back` na ErrorPage, `bodyTitle` e `titleSpace` no PageHeader, mais duas correções de acessibilidade. Sem quebra: toda prop nova é opcional e o padrão reproduz o que já era, e `rendra auditar` e `rendra auditar <pasta>`, sem flag e sem `rendra.config.json`, imprimem e saem como antes.

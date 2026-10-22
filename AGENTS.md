@@ -150,6 +150,7 @@ npm test                        # unitários (Vitest)
 npm run test:coverage           # idem, com o piso de cobertura por arquivo (o CI usa este)
 npm run test:layout             # Playwright: rotas x larguras x modelos, claro e escuro
 npm run test:a11y               # acessibilidade (axe-core, WCAG 2.1 AA)
+npm run test:motion             # movimento no navegador (tempo, origem, gesto; BASE_URL próprio)
 npm run test:visual             # regressão visual (referências do Linux, geradas no CI)
 npm run palettes:build          # gera src/styles/palettes.css das sementes de src/brand/palettes.ts
 npm run registry:build          # gera o registry.json (novo componente ou variante)
