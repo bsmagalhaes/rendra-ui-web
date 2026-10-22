@@ -2,7 +2,7 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
-## Não publicado
+## 2.6.0 (22/10/2026)
 
 Motion sob demanda. Versão minor, aditiva na API (nenhuma prop, export ou assinatura existente muda), mas **com uma mudança de comportamento para quem usa `motion="on"` com o texto** (veja "Alterado"). O `off`, o padrão, não muda um byte de HTML nem de pixel (as 152 capturas e os snapshots do `off` seguem iguais).
 
@@ -18,6 +18,7 @@ Motion sob demanda. Versão minor, aditiva na API (nenhuma prop, export ou assin
 - **Para quem usa `motion="on"` (texto):** o Motion deixa de ser carregado junto com o app. O provider baixa o motor depois do primeiro quadro: **o primeiro quadro sai em `off` e liga quando o chunk chega** (alguns milissegundos em rede boa). A ligação **não remonta nada** (estado, foco, texto digitado e overlays abertos ficam como estavam) e **o que já estava na tela não repete a entrada** (o número de um indicador não volta a 0, a agulha do gauge e o gráfico não redesenham). Efeitos práticos: (1) em servidor (SSR) o HTML sai em `off` e a hidratação bate; (2) testes que afirmam o `on` logo depois do `render` precisam esperar o chunk (`await screen.findBy...`) ou passar o objeto; (3) com `motion="on"` o componente que tem um ramo próprio para `on` (Accordion, Switch, Checkbox, Tabs, overlays) troca de elemento na hora da ligação. **Para manter o comportamento de antes, sem espera, passe `motion={rendraMotion}`** (`import { rendraMotion } from '@rendra-ui/web/motion'`).
 - **Motion fora do bundle inicial em `off`.** Os 22 componentes que importavam `m`, `AnimatePresence`, `animate` e os hooks do `motion/react` passam a ler o objeto do contexto (`useMotionLib`); `dist/index.js` e as demais entradas importam de `motion` só o `LazyMotion`, o `MotionConfig` e o `PresenceContext` (que ficam montados desde o primeiro quadro para a troca não remontar a árvore). Na vitrine em `off`, o chunk comum do Motion (87.598 B, 30.861 B gzip) sai do carregamento inicial: o bundle inicial passa de cerca de 729 kB (229 kB gzip) para cerca de 668 kB (208 kB gzip), e o motor (animações, gestos, `animate`) só é baixado por quem liga o `on` ou abre `/componentes-motion` e `/dashboard-motion`. **O que resta**: o `LazyMotion` estático arrasta a base do elemento visual do Motion (cerca de 13 kB gzip), porque o empacotador não separa os trechos de um mesmo módulo; ficam de fora todo o motor de animação (mais de 30 kB gzip).
 - `motion` segue em `dependencies`.
+- Simulação dos dois leigos aprovada em 22/10/2026 (Regra um, item 7): a partir só da documentação pública, uma pessoa começou um sistema novo pelo clone (limpeza do clone à risca com `npm test` verde, tela nova com `motion={rendraMotion}` na ponte e o `on` síncrono desde o primeiro quadro, `typecheck`, `lint`, `check:rules` e navegador em 360 e 1280 px) e outra consumiu o pacote (`build:lib`, `npm pack`, consumidor com `import { rendraMotion } from '@rendra-ui/web/motion'` compilando, o compilador barrando valor inválido e nenhuma entrada fora de `motion` importando o motor), sem precisar perguntar nada ao autor.
 
 ## 2.5.0 (22/10/2026)
 

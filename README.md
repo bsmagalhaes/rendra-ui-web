@@ -217,7 +217,7 @@ import { rendraMotion } from '@rendra-ui/web/motion'
 ;<RendraProvider motion={rendraMotion}>{/* ... */}</RendraProvider>
 ```
 
-Com React Router, ponha a prop na ponte, que já entrega ao provider o link, o caminho atual e a navegação: `<RendraRouterBridge motion="on">` ou `<RendraRouterBridge motion={rendraMotion}>`. Montando o `RendraProvider` direto, ele também exige `linkComponent`, `useCurrentPath`, `navigate` e `goBack`. Quem testa a interface em `on` e afirma o resultado logo depois do `render` usa `motion={rendraMotion}` (síncrono); com o texto é preciso esperar o chunk.
+Com React Router, ponha a prop na ponte, que já entrega ao provider o link, o caminho atual e a navegação: `<RendraRouterBridge motion="on">` ou `<RendraRouterBridge motion={rendraMotion}>`. Montando o `RendraProvider` direto, ele também exige `linkComponent`, `useCurrentPath`, `navigate` e `goBack`. Quem testa a interface em `on` e afirma o resultado logo depois do `render` usa `motion={rendraMotion}` (síncrono); com o texto é preciso esperar o chunk. No clone deste repositório, `rendraMotion` vem de `@/lib/motion/motion-on`.
 
 - **Tokens** (variáveis CSS que o host sobrescreve): `--rendra-duration-press|hover|fast|base|move|slow|draw|pulse`, `--rendra-reveal-enter|stagger|count|draw` (a chegada do painel, mais lenta, de uso único) e as curvas `--rendra-ease-out|in-out|spring|move|drawer`, com os aliases do Tailwind `ease-move` e `ease-drawer`.
 - **Presets** em `src/lib/motion` (`presets.ts`, `tokens.ts`; no registry do shadcn vão todos os arquivos da pasta): `press`, `open`, `sheet`, `tooltip`, `swap`, `indicator`, `move`, `settle`, `reveal`, `stagger`. Os nomes antigos (`fade`, `scale`, `pop`, `slide`, `layout`, `tap`, `bump`) continuam.
