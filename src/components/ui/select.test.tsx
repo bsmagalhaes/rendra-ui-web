@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { Select } from './select'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 const options = [
   { value: 'sp', label: 'São Paulo' },
@@ -124,7 +124,7 @@ describe('Select', () => {
 })
 
 describe('Select com motion', () => {
-  const emOn = (ui: ReactNode) => render(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => render(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 
   it('em on, no desktop: abre a lista, escolhe e a lista sai do DOM', async () => {
     const onChange = vi.fn()

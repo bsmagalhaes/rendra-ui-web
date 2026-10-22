@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import type { AnchorHTMLAttributes } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useMotionMode } from '@/lib/motion'
+import { motionOn } from '@/test/motion'
 import {
   RendraProvider,
   useCurrentPath,
@@ -171,13 +172,23 @@ describe('RendraProvider', () => {
       expect(screen.getByText('modo: off')).toBeInTheDocument()
     })
 
-    it('motion="on" liga o modo para os componentes de dentro', () => {
+    it('motion={objeto} liga o modo na hora, para os componentes de dentro', () => {
+      render(
+        <RendraProvider {...props} motion={motionOn}>
+          <Modo />
+        </RendraProvider>,
+      )
+      expect(screen.getByText('modo: on')).toBeInTheDocument()
+    })
+
+    it('motion="on" (texto) começa em off e liga quando o chunk do Motion chega', async () => {
       render(
         <RendraProvider {...props} motion="on">
           <Modo />
         </RendraProvider>,
       )
-      expect(screen.getByText('modo: on')).toBeInTheDocument()
+      expect(screen.getByText('modo: off')).toBeInTheDocument()
+      expect(await screen.findByText('modo: on')).toBeInTheDocument()
     })
   })
 })

@@ -1,8 +1,7 @@
-import { AnimatePresence, m } from 'motion/react'
 import { Popover as P } from 'radix-ui'
 import { createContext, useContext, useState, type ComponentProps } from 'react'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionMode, useMotionPresets } from '@/lib/motion'
 
 /*
  * Em `on` o Popover precisa saber se está aberto para manter o conteúdo montado durante a
@@ -51,7 +50,7 @@ export function PopoverContent({
   ...props
 }: PopoverContentProps) {
   const open = useContext(PopoverOpenContext)
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
   // O popover nasce do gatilho, não do centro (W6): a origem vem do Radix.
   const base = cn(
@@ -59,9 +58,9 @@ export function PopoverContent({
     width === 'sm' ? 'w-popover-sm' : 'w-popover',
   )
 
-  if (motion === 'on' && open !== null && !asChild) {
+  if (lib && open !== null && !asChild) {
     return (
-      <AnimatePresence>
+      <lib.AnimatePresence>
         {open && (
           <P.Portal forceMount key="popover">
             <P.Content
@@ -74,11 +73,11 @@ export function PopoverContent({
               className={cn(base, className)}
               {...props}
             >
-              <m.div {...presets.open()}>{children}</m.div>
+              <lib.m.div {...presets.open()}>{children}</lib.m.div>
             </P.Content>
           </P.Portal>
         )}
-      </AnimatePresence>
+      </lib.AnimatePresence>
     )
   }
 

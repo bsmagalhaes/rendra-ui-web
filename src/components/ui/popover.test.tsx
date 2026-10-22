@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './popover'
 import { Popover as P } from 'radix-ui'
 import { useState, type ComponentProps, type ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 describe('PopoverContent', () => {
   it('abre e usa o código do catálogo', async () => {
@@ -39,7 +39,7 @@ describe('PopoverContent', () => {
 })
 
 describe('Popover com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 
   it('o Root aceita exatamente as props do Root do Radix (mesmos tipos)', () => {
     expectTypeOf<ComponentProps<typeof Popover>>().toEqualTypeOf<ComponentProps<typeof P.Root>>()

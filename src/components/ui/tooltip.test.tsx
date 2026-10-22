@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Tooltip } from './tooltip'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 describe('Tooltip', () => {
   it('mostra o conteúdo ao focar o gatilho e some ao apertar Esc', async () => {
@@ -27,7 +27,7 @@ describe('Tooltip', () => {
 describe('Tooltip com motion', () => {
   const emOn = () =>
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Tooltip content="Configurações">
           <button type="button">Ícone</button>
         </Tooltip>
@@ -54,7 +54,7 @@ describe('Tooltip com motion', () => {
 
   it('disabled devolve só o filho, também em on', () => {
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Tooltip content="Configurações" disabled>
           <button type="button">Ícone</button>
         </Tooltip>

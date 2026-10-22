@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { motionOn } from '@/test/motion'
 import { MotionProvider } from './motion-context'
 import { createPresets, toCubicBezier } from './presets'
 import { DURATION, EASE, SPRING, type MotionTokens } from './tokens'
@@ -286,13 +287,13 @@ describe('useMotionPresets', () => {
   afterEach(() => {
     window.matchMedia = original
   })
-  const wrapper = (mode: 'on' | 'off') =>
+  const wrapper = (mode: 'off' | typeof motionOn) =>
     function Wrapper({ children }: { children: ReactNode }) {
       return createElement(MotionProvider, { mode, children })
     }
 
   it('em on, sem preferência de movimento reduzido, devolve os presets normais com a reserva dos tokens', () => {
-    const { result } = renderHook(() => useMotionPresets(), { wrapper: wrapper('on') })
+    const { result } = renderHook(() => useMotionPresets(), { wrapper: wrapper(motionOn) })
     expect(result.current.reduced).toBe(false)
     expect(result.current.fade.transition).toMatchObject({ duration: DURATION.base })
   })
@@ -304,7 +305,7 @@ describe('useMotionPresets', () => {
       addEventListener: () => {},
       removeEventListener: () => {},
     })) as unknown as typeof window.matchMedia
-    const { result } = renderHook(() => useMotionPresets(), { wrapper: wrapper('on') })
+    const { result } = renderHook(() => useMotionPresets(), { wrapper: wrapper(motionOn) })
     expect(result.current.reduced).toBe(true)
     expect(Object.keys(result.current.scale.animate)).toEqual(['opacity'])
     expect(result.current.scale.transition).toMatchObject({ duration: DURATION.base })

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { EmptyState } from './empty-state'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 describe('EmptyState', () => {
   it('mostra título, descrição e a ação', () => {
@@ -65,7 +65,7 @@ describe('EmptyState', () => {
 describe('EmptyState com motion', () => {
   it('em on, mantém o código do catálogo, o texto e as ações, e as partes assentam (opacidade 1, transform none)', async () => {
     const { container } = renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <EmptyState title="Nada aqui" description="Sem dados." actions={<button>Criar</button>} />
       </MotionProvider>,
     )
@@ -83,7 +83,7 @@ describe('EmptyState com motion', () => {
     const restore = reduceMotion()
     try {
       renderApp(
-        <MotionProvider mode="on">
+        <MotionProvider mode={motionOn}>
           <EmptyState title="Nada aqui" />
         </MotionProvider>,
       )

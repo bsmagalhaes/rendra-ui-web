@@ -7,7 +7,7 @@ import { renderApp } from '@/test/render'
 import { Stepper, Wizard } from './wizard'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 const steps = [
   { id: 'a', title: 'Dados' },
@@ -201,7 +201,7 @@ describe('Stepper', () => {
 })
 
 describe('Wizard com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 
   it('em on, avançar e voltar mostra só a etapa certa', async () => {
     emOn(
@@ -229,7 +229,7 @@ describe('Wizard com motion', () => {
         </Wizard>
       )
     }
-    for (const modo of ['off', 'on'] as const) {
+    for (const modo of ['off', motionOn] as const) {
       const { unmount } = renderApp(
         <MotionProvider mode={modo}>
           <Campos />

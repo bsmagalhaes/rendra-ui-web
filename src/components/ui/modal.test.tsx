@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Modal, type ModalProps } from './modal'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 function Harness(props: Partial<ModalProps>) {
   const [open, setOpen] = useState(true)
@@ -155,7 +155,7 @@ describe('Modal', () => {
 describe('Modal com motion', () => {
   const emOn = (props: Partial<ModalProps> = {}) =>
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Harness {...props} />
       </MotionProvider>,
     )

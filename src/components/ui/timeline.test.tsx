@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { Timeline } from './timeline'
 import { MotionProvider } from '@/lib/motion'
-import { expectSettled, reduceMotion } from '@/test/motion'
+import { expectSettled, motionOn, reduceMotion } from '@/test/motion'
 
 describe('Timeline', () => {
   it('usa o código do catálogo', () => {
@@ -40,7 +40,7 @@ describe('Timeline com motion', () => {
 
   it('em on, todos os eventos aparecem na ordem, dentro da raiz com o código do catálogo', async () => {
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Timeline events={eventos} />
       </MotionProvider>,
     )
@@ -56,7 +56,7 @@ describe('Timeline com motion', () => {
 
   it('em on, os eventos entram por deslocamento curto; reduzido, só por opacidade', async () => {
     const ui = (
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Timeline events={eventos} />
       </MotionProvider>
     )

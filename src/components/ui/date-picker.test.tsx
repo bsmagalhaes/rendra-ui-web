@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/render'
 import { DatePicker } from './date-picker'
 import { MotionProvider } from '@/lib/motion'
+import { motionOn } from '@/test/motion'
 
 describe('DatePicker', () => {
   it('o gatilho usa o código do catálogo e abrir o campo mostra o calendário', async () => {
@@ -55,7 +56,7 @@ describe('DatePicker com motion', () => {
     function Demo() {
       const [value, setValue] = useState<Date | null>(null)
       return (
-        <MotionProvider mode="on">
+        <MotionProvider mode={motionOn}>
           <DatePicker label="Data" value={value} onChange={setValue} dropdowns={false} />
         </MotionProvider>
       )

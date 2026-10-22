@@ -9,8 +9,8 @@ import {
 } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { Chart } from '@/components/ui/chart'
-import { MotionProvider, RevealScope } from '@/lib/motion'
-import { reduceMotion } from '@/test/motion'
+import { MotionProvider, RevealScope, useMotionMode } from '@/lib/motion'
+import { motionOn, reduceMotion } from '@/test/motion'
 import { renderApp } from '@/test/render'
 
 /*
@@ -48,7 +48,7 @@ describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (t
   it('em on, gráfico de rotina desenha em 420 ms (draw) com a curva dos presets', () => {
     seen.props.length = 0
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Chart type={type} aria-label="Vendas" data={data} xKey="mes" series={series} />
       </MotionProvider>,
     )
@@ -63,7 +63,7 @@ describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (t
   it('em on, dentro de um RevealScope (chegada do dashboard) desenha em 900 ms', () => {
     seen.props.length = 0
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <RevealScope>
           <Chart type={type} aria-label="Vendas" data={data} xKey="mes" series={series} />
         </RevealScope>
@@ -76,7 +76,7 @@ describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (t
   it('em on, depois do primeiro desenho trocar os dados não redesenha (W11)', () => {
     seen.props.length = 0
     const ui = (d: typeof data) => (
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Chart type={type} aria-label="Vendas" data={d} xKey="mes" series={series} />
       </MotionProvider>
     )
@@ -87,6 +87,38 @@ describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (t
     act(() => (ultimo().onAnimationEnd as () => void)())
     rerender(ui([{ mes: 'Jan', valor: 99 }, ...data.slice(1)]))
     expect(ultimo().isAnimationActive).toBe(false)
+  })
+
+  it('troca tardia (texto): o gráfico que já estava na tela em off não ganha as props do on (não redesenha); um novo, sim', async () => {
+    seen.props.length = 0
+    function Modo() {
+      return <p>modo: {useMotionMode()}</p>
+    }
+    const ui = (n: number) => (
+      <MotionProvider mode="on">
+        <Modo />
+        {Array.from({ length: n }, (_, i) => (
+          <Chart
+            key={i}
+            type={type}
+            aria-label={`Vendas ${i}`}
+            data={data}
+            xKey="mes"
+            series={series}
+          />
+        ))}
+      </MotionProvider>
+    )
+    const { rerender } = renderApp(ui(1))
+    await screen.findByText('modo: on', {}, { timeout: 20_000 })
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+    for (const p of seen.props) expect('animationDuration' in p).toBe(false)
+    // uma montagem nova, depois da troca, desenha com o tempo do on
+    seen.props.length = 0
+    rerender(ui(2))
+    expect(seen.props.some((p) => p.animationDuration === 420)).toBe(true)
   })
 
   it('em off não recebe nenhuma prop nova de animação', () => {
@@ -104,7 +136,7 @@ describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (t
     try {
       seen.props.length = 0
       renderApp(
-        <MotionProvider mode="on">
+        <MotionProvider mode={motionOn}>
           <Chart type={type} aria-label="Vendas" data={data} xKey="mes" series={series} />
         </MotionProvider>,
       )
@@ -118,7 +150,7 @@ describe.each(['bar', 'line', 'area', 'pie'] as const)('Chart %s com motion', (t
 describe('Gauge e Funnel com motion', () => {
   it('em on, a agulha do gauge anima de 0 até o valor e o gauge mantém o código e o texto', async () => {
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Chart type="gauge" aria-label="Meta do mês" value={80} max={100} />
       </MotionProvider>,
     )
@@ -133,7 +165,7 @@ describe('Gauge e Funnel com motion', () => {
 
   it('em on, o funil entra com fade e mantém o código e as etapas', async () => {
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Chart
           type="funnel"
           aria-label="Funil de vendas"

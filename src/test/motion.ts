@@ -1,11 +1,18 @@
 import { waitFor } from '@testing-library/react'
 import { MotionGlobalConfig } from 'motion/react'
 import { expect } from 'vitest'
+import { rendraMotion } from '@/lib/motion/motion-on'
 
 /*
  * Apoio dos testes do caminho `on`. Os testes rodam com as animações do Motion desligadas
  * (setup.ts); estes dois ajudam nos casos que precisam do contrário.
  */
+
+/**
+ * O `on` dos testes: o objeto do Motion passado direto ao provider (`mode={motionOn}`), síncrono
+ * e igual ao que `@rendra-ui/web/motion` entrega. Quem passa a string `'on'` espera o chunk.
+ */
+export const motionOn = rendraMotion
 
 /** Simula `prefers-reduced-motion: reduce`. Devolve a função que restaura o `matchMedia`. */
 export function reduceMotion() {

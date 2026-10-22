@@ -6,7 +6,7 @@ import { renderApp } from '@/test/render'
 import { Button } from './button'
 import { createRef, type ReactElement, type ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { reduceMotion } from '@/test/motion'
+import { motionOn, reduceMotion } from '@/test/motion'
 
 describe('Button', () => {
   it('clica e chama a ação', async () => {
@@ -47,7 +47,7 @@ describe('Button', () => {
 })
 
 describe('Button com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 
   it('em on: clica, mantém o código do catálogo, o type e a ref aponta para o HTMLButtonElement', async () => {
     const onClick = vi.fn()
@@ -104,7 +104,7 @@ describe('Button com motion', () => {
     )
     const off = html(comAsChild)
     cleanup()
-    const on = html(<MotionProvider mode="on">{comAsChild}</MotionProvider>)
+    const on = html(<MotionProvider mode={motionOn}>{comAsChild}</MotionProvider>)
     expect(on).toBe(off)
   })
 

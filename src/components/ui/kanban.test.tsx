@@ -12,7 +12,7 @@ import {
   type KanbanDropTarget,
 } from './kanban'
 import { MotionProvider } from '@/lib/motion'
-import { settleLayout } from '@/test/motion'
+import { motionOn, settleLayout } from '@/test/motion'
 
 const setViewportWidth = (w: number) =>
   (globalThis as unknown as { setViewportWidth: (w: number) => void }).setViewportWidth(w)
@@ -321,7 +321,7 @@ describe('Kanban', () => {
 
 describe('Kanban com motion', () => {
   const emOn = async (ui: ReactNode) => {
-    const r = renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+    const r = renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
     await settleLayout()
     return r
   }

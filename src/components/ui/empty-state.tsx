@@ -1,9 +1,8 @@
-import { m } from 'motion/react'
 import type { ElementType, ReactNode } from 'react'
 import type { FeedbackType } from '@/brand/types'
 import { BrandFeedbackIcon } from '@/components/ui/brand-feedback-icon'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionPresets } from '@/lib/motion'
 
 export interface EmptyStateProps {
   title: string
@@ -30,15 +29,16 @@ export function EmptyState({
   size = 'default',
   className,
 }: EmptyStateProps) {
-  const on = useMotionMode() === 'on'
+  const lib = useMotionLib()
+  const on = lib !== null
   const presets = useMotionPresets()
   // Em `on` as quatro partes (ícone, título, descrição e ações) sobem em cascata de 60 ms, cada
   // uma com o deslize curto; a raiz em si não anima. Estado vazio é cota de encanto: ocasional,
   // sem teclado no caminho. Em `off` o HTML é o de sempre.
-  const Icon: ElementType = on ? m.span : 'span'
-  const Title: ElementType = on ? m.p : 'p'
-  const Description: ElementType = on ? m.p : 'p'
-  const Actions: ElementType = on ? m.div : 'div'
+  const Icon: ElementType = on ? lib.m.span : 'span'
+  const Title: ElementType = on ? lib.m.p : 'p'
+  const Description: ElementType = on ? lib.m.p : 'p'
+  const Actions: ElementType = on ? lib.m.div : 'div'
   const part = (index: number) => {
     if (!on) return {}
     const enter = presets.slide('bottom', 'short')

@@ -6,7 +6,7 @@ import { renderApp } from '@/test/render'
 import { Switch } from './switch'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { reduceMotion } from '@/test/motion'
+import { motionOn, reduceMotion } from '@/test/motion'
 
 describe('Switch', () => {
   it('liga e desliga', async () => {
@@ -21,7 +21,7 @@ describe('Switch', () => {
 })
 
 describe('Switch com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 
   it('em on: liga e desliga, com o código do catálogo e o estado no data-state', async () => {
     const onCheckedChange = vi.fn()

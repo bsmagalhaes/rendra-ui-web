@@ -6,7 +6,7 @@ import { StatCard } from './stat-card'
 import userEvent from '@testing-library/user-event'
 import { useState, type ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { realAnimations, reduceMotion } from '@/test/motion'
+import { motionOn, realAnimations, reduceMotion } from '@/test/motion'
 
 describe('StatCard', () => {
   it('usa o código do catálogo, sobrepondo o do Card em que se apoia', () => {
@@ -46,7 +46,7 @@ describe('StatCard', () => {
 })
 
 describe('StatCard com motion', () => {
-  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+  const emOn = (ui: ReactNode) => renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
 
   it.each([
     [1234, '1234'],

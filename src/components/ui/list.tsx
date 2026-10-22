@@ -1,12 +1,17 @@
 import { ChevronRight } from 'lucide-react'
-import { m } from 'motion/react'
 import type { ElementType, ReactNode } from 'react'
 import { resolveCatalogCode } from '@/catalog/components'
 import { useRendraLink } from '@/components/rendra-provider'
 import { Badge } from '@/components/ui/badge'
 import { SortableHandle } from '@/components/ui/sortable-handle'
 import { cn } from '@/lib/cn'
-import { layoutEnabled, useLayoutReady, useMotionMode, useMotionPresets } from '@/lib/motion'
+import {
+  layoutEnabled,
+  useLayoutReady,
+  useMotionLib,
+  useMotionMode,
+  useMotionPresets,
+} from '@/lib/motion'
 import { useSortable } from '@/lib/sortable'
 
 export interface ListItem {
@@ -76,11 +81,12 @@ export function List({
   })
   const sortableEnabled = Boolean(onReorder)
   const motion = useMotionMode()
+  const lib = useMotionLib()
   const ready = useLayoutReady()
   const presets = useMotionPresets()
   // Em `on` o item anima o layout, mas só fora do arraste: sob o ponteiro a ordem muda a cada
   // passo e animar atrasaria a linha atrás do cursor. Pelo teclado (moveBy) o layout anima.
-  const Item: ElementType = motion === 'on' ? m.li : 'li'
+  const Item: ElementType = lib ? lib.m.li : 'li'
   const itemMotion =
     motion === 'on'
       ? {

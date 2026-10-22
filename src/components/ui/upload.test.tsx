@@ -5,7 +5,7 @@ import { renderApp } from '@/test/render'
 import { Upload } from './upload'
 import type { ReactNode } from 'react'
 import { MotionProvider } from '@/lib/motion'
-import { settleLayout } from '@/test/motion'
+import { motionOn, settleLayout } from '@/test/motion'
 
 // jsdom não sabe gerar um blob: real a partir do File do Node/Vitest; o componente só
 // precisa de uma string para a miniatura, então os testes substituem as duas funções.
@@ -234,7 +234,7 @@ describe('Upload', () => {
 
 describe('Upload com motion', () => {
   const emOn = async (ui: ReactNode) => {
-    const r = renderApp(<MotionProvider mode="on">{ui}</MotionProvider>)
+    const r = renderApp(<MotionProvider mode={motionOn}>{ui}</MotionProvider>)
     await settleLayout()
     return r
   }

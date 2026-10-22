@@ -1,8 +1,8 @@
-import { AnimatePresence, m } from 'motion/react'
 import { Tooltip as T } from 'radix-ui'
 import { forwardRef, useState, type ComponentPropsWithoutRef, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionOn, useMotionPresets } from '@/lib/motion'
+import type { RendraMotion } from '@/lib/motion/motion-on'
 
 /**
  * Tooltip: só para informação complementar, nunca essencial (não existe hover no toque).
@@ -34,8 +34,9 @@ const contentCls =
  * aberto, ou foi o foco do teclado). Nesse caso não anima: depois do primeiro, os outros abrem sem
  * atraso e sem animação, e a barra inteira parece mais rápida (W7).
  */
-const TooltipBody = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<typeof m.div>>(
+const TooltipBody = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<RendraMotion['m']['div']>>(
   function TooltipBody(props, ref) {
+    const { m } = useMotionOn()
     const presets = useMotionPresets()
     const instant = (props as { 'data-state'?: string })['data-state'] === 'instant-open'
     return <m.div ref={ref} {...props} {...presets.tooltip(instant)} />
@@ -43,16 +44,16 @@ const TooltipBody = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<typeof m
 )
 
 export function Tooltip({ content, children, side = 'top', disabled }: TooltipProps) {
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   // Só em `on`: o estado aberto fica aqui para o conteúdo continuar montado durante a saída.
   // O Radix segue dono do atraso: `onOpenChange` só dispara depois do `delayDuration`.
   const [open, setOpen] = useState(false)
   if (disabled) return <>{children}</>
-  if (motion === 'on') {
+  if (lib) {
     return (
       <T.Root open={open} onOpenChange={setOpen}>
         <T.Trigger asChild>{children}</T.Trigger>
-        <AnimatePresence>
+        <lib.AnimatePresence>
           {open && (
             <T.Portal forceMount key="tooltip">
               <T.Content
@@ -68,7 +69,7 @@ export function Tooltip({ content, children, side = 'top', disabled }: TooltipPr
               </T.Content>
             </T.Portal>
           )}
-        </AnimatePresence>
+        </lib.AnimatePresence>
       </T.Root>
     )
   }

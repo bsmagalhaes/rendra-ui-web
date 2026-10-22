@@ -30,7 +30,6 @@ import {
   MoreHorizontal,
   RotateCw,
 } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import { Collapsible } from 'radix-ui'
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useRendraLink } from '@/components/rendra-provider'
@@ -53,7 +52,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionPresets } from '@/lib/motion'
 import { formatCurrency } from '@/lib/masks'
 
 /* ================================================================ tipos */
@@ -344,7 +343,7 @@ const tableFeatureSet = tableFeatures({
  * conteúdo fechado sai do DOM; em `off` é o Collapsible de sempre, com as animações em CSS.
  */
 function MobileDetails({ children }: { children: ReactNode }) {
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
   const [open, setOpen] = useState(false)
   const trigger = (
@@ -357,14 +356,14 @@ function MobileDetails({ children }: { children: ReactNode }) {
       />
     </Collapsible.Trigger>
   )
-  if (motion === 'on') {
+  if (lib) {
     return (
       <Collapsible.Root open={open} onOpenChange={setOpen}>
         {trigger}
-        <AnimatePresence initial={false}>
+        <lib.AnimatePresence initial={false}>
           {open && (
             <Collapsible.Content forceMount asChild>
-              <m.div
+              <lib.m.div
                 className="overflow-hidden"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
@@ -372,10 +371,10 @@ function MobileDetails({ children }: { children: ReactNode }) {
                 transition={presets.fade.transition}
               >
                 {children}
-              </m.div>
+              </lib.m.div>
             </Collapsible.Content>
           )}
-        </AnimatePresence>
+        </lib.AnimatePresence>
       </Collapsible.Root>
     )
   }
@@ -415,7 +414,8 @@ export function Table<T>({
   ...aria
 }: TableProps<T>) {
   const { isMobile } = useBreakpoint()
-  const on = useMotionMode() === 'on'
+  const lib = useMotionLib()
+  const on = lib !== null
   const presets = useMotionPresets()
   // Linhas e cards NÃO animam a entrada, em nenhum modo (W3): a tabela é tela de dezenas de
   // vezes por dia, e a cascata a cada página, filtro ou ordenação a faria parecer lenta. O que
@@ -924,7 +924,7 @@ export function Table<T>({
                       </tr>
                     )}
                     {expandable && on && (
-                      <AnimatePresence initial={false}>
+                      <lib.AnimatePresence initial={false}>
                         {r.getIsExpanded() && (
                           <tr key="expanded" className="bg-muted/30">
                             <td
@@ -933,7 +933,7 @@ export function Table<T>({
                               }
                               className="px-4"
                             >
-                              <m.div
+                              <lib.m.div
                                 className="overflow-hidden"
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
@@ -941,11 +941,11 @@ export function Table<T>({
                                 transition={presets.fade.transition}
                               >
                                 <div className="py-4">{expandable(row)}</div>
-                              </m.div>
+                              </lib.m.div>
                             </td>
                           </tr>
                         )}
-                      </AnimatePresence>
+                      </lib.AnimatePresence>
                     )}
                   </Fragment>
                 )

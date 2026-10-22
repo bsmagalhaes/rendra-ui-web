@@ -1,5 +1,4 @@
 import { format } from 'date-fns'
-import { m } from 'motion/react'
 import {
   ArrowRightLeft,
   CalendarDays,
@@ -35,7 +34,13 @@ import { Tabs } from '@/components/ui/tabs'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { useFillHeight } from '@/hooks/use-fill-height'
 import { cn } from '@/lib/cn'
-import { layoutEnabled, useLayoutReady, useMotionMode, useMotionPresets } from '@/lib/motion'
+import {
+  layoutEnabled,
+  useLayoutReady,
+  useMotionLib,
+  useMotionMode,
+  useMotionPresets,
+} from '@/lib/motion'
 import { bindPointerDrag, findDragTarget, resolveDropIndex } from '@/lib/sortable'
 
 /*
@@ -295,6 +300,7 @@ export function Kanban({
   const code = resolveCatalogCode('Kanban', { hasDropTargets: Boolean(dropTargets?.length) })
   const { isMobile } = useBreakpoint()
   const motion = useMotionMode()
+  const lib = useMotionLib()
   const ready = useLayoutReady()
   const presets = useMotionPresets()
   // Prefixo do layoutId dos cards: dois quadros na mesma tela não trocam cards entre si. Sem
@@ -564,14 +570,14 @@ export function Kanban({
       </>
     )
 
-    if (motion === 'on') {
+    if (lib) {
       const layout = layoutEnabled({ mode: motion, ready, dragging: touchDrag !== null })
       // O Motion toma `onDragStart`/`onDragEnd` para o gesto de arraste dele e os tira do DOM.
       // O arraste nativo (HTML5) do desktop segue por ouvintes `dragstart`/`dragend` ligados
       // direto no elemento; o layout só liga fora do arraste por toque (o arraste nativo não
       // muda a ordem até soltar, e ao soltar o layout anima o resultado).
       return (
-        <m.li
+        <lib.m.li
           key={card.id}
           ref={(el) => {
             if (!el) return
@@ -589,7 +595,7 @@ export function Kanban({
           {...common}
         >
           {body}
-        </m.li>
+        </lib.m.li>
       )
     }
     return (

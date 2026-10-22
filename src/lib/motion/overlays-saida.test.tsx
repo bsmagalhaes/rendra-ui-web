@@ -6,13 +6,13 @@ import { useState } from 'react'
 import { describe, expect, it } from 'vitest'
 import { Modal } from '@/components/ui/modal'
 import { MotionProvider } from '@/lib/motion'
-import { realAnimations } from '@/test/motion'
+import { motionOn, realAnimations } from '@/test/motion'
 import { renderApp } from '@/test/render'
 
 function Harness() {
   const [open, setOpen] = useState(true)
   return (
-    <MotionProvider mode="on">
+    <MotionProvider mode={motionOn}>
       <Modal open={open} onOpenChange={setOpen} title="Excluir cliente?" />
     </MotionProvider>
   )

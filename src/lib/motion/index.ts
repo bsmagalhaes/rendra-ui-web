@@ -3,7 +3,10 @@ export {
   MotionProvider,
   RevealScope,
   useLayoutReady,
+  useMotionAdopted,
+  useMotionLib,
   useMotionMode,
+  useMotionOn,
   useRevealScope,
   type MotionMode,
 } from './motion-context'

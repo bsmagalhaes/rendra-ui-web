@@ -1,9 +1,8 @@
 import { ChevronDown } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import { Accordion as A } from 'radix-ui'
 import { useState, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionPresets } from '@/lib/motion'
 
 export interface AccordionItem {
   value: string
@@ -22,7 +21,7 @@ export interface AccordionProps {
 
 /** Accordion único, com animação de altura e área de toque de 44px no mobile. */
 export function Accordion({ items, multiple, defaultValue, className }: AccordionProps) {
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
   // Só em `on`: o valor aberto é espelhado aqui, para o conteúdo continuar montado durante a
   // saída animada. Sempre uma lista; no modo único tem no máximo um item.
@@ -30,7 +29,7 @@ export function Accordion({ items, multiple, defaultValue, className }: Accordio
     multiple ? (defaultValue ?? []) : defaultValue?.[0] ? [defaultValue[0]] : [],
   )
 
-  if (motion === 'on') {
+  if (lib) {
     const rootProps = multiple
       ? ({ type: 'multiple', value: open, onValueChange: setOpen } as const)
       : ({
@@ -53,20 +52,20 @@ export function Accordion({ items, multiple, defaultValue, className }: Accordio
               <A.Header>
                 <A.Trigger className="group flex min-h-touch w-full cursor-pointer items-center justify-between gap-4 py-4 text-left text-sm font-medium transition-colors hover:text-primary-text disabled:cursor-not-allowed disabled:opacity-50 md:min-h-0">
                   {it.title}
-                  <m.span
+                  <lib.m.span
                     aria-hidden
                     className="flex shrink-0"
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={presets.fade.transition}
                   >
                     <ChevronDown className="size-icon-sm text-muted-foreground" />
-                  </m.span>
+                  </lib.m.span>
                 </A.Trigger>
               </A.Header>
-              <AnimatePresence initial={false}>
+              <lib.AnimatePresence initial={false}>
                 {isOpen && (
                   <A.Content forceMount asChild>
-                    <m.div
+                    <lib.m.div
                       className="overflow-hidden text-sm wrap-break-word text-muted-foreground"
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
@@ -74,10 +73,10 @@ export function Accordion({ items, multiple, defaultValue, className }: Accordio
                       transition={presets.fade.transition}
                     >
                       <div className="pb-4">{it.content}</div>
-                    </m.div>
+                    </lib.m.div>
                   </A.Content>
                 )}
-              </AnimatePresence>
+              </lib.AnimatePresence>
             </A.Item>
           )
         })}

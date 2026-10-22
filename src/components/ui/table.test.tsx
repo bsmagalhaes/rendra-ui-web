@@ -6,6 +6,7 @@ import { RendraProvider, type RendraLinkProps } from '@/components/rendra-provid
 import { renderApp } from '@/test/render'
 import { Table, type TableColumn, type TableQuery } from './table'
 import { MotionProvider } from '@/lib/motion'
+import { motionOn } from '@/test/motion'
 
 /** Link falso, sem react-router: prova que a Table só depende do RendraProvider. */
 function FakeLink({ to, children }: RendraLinkProps) {
@@ -301,7 +302,7 @@ describe('Table', () => {
 describe('Table com motion', () => {
   const emOn = (props: Partial<Parameters<typeof Table<Row>>[0]> = {}) =>
     renderApp(
-      <MotionProvider mode="on">
+      <MotionProvider mode={motionOn}>
         <Table<Row>
           aria-label="Clientes"
           data={rows}

@@ -1,9 +1,8 @@
 import { Check, ChevronRight } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import { DropdownMenu as D } from 'radix-ui'
 import { createContext, useContext, useState, type ComponentProps } from 'react'
 import { cn } from '@/lib/cn'
-import { useMotionMode, useMotionPresets } from '@/lib/motion'
+import { useMotionLib, useMotionMode, useMotionPresets } from '@/lib/motion'
 
 /*
  * Em `on` o menu e o submenu precisam saber se estão abertos para manter o conteúdo montado
@@ -78,12 +77,12 @@ export function DropdownMenuContent({
   ...props
 }: ComponentProps<typeof D.Content>) {
   const open = useContext(MenuOpenContext)
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
 
-  if (motion === 'on' && open !== null && !asChild) {
+  if (lib && open !== null && !asChild) {
     return (
-      <AnimatePresence>
+      <lib.AnimatePresence>
         {open && (
           <D.Portal forceMount key="menu">
             <D.Content
@@ -95,11 +94,11 @@ export function DropdownMenuContent({
               className={cn(panelBase, className)}
               {...props}
             >
-              <m.div {...presets.open()}>{children}</m.div>
+              <lib.m.div {...presets.open()}>{children}</lib.m.div>
             </D.Content>
           </D.Portal>
         )}
-      </AnimatePresence>
+      </lib.AnimatePresence>
     )
   }
 
@@ -205,12 +204,12 @@ export function DropdownMenuSubContent({
   ...props
 }: ComponentProps<typeof D.SubContent>) {
   const open = useContext(SubOpenContext)
-  const motion = useMotionMode()
+  const lib = useMotionLib()
   const presets = useMotionPresets()
 
-  if (motion === 'on' && open !== null && !asChild) {
+  if (lib && open !== null && !asChild) {
     return (
-      <AnimatePresence>
+      <lib.AnimatePresence>
         {open && (
           <D.Portal forceMount key="submenu">
             <D.SubContent
@@ -220,11 +219,11 @@ export function DropdownMenuSubContent({
               className={cn(panelBase, className)}
               {...props}
             >
-              <m.div {...presets.open()}>{children}</m.div>
+              <lib.m.div {...presets.open()}>{children}</lib.m.div>
             </D.SubContent>
           </D.Portal>
         )}
-      </AnimatePresence>
+      </lib.AnimatePresence>
     )
   }
 
