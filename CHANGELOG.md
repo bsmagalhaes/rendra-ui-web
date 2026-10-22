@@ -2,7 +2,7 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
-## Não publicado
+## 2.5.0 (22/10/2026)
 
 Movimento com linguagem única, opcional e desligado por padrão (`motion` no `RendraProvider`), mais as telas `/componentes-motion` e `/dashboard-motion`. Versão minor, aditiva na API: nenhuma prop, export ou nome existente muda, e o padrão continua `motion="off"`. **O caminho `off` também muda, só em tempo, curva, origem e estado intermediário** (nunca em quadro parado; as 152 capturas de regressão não mudam). Quem usa o pacote e não liga o motion só percebe isso, descrito em "Alterado".
 
@@ -26,6 +26,7 @@ Movimento com linguagem única, opcional e desligado por padrão (`motion` no `R
 - Título e descrição sem espaço (e-mail, URL, nome composto) vazavam da tela a 360 px no Modal, Drawer, Toast, Tooltip, EmptyState, Timeline e Accordion: agora quebram (`wrap-anywhere` / `wrap-break-word`).
 - A barra do Progress indeterminado, que corre além do trilho recortado, deixava de pegar o teste de layout ao acaso: o trilho agora leva `data-allow-overflow`.
 - Removida a `transition-all duration-700` da agulha do gauge no `off`: era letra morta (`x2`/`y2` do `<line>` não são propriedades de CSS).
+- Simulação dos dois leigos aprovada em 22/10/2026 (Regra um, item 7): a partir só da documentação pública, uma pessoa começou um sistema novo pelo clone (limpeza do clone à risca com `npm test` verde, tela nova com `motion="on"` na ponte, `typecheck`, `lint`, `check:rules` e navegador em 360 e 1280 px) e outra consumiu o pacote (`build:lib`, `npm pack`, consumidor com `motion` compilando e o compilador barrando valor inválido), sem precisar perguntar nada ao autor.
 
 ## 2.4.0 (19/10/2026)
 
