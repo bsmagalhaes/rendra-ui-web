@@ -62,6 +62,10 @@ Vale para quem instalou o pacote (`1b`) e tem telas próprias. O CSS do pacote s
 
 Uma `@utility` nova em `src/styles/globals.css` entra nesta lista no mesmo commit: o teste `src/lib/utilities-doc.test.ts` falha se a lista e o arquivo divergirem.
 
+## Movimento (opcional)
+
+`<RendraProvider motion="on">` liga as animações (o padrão é `'off'`, e em `off` nada do Motion é montado). Quem instalou o pacote já tem o `motion` como dependência; quem copiou arquivos-fonte (Caminho 2) copia também `src/lib/motion/*` (o registry do shadcn entrega a pasta inteira) e o bloco de tokens de `src/styles/globals.css` (`--rendra-duration-*`, `--rendra-reveal-*`, `--rendra-ease-*`; o host pode sobrescrevê-los). O `off` também mudou na 2.5.0 em tempo, curva e origem (toque de 120 ms, saída de overlay em 120 ms, popover nascendo do gatilho, reduzido só com opacidade): não há mudança de API nem de quadro parado, e as capturas de regressão do projeto de destino não devem mudar. Detalhes e a lista de tokens no README, seção "Movimento".
+
 ## Limpeza do clone
 
 Só se aplica a quem clonou o repositório inteiro (caminho 1a, ou o caminho "clone e refazer" de uma migração, `docs/PROMPT_MIGRACAO.md`). O clone nasce publicável como o pacote `@rendra-ui/web`: antes de considerar o projeto pronto, troque ou remova o que só faz sentido no repositório do Rendra.

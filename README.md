@@ -200,13 +200,27 @@ Tudo configurável por props, com o padrão em `src/config/layout.ts`:
 
 Login, esqueci a senha, verificação em duas etapas (2FA), nova senha, cadastro, painel com indicadores e gráficos, listagem com barra de ferramentas e filtros, detalhe com abas, formulário longo em seções, cadastro em wizard, configurações com navegação interna, criação e edição de registro em drawer (com busca de CNPJ e CEP), tarefas, atendimento omnichannel, agenda, funil de vendas em kanban, painel em widgets, galeria e página 404.
 
+### Movimento (opcional, desligado por padrão)
+
+O `RendraProvider` (e o `RendraRouterBridge`) aceita a prop `motion`: `'off'` (o padrão) ou `'on'`. Em `'on'` os componentes animam com o Motion (`motion` 14, já em `dependencies`); em `'off'` nada do Motion é montado. A linguagem é uma só: o que se repete dezenas de vezes por dia (tabela, abas, teclado) não anima a entrada; o toque responde em 120 ms; overlays entram em mola sem quique e saem mais rápido que entram, a partir do gatilho; nada parte de `scale(0)`; movimento reduzido vira só opacidade.
+
+```tsx
+<RendraProvider motion="on">{/* ... */}</RendraProvider>
+```
+
+- **Tokens** (variáveis CSS que o host sobrescreve): `--rendra-duration-press|hover|fast|base|move|slow|draw|pulse`, `--rendra-reveal-enter|stagger|count|draw` (a chegada do painel, mais lenta, de uso único) e as curvas `--rendra-ease-out|in-out|spring|move|drawer`, com os aliases do Tailwind `ease-move` e `ease-drawer`.
+- **Presets** em `src/lib/motion` (`presets.ts`, `tokens.ts`; no registry do shadcn vão todos os arquivos da pasta): `press`, `open`, `sheet`, `tooltip`, `swap`, `indicator`, `move`, `settle`, `reveal`, `stagger`. Os nomes antigos (`fade`, `scale`, `pop`, `slide`, `layout`, `tap`, `bump`) continuam.
+- **Telas de comparação**: `/componentes-motion` (as mesmas seções de `/componentes`, com a chave Ligado/Desligado) e `/dashboard-motion` (painel que chega com contagem, gráficos desenhando e cascata). Ficam fora das suítes de captura.
+- **O `off` também mudou nesta versão** (2.5.0), só em tempo, curva, origem e estado intermediário, nunca em quadro parado: o toque do botão é de 120 ms a 0,97; popover, menu, tooltip e painel do Select nascem do gatilho; toda saída de overlay dura 120 ms; o tooltip em `instant-open` não anima; a bolinha do radio e o check do checkbox partem de 0,9, não de zero; com movimento reduzido os overlays só esmaecem. As 152 capturas de referência não mudam.
+- `npm run test:motion` mede tempo, escala, origem e gesto no navegador (`BASE_URL` para o seu servidor).
+
 ### Vitrine, Storybook e testes
 
 - **Vitrine** na rota `/componentes`: cada componente com variantes, tamanhos e estados (padrão, hover, foco, ativo, desabilitado, carregando, erro) e as regras de composição.
 - **Storybook 10** com mais de 100 stories: viewport de celular por padrão, com tablet e desktop, e alternância de template, paleta e modo claro/escuro na barra.
 - **Testes de layout com Playwright** (`npm run test:layout`): 16 rotas × 5 larguras (360, 390, 768, 1280 e 1920) × 3 templates no modo claro, mais 360 e 1280 no escuro, somando 336 testes. Falham se houver rolagem horizontal, elemento maior que a tela, toque menor que 44px no celular ou erro de JavaScript, e geram capturas de todas as telas.
 - **Testes de acessibilidade com axe-core** (`npm run test:a11y`): 144 testes, todas as rotas nos três templates, claro e escuro, mais a paleta Ardósia e o celular. Falham em qualquer violação WCAG 2.1 A ou AA, inclusive contraste.
-- **Regressão visual** (`npm run test:visual`): 128 capturas comparadas com a referência aprovada. Pegam cor que mudou, espaçamento que quebrou e ícone que sumiu. As referências são geradas no Linux do CI; depois de uma mudança visual intencional, aplique o rótulo `atualizar-visual` no Pull Request.
+- **Regressão visual** (`npm run test:visual`): 152 capturas comparadas com a referência aprovada. Pegam cor que mudou, espaçamento que quebrou e ícone que sumiu. As referências são geradas no Linux do CI; depois de uma mudança visual intencional, aplique o rótulo `atualizar-visual` no Pull Request.
 - **Testes unitários e de componente com Vitest e Testing Library** (`npm test`; `npm run test:coverage` com o piso por arquivo): comportamento de Table (ordenação, busca, paginação, seleção, ações em massa, modo remoto e cartões no celular), Select, Input (máscaras, centavos e busca de CEP e CNPJ), Modal, Drawer, campos de formulário e navegação, além de validadores, máscaras, buscas e o gerador de paletas (AA garantido em todas). Cada componente tem o teste ao lado, e ele vai junto quando você copia o componente para outro projeto.
 - **CI no GitHub Actions**: todo Pull Request passa por tipos, lint, formatação, regras, unitários, build, Storybook e os três testes no navegador. A `main` só aceita merge com tudo verde. Os alertas de segurança do GitHub avisam de dependência vulnerável; as atualizações de versão são feitas à mão (veja o `CONTRIBUTING.md`).
 - **Verificador de regras** (`npm run check:rules`): barra cor fixa, valor arbitrário, degrau fora da escala, estilo inline, fonte fixa, `100vh` e arquivos duplicados ou mobile. A mesma varredura, com as 17 regras, roda em qualquer projeto por `npx @rendra-ui/web auditar --all`.
