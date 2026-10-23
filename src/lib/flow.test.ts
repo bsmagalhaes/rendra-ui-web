@@ -4,6 +4,7 @@ import {
   advanceSimulation,
   connectNodes,
   describeWait,
+  formatWait,
   moveNode,
   nextCandidates,
   parseFlow,
@@ -573,6 +574,8 @@ describe('simulação', () => {
     expect(describeWait({ duration: 1, unit: 'dias' })).toBe('Aguardaria 1 dia')
     expect(describeWait({ duration: 3, unit: 'horas' })).toBe('Aguardaria 3 horas')
     expect(describeWait({ duration: 1, unit: 'segundos' })).toBe('Aguardaria 1 segundo')
+    expect(formatWait({ duration: 2, unit: 'dias' })).toBe('2 dias')
+    expect(formatWait({ unit: 'dias' })).toBeNull()
     expect(describeWait(undefined)).toBe('Aguardaria o tempo definido no bloco')
     expect(describeWait({ duration: 'x', unit: 'minutos' })).toBe(
       'Aguardaria o tempo definido no bloco',

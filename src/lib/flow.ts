@@ -85,13 +85,18 @@ const DEFAULT_WAIT: { duration: number; unit: FlowWaitUnit } = { duration: 5, un
 const isUnit = (v: unknown): v is FlowWaitUnit =>
   typeof v === 'string' && (FLOW_WAIT_UNITS as readonly string[]).includes(v)
 
-/** Texto da espera simulada: nunca espera de verdade. */
-export function describeWait(config: Record<string, unknown> | undefined): string {
+/** A duração do bloco de espera ("5 minutos"), ou `null` se o config não a define. */
+export function formatWait(config: Record<string, unknown> | undefined): string | null {
   const duration = config?.duration
   const unit = config?.unit
-  if (typeof duration !== 'number' || !Number.isFinite(duration) || !isUnit(unit))
-    return 'Aguardaria o tempo definido no bloco'
-  return `Aguardaria ${duration} ${duration === 1 ? WAIT_SINGULAR[unit] : unit}`
+  if (typeof duration !== 'number' || !Number.isFinite(duration) || !isUnit(unit)) return null
+  return `${duration} ${duration === 1 ? WAIT_SINGULAR[unit] : unit}`
+}
+
+/** Texto da espera simulada: nunca espera de verdade. */
+export function describeWait(config: Record<string, unknown> | undefined): string {
+  const wait = formatWait(config)
+  return wait ? `Aguardaria ${wait}` : 'Aguardaria o tempo definido no bloco'
 }
 
 const nameOf = (n: FlowNode) => n.data.label.trim() || FLOW_TYPE_NAME[n.type]

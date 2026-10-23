@@ -59,6 +59,8 @@ export const groups = [
       ['chart', 'Chart'],
       ['qrcode', 'QrCode'],
       ['widgets', 'WidgetGrid'],
+      ['fluxo-editor', 'FlowEditor'],
+      ['fluxo-viewer', 'FlowViewer'],
     ],
   },
   {

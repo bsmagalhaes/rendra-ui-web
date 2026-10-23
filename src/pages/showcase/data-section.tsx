@@ -15,19 +15,84 @@ import {
 } from '@/components/ui/card'
 import { Chart } from '@/components/ui/chart'
 import { Field } from '@/components/ui/field'
+import { FlowEditor } from '@/components/ui/flow-editor'
+import { FlowViewer } from '@/components/ui/flow-viewer'
 import { Input } from '@/components/ui/input'
 import { List } from '@/components/ui/list'
 import { QrCode } from '@/components/ui/qr-code'
 import { Select } from '@/components/ui/select'
 import { StatCard } from '@/components/ui/stat-card'
 import { Table } from '@/components/ui/table'
+import { Textarea } from '@/components/ui/textarea'
 import { clientColumns } from '@/pages/app/client-columns'
 import { Timeline } from '@/components/ui/timeline'
 import { toast } from '@/components/ui/toast'
 import { WidgetGrid, type Widget } from '@/components/ui/widget-grid'
 import { bySegment, clients, monthly, statusTone, type Client } from '@/mocks/clients'
+import { serializeFlow, type Flow } from '@/lib/flow'
 import { formatCurrency } from '@/lib/masks'
 import { CatalogCode, Demo, GroupTitle, Row } from './demo'
+
+/* Fluxo de exemplo da vitrine e da story: os cinco tipos de bloco, com a condição de duas saídas. */
+export const demoFlow: Flow = {
+  nodes: [
+    { id: 'gatilho-1', type: 'gatilho', position: { x: 0, y: 0 }, data: { label: 'Novo pedido' } },
+    {
+      id: 'acao-1',
+      type: 'acao',
+      position: { x: 0, y: 120 },
+      data: { label: 'Enviar confirmação' },
+    },
+    {
+      id: 'condicao-1',
+      type: 'condicao',
+      position: { x: 0, y: 240 },
+      data: { label: 'Pagamento aprovado?' },
+    },
+    {
+      id: 'espera-1',
+      type: 'espera',
+      position: { x: 360, y: 240 },
+      data: { label: 'Aguardar liberação', config: { duration: 2, unit: 'horas' } },
+    },
+    {
+      id: 'acao-2',
+      type: 'acao',
+      position: { x: 360, y: 380 },
+      data: { label: 'Liberar acesso' },
+    },
+    {
+      id: 'fim-1',
+      type: 'fim',
+      position: { x: 360, y: 500 },
+      data: { label: 'Pedido concluído' },
+    },
+    {
+      id: 'fim-2',
+      type: 'fim',
+      position: { x: 0, y: 420 },
+      data: { label: 'Pedido cancelado' },
+    },
+  ],
+  edges: [
+    { id: 'gatilho-1->acao-1', source: 'gatilho-1', target: 'acao-1' },
+    { id: 'acao-1->condicao-1', source: 'acao-1', target: 'condicao-1' },
+    {
+      id: 'condicao-1:sim->espera-1',
+      source: 'condicao-1',
+      target: 'espera-1',
+      branch: 'sim',
+    },
+    {
+      id: 'condicao-1:nao->fim-2',
+      source: 'condicao-1',
+      target: 'fim-2',
+      branch: 'nao',
+    },
+    { id: 'espera-1->acao-2', source: 'espera-1', target: 'acao-2' },
+    { id: 'acao-2->fim-1', source: 'acao-2', target: 'fim-1' },
+  ],
+}
 
 /* Widgets de exemplo para a vitrine do WidgetGrid (cada um já é um card). */
 const demoWidgets: Widget[] = [
@@ -72,6 +137,7 @@ export function DataSection() {
   const [state, setState] = useState<'data' | 'loading' | 'empty' | 'error'>('data')
   const [density, setDensity] = useState<'compact' | 'default' | 'comfortable'>('default')
   const [qrValue, setQrValue] = useState('https://rendra.example.com/clientes/42')
+  const [flow, setFlow] = useState<Flow>(demoFlow)
   const data =
     state === 'empty' ? [] : clients.filter((c) => !status.length || status.includes(c.status))
 
@@ -606,6 +672,45 @@ export function DataSection() {
         bare
       >
         <WidgetGrid widgets={demoWidgets} />
+      </Demo>
+
+      <Demo
+        id="fluxo-editor"
+        title="FlowEditor"
+        description="Editor de fluxos de automação: monte os blocos (gatilho, ação, condição, espera e fim), ligue um ao próximo, valide e teste o caminho. No celular só se vê e se navega; tocar no bloco abre a gaveta, onde se edita, se liga ao próximo bloco e se exclui. O JSON ao lado é o que a tela guarda."
+        props="value (Flow), onChange, readOnly"
+        code="FLX-001"
+        bare
+      >
+        <Stack gap="4">
+          <FlowEditor value={flow} onChange={setFlow} />
+          <Card>
+            <CardHeader>
+              <CardTitle>JSON do fluxo</CardTitle>
+              <CardDescription>Só leitura: muda a cada alteração no editor.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                readOnly
+                aria-label="JSON do fluxo"
+                rows={8}
+                value={serializeFlow(flow)}
+                className="font-mono"
+              />
+            </CardContent>
+          </Card>
+        </Stack>
+      </Demo>
+
+      <Demo
+        id="fluxo-viewer"
+        title="FlowViewer"
+        description="O mesmo fluxo só para ler: aproximar, afastar e mover o canvas, sem arrastar, ligar ou apagar. activeId destaca um bloco."
+        props="value (Flow), activeId, issues, className"
+        code="FLX-002"
+        bare
+      >
+        <FlowViewer value={demoFlow} activeId="condicao-1" />
       </Demo>
     </>
   )

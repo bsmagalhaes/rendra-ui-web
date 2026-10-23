@@ -17,6 +17,7 @@
     "src/rich-text-editor.ts",
     "src/chart.ts",
     "src/widget-grid.ts",
+    "src/flow.ts",
     "src/motion.ts"
   ]
 }

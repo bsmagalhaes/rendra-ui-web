@@ -829,6 +829,24 @@ export const CATALOG: ComponentCatalogEntry[] = [
     variantProps: { layout: 'gallery' },
     whenToUse: 'Para upload de fotos e vídeos, com miniatura em vez de linha de lista.',
   },
+  // ---------------------------------------------------------------- flow
+  {
+    code: 'FLX-001',
+    name: 'Editor de fluxo',
+    component: 'FlowEditor',
+    file: 'components/ui/flow-editor.tsx',
+    variantProps: {},
+    whenToUse:
+      'Para montar, ligar, validar e testar um fluxo de automação (gatilho, ação, condição, espera e fim).',
+  },
+  {
+    code: 'FLX-002',
+    name: 'Visualizador de fluxo',
+    component: 'FlowViewer',
+    file: 'components/ui/flow-viewer.tsx',
+    variantProps: {},
+    whenToUse: 'Para mostrar um fluxo de automação só para ler, sem editar.',
+  },
   // ---------------------------------------------------------------- widget-grid
   {
     code: 'WDG-001',

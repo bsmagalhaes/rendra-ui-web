@@ -927,6 +927,50 @@
   }
 }
 
+/* Fluxo de automação (FlowEditor e FlowViewer, React Flow): o bloco tem largura própria. */
+@utility w-flow-node {
+  width: 16rem;
+}
+
+/*
+ * O CSS do React Flow não tem camada e por isso vence qualquer regra em @layer, mesmo com seletor
+ * mais específico. O traço das ligações, as alças, a seleção e o fundo entram pelas variáveis
+ * --xy-* no style do contêiner (flow-viewer.tsx), apontando para os tokens do Rendra. Aqui ficam
+ * só as regras que a biblioteca não lê de variável. O link "React Flow" mantém a atribuição, com
+ * as cores do tema e área de toque de 44 px; a cor leva !important porque a da biblioteca é fixa.
+ */
+@layer rendra.components {
+  .flow-surface .react-flow__node {
+    touch-action: none;
+  }
+  .flow-surface .react-flow__node:focus-visible {
+    border-radius: var(--rendra-shape-block);
+    outline: 2px solid var(--rendra-ring);
+    outline-offset: 2px;
+  }
+  .flow-surface .react-flow__attribution {
+    border-radius: var(--rendra-shape-item);
+    border: 1px solid var(--rendra-border);
+  }
+  .flow-surface .react-flow__attribution a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--rendra-primary-text) !important;
+    text-decoration: underline;
+    text-underline-offset: 0.25rem;
+  }
+  .flow-surface .react-flow__attribution a:focus-visible {
+    border-radius: var(--rendra-shape-item);
+    outline: 2px solid var(--rendra-ring);
+  }
+}
+
 /* Atendimento: lista de conversas, conversa e (a partir de xl) dados do contato. */
 @utility grid-chat-2 {
   grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
