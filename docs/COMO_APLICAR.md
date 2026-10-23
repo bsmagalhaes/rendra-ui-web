@@ -64,7 +64,7 @@ Uma `@utility` nova em `src/styles/globals.css` entra nesta lista no mesmo commi
 
 ## Fluxos de automação (opcional)
 
-`FlowEditor` e `FlowViewer` ficam no subcaminho `@rendra-ui/web/flow`, que depende do React Flow (`@xyflow/react`, MIT). O pacote traz o `@xyflow/react` como dependência, e o import do CSS dele (`@xyflow/react/dist/base.css`) sai preservado em `dist/flow.js`: o seu bundler resolve do `node_modules`, como acontece com o `react-grid-layout` do `widget-grid`. Quem copia o código-fonte (clone ou registry) instala o `@xyflow/react` sozinho pelo item `flow-editor` ou `flow-viewer`.
+`FlowEditor` e `FlowViewer` ficam no subcaminho `@rendra-ui/web/flow`, que depende do React Flow (`@xyflow/react`, MIT). O pacote traz o `@xyflow/react` como dependência, e o import do CSS dele (`@xyflow/react/dist/base.css`) sai preservado em `dist/flow.js`: o seu bundler resolve do `node_modules`, como acontece com o `react-grid-layout` do `widget-grid`. No clone ele já vem no `package.json`; pelo registry, o item `flow-editor` ou `flow-viewer` o instala. No clone (quem começou o sistema a partir deste repositório), `FlowEditor` e `FlowViewer` vêm de `@/components/ui/flow-editor` e `@/components/ui/flow-viewer`, e `validateFlow`, `serializeFlow` e `parseFlow` de `@/lib/flow` (`src/flow.ts` reúne os mesmos nomes). Os tipos do `@xyflow/react` 12 exigem `skipLibCheck: true` (o padrão) num host com `exactOptionalPropertyTypes`.
 
 ```tsx
 import { useState } from 'react'

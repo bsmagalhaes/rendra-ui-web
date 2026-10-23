@@ -2,7 +2,7 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
-## Não publicado
+## 2.7.0 (23/10/2026)
 
 Fluxos de automação com o React Flow. Versão minor, aditiva: nenhuma prop, export ou assinatura existente muda, e a entrada principal (`@rendra-ui/web`) não importa o React Flow.
 
@@ -12,6 +12,7 @@ Fluxos de automação com o React Flow. Versão minor, aditiva: nenhuma prop, ex
 - `validateFlow`, `serializeFlow` e `parseFlow` (e os tipos `Flow`, `FlowNode`, `FlowEdge`, `FlowIssue`) em `@rendra-ui/web/flow`; a lógica pura mora em `src/lib/flow.ts`, sem importar o React Flow.
 - **Dependência nova: `@xyflow/react` (MIT)**, em `dependencies` e fora do bundle do pacote. Quem não importa `@rendra-ui/web/flow` não carrega nada dela.
 - `@utility w-flow-node`, `npm run test:flow` (projeto `flow` do Playwright, no CI) e os itens `flow-editor` e `flow-viewer` no registry.
+- Simulação dos dois leigos aprovada em 23/10/2026 (Regra um, item 7): a partir só da documentação pública, uma pessoa começou um sistema novo pelo clone (tela nova com `FlowEditor` controlado, `validateFlow`, `serializeFlow`, `parseFlow` e `FlowViewer` com `issues`, teste de tela afirmando o efeito visível, `typecheck`, `lint`, `check:rules`, navegador em 360 e 1280 px com a gaveta do bloco no celular, e a limpeza do clone à risca com `npm test` verde) e outra consumiu o pacote (`build:lib`, `npm pack`, consumidor estrito com `import { FlowEditor, FlowViewer, validateFlow, serializeFlow, parseFlow } from '@rendra-ui/web/flow'` compilando, o compilador barrando bloco, ramo e `parseFlow` inválidos, a entrada principal sem o React Flow e o CSS dele chegando pelo próprio subcaminho), sem precisar perguntar nada ao autor.
 
 ### Limites
 
