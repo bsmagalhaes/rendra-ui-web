@@ -527,6 +527,7 @@ describe('FlowEditor: validar', () => {
   it('mostra uma mensagem por problema, cada uma com "Ver bloco", e marca os blocos no canvas', async () => {
     const quebrado = base()
     quebrado.edges = quebrado.edges.filter((e) => e.id !== 'a->c')
+    const erroDoReact = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { container } = renderApp(<Host initial={quebrado} />)
     await settle()
     await userEvent.click(screen.getByRole('button', { name: 'Validar' }))
@@ -536,6 +537,10 @@ describe('FlowEditor: validar', () => {
       expect(within(relatorio).getByText(issue.message)).toBeInTheDocument()
     const ver = within(relatorio).getAllByRole('button', { name: /Ver bloco/ })
     expect(ver.length).toBe(esperado.filter((i) => i.nodeId).length)
+    // HTML válido: a lista não fica dentro de um parágrafo (o React reclama no console)
+    expect(relatorio.querySelector('p ul')).toBeNull()
+    expect(erroDoReact).not.toHaveBeenCalled()
+    erroDoReact.mockRestore()
     await userEvent.click(ver[0]!)
     expect(container.querySelector('.react-flow__node.selected')).toBeInTheDocument()
     await waitFor(() =>

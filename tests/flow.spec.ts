@@ -30,6 +30,22 @@ const json = async (page: Page) =>
 async function abrir(page: Page, theme: Theme = { brand: 'safira', mode: 'light' }) {
   await aplicarTema(page, theme)
   const errors = await openRoute(page, '/componentes')
+  // Servidor de desenvolvimento lento ou ocupado: uma carga que não chegou a desenhar a vitrine
+  // é repetida uma vez; o motivo, se persistir, vai na mensagem de falha.
+  const desenhou = await page
+    .locator(SEC)
+    .waitFor({ state: 'attached', timeout: 25_000 })
+    .then(
+      () => true,
+      () => false,
+    )
+  if (!desenhou) {
+    await page.reload({ waitUntil: 'networkidle' })
+    await expect(
+      page.locator(SEC),
+      `a vitrine não desenhou o fluxo nem depois de recarregar (erros: ${errors.join(' | ') || 'nenhum'})`,
+    ).toBeAttached({ timeout: 40_000 })
+  }
   // O mouse nasce em (0, 0), sobre a barra lateral recolhida, e o hover a abre por cima do canvas.
   await page.mouse.move(640, 500)
   await page.waitForTimeout(300)
@@ -146,6 +162,25 @@ test.describe('desktop (1280, claro, mouse)', () => {
     await expect(edges(page)).toHaveCount(6)
     expect((await json(page)).nodes.some((n) => n.id === 'acao-3')).toBe(false)
     expect(errors).toEqual([])
+  })
+
+  test('validar e testar um fluxo inválido não gera erro no console', async ({ page }) => {
+    const erros: string[] = []
+    page.on('console', (m) => {
+      if (m.type() === 'error') erros.push(m.text())
+    })
+    await abrir(page)
+    await arrastarPaleta(page, 'Ação')
+    await expect(nodes(page)).toHaveCount(8)
+    await page.locator(SEC).getByRole('button', { name: 'Validar' }).click()
+    await expect(
+      page.locator(SEC).getByRole('region', { name: 'Validação do fluxo' }),
+    ).toContainText('problemas')
+    await page.locator(SEC).getByRole('button', { name: 'Testar fluxo' }).click()
+    await expect(page.locator(SEC).getByRole('region', { name: 'Teste do fluxo' })).toContainText(
+      'ajustes',
+    )
+    expect(erros).toEqual([])
   })
 
   test('apagar uma ligação selecionada por Delete', async ({ page }) => {
