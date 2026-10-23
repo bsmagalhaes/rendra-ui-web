@@ -344,32 +344,28 @@ function SimulationPanel({
     <Card role="region" aria-label="Teste do fluxo" className="min-w-0 shrink-0 lg:w-popover">
       <CardHeader
         actions={
-          <>
-            <Button
-              size="sm"
-              disabled={sim.status !== 'running'}
-              onClick={() => onSim(advanceSimulation(flow, sim))}
-            >
-              Avançar
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => onSim(startSimulation(flow))}>
-              Reiniciar
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              iconOnly
-              aria-label="Fechar teste"
-              icon={<X />}
-              onClick={onClose}
-            />
-          </>
+          <Button
+            size="sm"
+            variant="ghost"
+            iconOnly
+            aria-label="Fechar teste"
+            icon={<X />}
+            onClick={onClose}
+          />
         }
       >
         <CardTitle>Teste do fluxo</CardTitle>
         <CardDescription>Um passo por vez, sem executar nada de verdade.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        <ActionBar
+          primary={{
+            label: 'Avançar',
+            disabled: sim.status !== 'running',
+            onClick: () => onSim(advanceSimulation(flow, sim)),
+          }}
+          cancel={{ label: 'Reiniciar', onClick: () => onSim(startSimulation(flow)) }}
+        />
         {sim.status === 'error' && (
           <Alert
             type="error"
@@ -633,11 +629,22 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
           <CardHeader
             actions={
               <>
-                <Button variant="outline" icon={<ListChecks />} onClick={() => setValidated(true)}>
-                  Validar
+                <Button
+                  variant="outline"
+                  iconOnly={isMobile}
+                  aria-label="Validar"
+                  icon={<ListChecks />}
+                  onClick={() => setValidated(true)}
+                >
+                  {isMobile ? null : 'Validar'}
                 </Button>
-                <Button icon={<FlaskConical />} onClick={startTest}>
-                  Testar fluxo
+                <Button
+                  iconOnly={isMobile}
+                  aria-label="Testar fluxo"
+                  icon={<FlaskConical />}
+                  onClick={startTest}
+                >
+                  {isMobile ? null : 'Testar fluxo'}
                 </Button>
               </>
             }

@@ -7,6 +7,7 @@ import { defineConfig } from '@playwright/test'
  *   npm run test:visual   regressão visual contra as referências aprovadas
  *   npm run test:motion   movimento no navegador (tempo, escala, origem, gesto): /componentes-motion
  *   npm run test:lazy     o motor do Motion só é baixado por quem liga o `on`
+ *   npm run test:flow     fluxos de automação (FlowEditor e FlowViewer): arrastar, ligar, apagar, tema, toque
  */
 export default defineConfig({
   testDir: './tests',
@@ -34,6 +35,8 @@ export default defineConfig({
     { name: 'estados', testMatch: 'motion-estados.spec.ts' },
     // Motion sob demanda: o motor do Motion só é baixado por quem liga o `on` (tests/motion-lazy.spec.ts).
     { name: 'lazy', testMatch: 'motion-lazy.spec.ts' },
+    // Fluxos de automação: arrastar, ligar, apagar, simular, tema computado, toque e acessibilidade.
+    { name: 'flow', testMatch: 'flow.spec.ts' },
     // CSS em camadas (C4, etapa 2.0.0-alpha.8): tests/css-layers.spec.ts.
     { name: 'css-layers', testMatch: 'css-layers.spec.ts' },
   ],

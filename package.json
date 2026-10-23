@@ -126,6 +126,7 @@
     "test:visual:update": "playwright test --project=visual --update-snapshots",
     "test:motion": "playwright test --project=motion --project=estados",
     "test:lazy": "playwright test --project=lazy",
+    "test:flow": "playwright test --project=flow",
     "test:css-layers": "playwright test --project=css-layers",
     "test:site": "playwright test -c playwright.site.config.ts",
     "registry:build": "node scripts/build-registry.mjs",

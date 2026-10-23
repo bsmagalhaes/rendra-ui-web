@@ -2,6 +2,21 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
+## Não publicado
+
+Fluxos de automação com o React Flow. Versão minor, aditiva: nenhuma prop, export ou assinatura existente muda, e a entrada principal (`@rendra-ui/web`) não importa o React Flow.
+
+### Adicionado
+
+- **`FlowEditor` (`FLX-001`) e `FlowViewer` (`FLX-002`)** no subcaminho novo **`@rendra-ui/web/flow`**. O editor monta o fluxo (gatilho, ação, condição com "Sim" e "Não", espera e fim) por paleta com arraste, ligação pela alça, Delete e setas, gaveta do bloco, validação com mensagens e teste passo a passo na `Timeline`; o viewer só mostra. No celular só se vê e se navega, e a gaveta edita, liga ao próximo bloco e exclui.
+- `validateFlow`, `serializeFlow` e `parseFlow` (e os tipos `Flow`, `FlowNode`, `FlowEdge`, `FlowIssue`) em `@rendra-ui/web/flow`; a lógica pura mora em `src/lib/flow.ts`, sem importar o React Flow.
+- **Dependência nova: `@xyflow/react` (MIT)**, em `dependencies` e fora do bundle do pacote. Quem não importa `@rendra-ui/web/flow` não carrega nada dela.
+- `@utility w-flow-node`, `npm run test:flow` (projeto `flow` do Playwright, no CI) e os itens `flow-editor` e `flow-viewer` no registry.
+
+### Limites
+
+- Sem ciclos nesta versão (a validação acusa); sem montar blocos arrastando no celular (a gaveta é o caminho); a espera da simulação é instantânea e só diz quanto aguardaria.
+
 ## 2.6.0 (22/10/2026)
 
 Motion sob demanda. Versão minor, aditiva na API (nenhuma prop, export ou assinatura existente muda), mas **com uma mudança de comportamento para quem usa `motion="on"` com o texto** (veja "Alterado"). O `off`, o padrão, não muda um byte de HTML nem de pixel (as 152 capturas e os snapshots do `off` seguem iguais).
