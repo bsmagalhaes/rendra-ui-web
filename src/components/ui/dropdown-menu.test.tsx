@@ -140,17 +140,24 @@ describe('DropdownMenu com motion', () => {
       </DropdownMenu>,
     )
     await user.click(screen.getByRole('button', { name: 'Ações' }))
-    await user.click(await screen.findByRole('menuitem', { name: 'Mais opções' }))
-    await user.keyboard('{ArrowRight}')
-    expect(await screen.findByRole('menuitem', { name: 'Exportar' })).toBeInTheDocument()
+    await screen.findByRole('menuitem', { name: 'Mais opções' })
+    // Abre o submenu só pelo teclado. Um clique no gatilho do submenu manda um pointermove, e o
+    // Radix agenda um setTimeout de 100 ms que chama onOpenChange(true) sem conferir o estado:
+    // se a seta para a esquerda fechar o submenu antes desse timer, ele reabre e o submenu nunca
+    // sai (era a falha intermitente do CI, com a saída animada ainda em curso aos 100 ms).
+    await user.keyboard('{ArrowDown}{ArrowRight}')
+    const item = await screen.findByRole('menuitem', { name: 'Exportar' })
+    // A seta para a esquerda só fecha se o foco já estiver dentro do submenu.
+    const submenu = item.closest('[role="menu"]') as HTMLElement
+    await waitFor(() => expect(submenu).toContainElement(document.activeElement as HTMLElement))
     await user.keyboard('{ArrowLeft}')
-    await waitFor(
-      () => expect(screen.queryByRole('menuitem', { name: 'Exportar' })).not.toBeInTheDocument(),
-      { timeout: 15_000 },
+    // Com as animações do teste desligadas (setup.ts) a saída termina no quadro seguinte; o
+    // waitFor cobre esse quadro (a espera é por um estado, não por tempo fixo).
+    await waitFor(() => expect(item).not.toBeInTheDocument(), { timeout: 5_000 })
+    expect(screen.getByRole('menuitem', { name: 'Mais opções' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
     )
-    expect(screen.getByRole('menuitem', { name: 'Mais opções' })).toBeInTheDocument()
-    // O waitFor espera até 15 s a saída animada (estourava 5 s com a máquina carregada) e o teto do
-    // teste, 20 s, cobre esse tempo mais a abertura do menu.
   }, 20_000)
 
   it('em on, o menu é animado por transform; com movimento reduzido, só opacidade', async () => {
