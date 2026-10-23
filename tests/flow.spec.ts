@@ -183,6 +183,38 @@ test.describe('desktop (1280, claro, mouse)', () => {
     expect(erros).toEqual([])
   })
 
+  test('abrir o teste do fluxo estreita o canvas e os blocos continuam todos à vista', async ({
+    page,
+  }) => {
+    await abrir(page)
+    const dentro = async () =>
+      page.evaluate(() => {
+        const c = document.querySelector('#fluxo-editor .flow-surface')!.getBoundingClientRect()
+        return [...document.querySelectorAll('#fluxo-editor .react-flow__node')].every((n) => {
+          const r = n.getBoundingClientRect()
+          return (
+            r.left >= c.left - 1 &&
+            r.right <= c.right + 1 &&
+            r.top >= c.top - 1 &&
+            r.bottom <= c.bottom + 1
+          )
+        })
+      })
+    expect(await dentro()).toBe(true)
+    const larguraAntes = (await page.locator(`${SEC} .flow-surface`).boundingBox())!.width
+    await page.locator(SEC).getByRole('button', { name: 'Testar fluxo' }).click()
+    await expect(page.locator(SEC).getByRole('region', { name: 'Teste do fluxo' })).toBeVisible()
+    await expect
+      .poll(async () => (await page.locator(`${SEC} .flow-surface`).boundingBox())!.width)
+      .toBeLessThan(larguraAntes - 100)
+    await expect.poll(dentro).toBe(true)
+    await page.screenshot({
+      path: process.env.FLOW_SHOTS_DIR
+        ? `${process.env.FLOW_SHOTS_DIR}/refit-simulacao-1280.png`
+        : 'screenshots/flow-refit.png',
+    })
+  })
+
   test('apagar uma ligação selecionada por Delete', async ({ page }) => {
     await abrir(page)
     // clica no meio do traço da ligação (a área de toque dela é o traço transparente de 20 px)

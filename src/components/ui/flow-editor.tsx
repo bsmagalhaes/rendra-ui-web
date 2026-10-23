@@ -8,19 +8,7 @@ import {
   type EdgeChange,
   type NodeChange,
 } from '@xyflow/react'
-import {
-  CheckCircle2,
-  Clock,
-  FlaskConical,
-  Flag,
-  GitBranch,
-  ListChecks,
-  Play,
-  Trash2,
-  X,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react'
+import { CheckCircle2, FlaskConical, ListChecks, Trash2, X } from 'lucide-react'
 import {
   useCallback,
   useEffect,
@@ -37,7 +25,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Drawer } from '@/components/ui/drawer'
 import { Field } from '@/components/ui/field'
-import { FlowSurface, toRfEdges, toRfNodes, type FlowRfNode } from '@/components/ui/flow-viewer'
+import {
+  FLOW_ICON,
+  FlowSurface,
+  toRfEdges,
+  toRfNodes,
+  type FlowRfNode,
+} from '@/components/ui/flow-viewer'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
 import { Select } from '@/components/ui/select'
@@ -45,7 +39,9 @@ import { Timeline, type TimelineEvent } from '@/components/ui/timeline'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { cn } from '@/lib/cn'
 import {
+  FLOW_NODE_TYPES,
   FLOW_TYPE_NAME,
+  nodeName,
   FLOW_WAIT_UNITS,
   addNode,
   advanceSimulation,
@@ -88,22 +84,10 @@ export interface FlowEditorProps {
   className?: string
 }
 
-const PALETTE_ITEMS: { type: FlowNodeType; icon: LucideIcon }[] = [
-  { type: 'gatilho', icon: Zap },
-  { type: 'acao', icon: Play },
-  { type: 'condicao', icon: GitBranch },
-  { type: 'espera', icon: Clock },
-  { type: 'fim', icon: Flag },
-]
-
 const NODE_W = 256
 const NODE_H = 72
 const DRAG_START = 4
 const NONE = '__nenhum'
-
-function nameOf(n: Pick<FlowNode, 'type' | 'data'>) {
-  return n.data.label.trim() || FLOW_TYPE_NAME[n.type]
-}
 
 /** Reaproveita os objetos de nó que não mudaram (a biblioteca guarda medida e seleção neles). */
 function mergeNodes(prev: FlowRfNode[], next: FlowRfNode[]): FlowRfNode[] {
@@ -208,7 +192,7 @@ function BlockDrawer({ flow, nodeId, open, onOpenChange, onApply, onDelete }: Bl
     { value: NONE, label: 'Nenhum' },
     ...nextCandidates(flow, node.id).map((n) => ({
       value: n.id,
-      label: `${FLOW_TYPE_NAME[n.type]}: ${nameOf(n)}`,
+      label: `${FLOW_TYPE_NAME[n.type]}: ${nodeName(n)}`,
     })),
   ]
   const target = (value: string | null) => (value && value !== NONE ? value : null)
@@ -243,7 +227,7 @@ function BlockDrawer({ flow, nodeId, open, onOpenChange, onApply, onDelete }: Bl
       <Drawer
         open={open}
         onOpenChange={onOpenChange}
-        title={`Bloco: ${nameOf(node)}`}
+        title={`Bloco: ${nodeName(node)}`}
         description={FLOW_TYPE_NAME[node.type]}
         dirty={dirty}
         footer={
@@ -383,7 +367,7 @@ function SimulationPanel({
             aria-label="Escolha o caminho da condição"
             className="flex flex-col gap-3"
           >
-            <p className="text-sm font-medium">{nameOf(current)}</p>
+            <p className="text-sm font-medium">{nodeName(current)}</p>
             <div className="grid grid-actions-2 gap-3">
               <Button variant="outline" onClick={() => choose('sim')}>
                 Sim
@@ -653,22 +637,25 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
           <CardContent className="flex flex-col gap-4">
             {canBuild && (
               <div role="group" aria-label="Blocos" className="flex flex-wrap items-center gap-2">
-                {PALETTE_ITEMS.map(({ type, icon: Icon }) => (
-                  <Button
-                    key={type}
-                    variant="outline"
-                    size="sm"
-                    icon={<Icon />}
-                    className="cursor-grab touch-none"
-                    onPointerDown={(e) => startPaletteDrag(e, type)}
-                    onClick={() => {
-                      if (suppressClick.current) return
-                      addBlock(type)
-                    }}
-                  >
-                    {FLOW_TYPE_NAME[type]}
-                  </Button>
-                ))}
+                {FLOW_NODE_TYPES.map((type) => {
+                  const Icon = FLOW_ICON[type]
+                  return (
+                    <Button
+                      key={type}
+                      variant="outline"
+                      size="sm"
+                      icon={<Icon />}
+                      className="cursor-grab touch-none"
+                      onPointerDown={(e) => startPaletteDrag(e, type)}
+                      onClick={() => {
+                        if (suppressClick.current) return
+                        addBlock(type)
+                      }}
+                    >
+                      {FLOW_TYPE_NAME[type]}
+                    </Button>
+                  )
+                })}
               </div>
             )}
             <div ref={canvasRef} className="min-w-0">
@@ -749,7 +736,7 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
                             <Button
                               size="sm"
                               variant="outline"
-                              aria-label={`Ver bloco ${nameOf(
+                              aria-label={`Ver bloco ${nodeName(
                                 value.nodes.find((n) => n.id === i.nodeId) ?? {
                                   type: 'acao',
                                   data: { label: i.nodeId },
@@ -804,7 +791,7 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
         title="Excluir este bloco?"
         description={
           deleteNode
-            ? `O bloco "${nameOf(deleteNode)}" e as ligações dele serão apagados.`
+            ? `O bloco "${nodeName(deleteNode)}" e as ligações dele serão apagados.`
             : undefined
         }
         confirmLabel="Excluir"

@@ -99,7 +99,9 @@ export function describeWait(config: Record<string, unknown> | undefined): strin
   return wait ? `Aguardaria ${wait}` : 'Aguardaria o tempo definido no bloco'
 }
 
-const nameOf = (n: FlowNode) => n.data.label.trim() || FLOW_TYPE_NAME[n.type]
+/** Nome do bloco para mensagens e rótulos: o rótulo, ou o tipo quando ele está vazio. */
+export const nodeName = (n: Pick<FlowNode, 'type' | 'data'>) =>
+  n.data.label.trim() || FLOW_TYPE_NAME[n.type]
 
 /** Ligações que saem de cada bloco, na ordem do fluxo. */
 function outgoing(flow: Flow) {
@@ -144,8 +146,8 @@ export function validateFlow(flow: Flow): FlowIssue[] {
         code: 'ramo-invalido',
         message:
           from.type === 'condicao'
-            ? `Uma saída da condição "${nameOf(from)}" não diz se é "Sim" ou "Não".`
-            : `A ligação que sai de "${nameOf(from)}" não pode ter "Sim" ou "Não": isso só vale para condição.`,
+            ? `Uma saída da condição "${nodeName(from)}" não diz se é "Sim" ou "Não".`
+            : `A ligação que sai de "${nodeName(from)}" não pode ter "Sim" ou "Não": isso só vale para condição.`,
         nodeId: from.id,
         edgeId: e.id,
       })
@@ -156,7 +158,7 @@ export function validateFlow(flow: Flow): FlowIssue[] {
 
   for (const n of flow.nodes) {
     const edges = out.get(n.id) ?? []
-    const name = nameOf(n)
+    const name = nodeName(n)
     if (n.type === 'fim') {
       if (edges.length > 0)
         issues.push({
@@ -217,7 +219,7 @@ export function validateFlow(flow: Flow): FlowIssue[] {
       if (!seen.has(n.id))
         issues.push({
           code: 'inalcancavel',
-          message: `O bloco "${nameOf(n)}" não é alcançado a partir do gatilho.`,
+          message: `O bloco "${nodeName(n)}" não é alcançado a partir do gatilho.`,
           nodeId: n.id,
         })
   }
@@ -230,7 +232,7 @@ export function validateFlow(flow: Flow): FlowIssue[] {
     path.push(id)
     for (const t of next.get(id) ?? []) {
       if (state.get(t) === 1) {
-        const loop = [...path.slice(path.indexOf(t)), t].map((x) => `"${nameOf(byId.get(x)!)}"`)
+        const loop = [...path.slice(path.indexOf(t)), t].map((x) => `"${nodeName(byId.get(x)!)}"`)
         issues.push({
           code: 'ciclo',
           message: `O fluxo volta para um bloco por onde já passou: ${loop.join(' → ')}.`,
@@ -569,7 +571,7 @@ export function advanceSimulation(
   const step: SimulationStep = {
     nodeId: node.id,
     type: node.type,
-    label: nameOf(node),
+    label: nodeName(node),
     status: 'succeeded',
     ...(detail ? { detail } : {}),
   }

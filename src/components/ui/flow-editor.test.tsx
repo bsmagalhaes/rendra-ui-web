@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { ReactFlowProps } from '@xyflow/react'
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -333,29 +333,34 @@ describe('FlowEditor: ligar, apagar e mover (callbacks da biblioteca)', () => {
     expect(rf.nodesConnectable).toBe(false)
   })
 
-  it('mover o bloco (fim do arraste ou setas) grava a posição; sem mudança não chama', () => {
-    const onFlow = vi.fn()
-    renderApp(<FlowEditor value={base()} onChange={onFlow} />)
-    rf.onNodeDragStop?.(
-      {} as never,
-      { id: 'a', position: { x: 40, y: 50 } } as never,
-      [{ id: 'a', position: { x: 40, y: 50 } }] as never,
+  it('mover o bloco (fim do arraste ou setas) muda a posição no JSON; sem mudança nada muda', async () => {
+    renderApp(<Host initial={base()} />)
+    await settle()
+    const pos = (id: string) => current().nodes.find((n) => n.id === id)!.position
+    act(() =>
+      rf.onNodeDragStop?.(
+        {} as never,
+        { id: 'a', position: { x: 40, y: 50 } } as never,
+        [{ id: 'a', position: { x: 40, y: 50 } }] as never,
+      ),
     )
-    expect((onFlow.mock.calls[0]![0] as Flow).nodes.find((n) => n.id === 'a')?.position).toEqual({
-      x: 40,
-      y: 50,
-    })
-    rf.onNodesChange?.([
-      { type: 'position', id: 'g', position: { x: 10, y: 0 }, dragging: false },
-    ] as never)
-    expect(onFlow).toHaveBeenCalledTimes(2)
-    // sem mudança de posição
-    rf.onNodeDragStop?.(
-      {} as never,
-      { id: 'a', position: { x: 0, y: 120 } } as never,
-      [{ id: 'a', position: { x: 0, y: 120 } }] as never,
+    expect(pos('a')).toEqual({ x: 40, y: 50 })
+    act(() =>
+      rf.onNodesChange?.([
+        { type: 'position', id: 'g', position: { x: 10, y: 0 }, dragging: false },
+      ] as never),
     )
-    expect(onFlow).toHaveBeenCalledTimes(2)
+    expect(pos('g')).toEqual({ x: 10, y: 0 })
+    // arrastar sem sair do lugar não mexe em ninguém
+    const antes = screen.getByTestId('json').textContent
+    act(() =>
+      rf.onNodeDragStop?.(
+        {} as never,
+        { id: 'a', position: { x: 40, y: 50 } } as never,
+        [{ id: 'a', position: { x: 40, y: 50 } }] as never,
+      ),
+    )
+    expect(screen.getByTestId('json').textContent).toBe(antes)
   })
 })
 
@@ -508,11 +513,23 @@ describe('FlowEditor: teclado', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
-  it('com a gaveta aberta, Delete não apaga o bloco selecionado', async () => {
+  it('com a gaveta aberta, Delete não apaga o bloco; fechada, o bloco some', async () => {
     renderApp(<Host initial={base()} />)
     await settle()
+    // a biblioteca só chama onDelete quando onBeforeDelete deixa
+    const apagar = async () => {
+      if (await rf.onBeforeDelete?.({ nodes: [], edges: [] }))
+        act(() => rf.onDelete?.({ nodes: [{ id: 'a' }] as never, edges: [] }))
+    }
     await abrirGaveta('Enviar e-mail')
-    expect(await rf.onBeforeDelete?.({ nodes: [], edges: [] })).toBe(false)
+    await apagar()
+    expect(current().nodes.some((n) => n.id === 'a')).toBe(true)
+    expect(screen.getByText('Enviar e-mail')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await apagar()
+    expect(current().nodes.some((n) => n.id === 'a')).toBe(false)
+    await waitFor(() => expect(screen.queryByText('Enviar e-mail')).not.toBeInTheDocument())
   })
 
   it('em condições normais a biblioteca pode apagar (Delete e Backspace)', async () => {
