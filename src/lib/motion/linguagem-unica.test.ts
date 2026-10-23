@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 /*
- * Linguagem única de movimento: nenhuma duração nem curva fora dos tokens, nos 30 componentes da
+ * Linguagem única de movimento: nenhuma duração nem curva fora dos tokens, nos 32 componentes da
  * lista (mais o painel interno do select e do date-picker) e nos keyframes do globals.css, e o
  * contrato do `off` corrigido (tabela do parecer, B4). Estes são testes estruturais: leem o
  * código-fonte, porque o que importa aqui é a ausência de literal; o efeito (duração e origem
@@ -23,6 +23,8 @@ const COMPONENTES = [
   'wizard',
   'kanban',
   'widget-grid',
+  'flow-editor',
+  'flow-viewer',
   'list',
   'table',
   'timeline',
@@ -69,8 +71,8 @@ describe('nenhum literal de duração ou de curva nos componentes', () => {
     },
   )
 
-  it('o mapa de nomes está completo: os 30 componentes da lista existem (mais o painel interno)', () => {
-    expect(COMPONENTES).toHaveLength(31)
+  it('o mapa de nomes está completo: os 32 componentes da lista existem (mais o painel interno)', () => {
+    expect(COMPONENTES).toHaveLength(33)
     for (const nome of COMPONENTES) expect(() => fonte(nome)).not.toThrow()
   })
 

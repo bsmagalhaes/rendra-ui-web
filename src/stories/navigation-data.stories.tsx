@@ -18,6 +18,8 @@ import {
 import { Chart } from '@/components/ui/chart'
 import { DataToolbar, type ToolbarColumn } from '@/components/ui/data-toolbar'
 import { Field } from '@/components/ui/field'
+import { FlowEditor } from '@/components/ui/flow-editor'
+import { FlowViewer } from '@/components/ui/flow-viewer'
 import { ImageViewer, type ViewerImage } from '@/components/ui/image-viewer'
 import { Input } from '@/components/ui/input'
 import { List } from '@/components/ui/list'
@@ -30,9 +32,11 @@ import { Tabs } from '@/components/ui/tabs'
 import { Timeline } from '@/components/ui/timeline'
 import { WidgetGrid } from '@/components/ui/widget-grid'
 import { Stepper, Wizard } from '@/components/ui/wizard'
+import type { Flow } from '@/lib/flow'
 import { formatCurrency } from '@/lib/masks'
 import { bySegment, clients, monthly, statusTone, type Client } from '@/mocks/clients'
 import { clientColumns } from '@/pages/app/client-columns'
+import { demoFlow } from '@/pages/showcase/data-section'
 
 /* ------------------------------------------------ Table (componente central) */
 
@@ -399,6 +403,20 @@ function WidgetGridDemo() {
 export const GradeDeWidgets: Story = {
   name: 'WidgetGrid',
   render: () => <WidgetGridDemo />,
+}
+
+function FlowEditorDemo() {
+  const [flow, setFlow] = useState<Flow>(demoFlow)
+  return <FlowEditor value={flow} onChange={setFlow} />
+}
+export const EditorDeFluxo: Story = {
+  name: 'FlowEditor',
+  render: () => <FlowEditorDemo />,
+}
+
+export const VisualizadorDeFluxo: Story = {
+  name: 'FlowViewer',
+  render: () => <FlowViewer value={demoFlow} activeId="condicao-1" />,
 }
 
 export const Etiquetas: Story = {

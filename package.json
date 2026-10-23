@@ -68,6 +68,10 @@
       "types": "./dist/types/motion.d.ts",
       "import": "./dist/motion.js"
     },
+    "./flow": {
+      "types": "./dist/types/flow.d.ts",
+      "import": "./dist/flow.js"
+    },
     "./widget-grid": {
       "types": "./dist/types/widget-grid.d.ts",
       "import": "./dist/widget-grid.js"

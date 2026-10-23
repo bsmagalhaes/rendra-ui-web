@@ -65,6 +65,7 @@ const EXTERNAL_PACKAGES = [
   'sonner',
   'recharts',
   'react-grid-layout',
+  '@xyflow/react',
   '@tanstack/react-table',
   '@tiptap/pm',
   '@tiptap/react',
@@ -104,6 +105,7 @@ export default defineConfig({
         'rich-text-editor': 'src/rich-text-editor.ts',
         chart: 'src/chart.ts',
         'widget-grid': 'src/widget-grid.ts',
+        flow: 'src/flow.ts',
         motion: 'src/motion.ts',
         // CLI: bin/rendra.mjs importa sempre daqui, nunca de src/cli/*.ts direto. "typescript"
         // nunca entra no bundle: o import em src/cli/trocar.ts é só de tipo (import type),

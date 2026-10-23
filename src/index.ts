@@ -2,8 +2,8 @@
  * ENTRADA PRINCIPAL DO PACOTE (@rendra-ui/web)
  * ----------------------------------------
  * Barrel da superfície pública: componentes de src/components/ui (menos os internos
- * overlay-shell, picker-panel, sortable-handle, e os quatro "pesados" com entrada própria
- * por subcaminho: document-viewer, rich-text-editor, chart, widget-grid), as primitivas de
+ * overlay-shell, picker-panel, sortable-handle, e os cinco "pesados" com entrada própria
+ * por subcaminho: document-viewer, rich-text-editor, chart, widget-grid, flow), as primitivas de
  * layout, o AppShell, o RendraProvider (sem depender de um roteador específico), o catálogo
  * de componentes, os hooks e as bibliotecas utilitárias, e a API de marca reutilizável
  * (src/brand/public.ts).
@@ -14,6 +14,7 @@
  *   @rendra-ui/web/rich-text-editor   depende de @tiptap/*
  *   @rendra-ui/web/chart              depende de recharts
  *   @rendra-ui/web/widget-grid        depende de react-grid-layout
+ *   @rendra-ui/web/flow               depende de @xyflow/react
  *
  * O CSS (tokens.css, base.css, components.css) não entra aqui: é publicado como arquivo
  * pré-compilado (estratégia A, escolhida para o host nunca precisar ter o Tailwind

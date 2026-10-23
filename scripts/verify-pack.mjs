@@ -339,6 +339,29 @@ assert(existsSync(entryJsPath), 'dist/index.js está no pacote publicado.')
 const entryJs = readFileSync(entryJsPath, 'utf8')
 assert(entryJs.includes(BANNER), `dist/index.js contém o banner "${BANNER}".`)
 
+// Subcaminho de fluxo (@rendra-ui/web/flow): a lib de terceiros (@xyflow/react) só entra por ele.
+const distDir = dirname(entryJsPath)
+const flowJsPath = join(distDir, 'flow.js')
+assert(existsSync(flowJsPath), 'dist/flow.js está no pacote publicado (subcaminho flow).')
+assert(
+  existsSync(join(typesDirForAssertions, 'flow.d.ts')),
+  'dist/types/flow.d.ts está no pacote publicado.',
+)
+assert(
+  !entryJs.includes('@xyflow'),
+  'dist/index.js não importa @xyflow (o React Flow só entra pelo subcaminho flow).',
+)
+const flowJs = readFileSync(flowJsPath, 'utf8')
+assert(
+  /\bFlowEditor\b/.test(flowJs) && /\bFlowViewer\b/.test(flowJs),
+  'dist/flow.js exporta FlowEditor e FlowViewer.',
+)
+assert(
+  /from\s+["']@xyflow\/react["']/.test(flowJs) &&
+    /import\s+["']@xyflow\/react\/dist\/base\.css["']/.test(flowJs),
+  'dist/flow.js mantém @xyflow/react e o CSS dele como imports externos (o host resolve do node_modules).',
+)
+
 // Asserção 6: o fecho estático de cada entrada do pacote publicado (instalado ou descompactado).
 const bundle = analisarLib(dirname(entryJsPath))
 for (const linha of bundle.linhas) console.log(`  ${linha}`)
