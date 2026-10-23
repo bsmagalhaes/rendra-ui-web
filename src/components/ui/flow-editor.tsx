@@ -368,17 +368,14 @@ function SimulationPanel({
           cancel={{ label: 'Reiniciar', onClick: () => onSim(startSimulation(flow)) }}
         />
         {sim.status === 'error' && (
-          <Alert
-            type="error"
-            title="O fluxo precisa de ajustes antes do teste"
-            description={
-              <ul className="flex list-disc flex-col gap-1 pl-4">
-                {sim.issues.map((i, k) => (
-                  <li key={`${i.code}-${k}`}>{i.message}</li>
-                ))}
-              </ul>
-            }
-          />
+          <div className="flex flex-col gap-3">
+            <Alert type="error" title="O fluxo precisa de ajustes antes do teste" />
+            <ul className="flex list-disc flex-col gap-1 pl-4 text-sm">
+              {sim.issues.map((i, k) => (
+                <li key={`${i.code}-${k}`}>{i.message}</li>
+              ))}
+            </ul>
+          </div>
         )}
         {waiting && current && (
           <div
@@ -732,41 +729,41 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
                 {issues.length === 0 ? (
                   <Alert type="success" title="Fluxo válido" />
                 ) : (
-                  <Alert
-                    type="error"
-                    title={
-                      issues.length === 1
-                        ? '1 problema encontrado'
-                        : `${issues.length} problemas encontrados`
-                    }
-                    description={
-                      <ul className="flex flex-col gap-2">
-                        {issues.map((i, k) => (
-                          <li
-                            key={`${i.code}-${i.nodeId ?? i.edgeId ?? k}`}
-                            className="flex flex-wrap items-center justify-between gap-2"
-                          >
-                            <span>{i.message}</span>
-                            {i.nodeId && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                aria-label={`Ver bloco ${nameOf(
-                                  value.nodes.find((n) => n.id === i.nodeId) ?? {
-                                    type: 'acao',
-                                    data: { label: i.nodeId },
-                                  },
-                                )}`}
-                                onClick={() => viewBlock(i.nodeId!)}
-                              >
-                                Ver bloco
-                              </Button>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    }
-                  />
+                  <>
+                    <Alert
+                      type="error"
+                      title={
+                        issues.length === 1
+                          ? '1 problema encontrado'
+                          : `${issues.length} problemas encontrados`
+                      }
+                    />
+                    <ul className="flex flex-col gap-2">
+                      {issues.map((i, k) => (
+                        <li
+                          key={`${i.code}-${i.nodeId ?? i.edgeId ?? k}`}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-control border bg-card px-3 py-2 text-sm"
+                        >
+                          <span>{i.message}</span>
+                          {i.nodeId && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              aria-label={`Ver bloco ${nameOf(
+                                value.nodes.find((n) => n.id === i.nodeId) ?? {
+                                  type: 'acao',
+                                  data: { label: i.nodeId },
+                                },
+                              )}`}
+                              onClick={() => viewBlock(i.nodeId!)}
+                            >
+                              Ver bloco
+                            </Button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
                 )}
               </section>
             )}
