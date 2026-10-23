@@ -1,7 +1,14 @@
 import { mkdirSync } from 'node:fs'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { auditLayout, MOBILE, openRoute, templates, useTheme, type Theme } from './helpers'
+import {
+  auditLayout,
+  MOBILE,
+  openRoute,
+  templates,
+  useTheme as aplicarTema,
+  type Theme,
+} from './helpers'
 
 /*
  * FLUXOS DE AUTOMAÇÃO NO NAVEGADOR (FlowEditor e FlowViewer, na vitrine /componentes).
@@ -21,7 +28,7 @@ const json = async (page: Page) =>
   }
 
 async function abrir(page: Page, theme: Theme = { brand: 'safira', mode: 'light' }) {
-  await useTheme(page, theme)
+  await aplicarTema(page, theme)
   const errors = await openRoute(page, '/componentes')
   // O mouse nasce em (0, 0), sobre a barra lateral recolhida, e o hover a abre por cima do canvas.
   await page.mouse.move(640, 500)
