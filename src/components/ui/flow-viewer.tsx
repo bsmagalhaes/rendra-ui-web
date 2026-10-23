@@ -7,6 +7,7 @@ import {
   useReactFlow,
   type AriaLabelConfig,
   type Edge,
+  type FitViewOptions,
   type Node,
   type NodeProps,
   type ReactFlowProps,
@@ -176,7 +177,7 @@ function FlowBlock({ id, data, selected, isConnectable }: NodeProps<FlowRfNode>)
       aria-describedby={invalid ? issueId : undefined}
       className={cn(
         'relative w-flow-node rounded-block border bg-card p-3 text-card-foreground shadow-sm',
-        data.kind === 'condicao' && 'pr-8 pb-8',
+        data.kind === 'condicao' && 'pr-12 pb-8',
         invalid && 'border-destructive',
         data.active && 'border-primary',
         selected && 'ring-2 ring-primary',
@@ -247,10 +248,10 @@ function FlowBlock({ id, data, selected, isConnectable }: NodeProps<FlowRfNode>)
       )}
       {data.kind === 'condicao' && (
         <>
-          <span className="absolute inset-y-0 right-2 flex items-center text-xs font-medium">
+          <span className="absolute inset-y-0 right-4 flex items-center text-xs font-medium">
             Sim
           </span>
-          <span className="absolute inset-x-0 bottom-2 text-center text-xs font-medium">Não</span>
+          <span className="absolute inset-x-0 bottom-3 text-center text-xs font-medium">Não</span>
           <Handle
             id="sim"
             type="source"
@@ -282,14 +283,18 @@ function FlowBlock({ id, data, selected, isConnectable }: NodeProps<FlowRfNode>)
 const nodeTypes = { bloco: FlowBlock }
 
 const defaultEdgeOptions = { type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }
-const fitViewOptions = { padding: 0.2, maxZoom: 1 }
+// Folga em cima e embaixo: o zoom fica no topo e a atribuição no canto de baixo, sem cobrir blocos.
+const fitViewOptions: FitViewOptions = {
+  padding: { top: '64px', right: '16px', bottom: '64px', left: '16px' },
+  maxZoom: 1,
+}
 
 /** Aproximar, afastar e enquadrar, com 44 px de toque (os botões da biblioteca têm 26 px). */
 export function FlowZoomControls() {
   const { zoomIn, zoomOut, fitView } = useReactFlow()
   const cls = 'min-h-touch min-w-touch'
   return (
-    <div className="absolute bottom-2 left-2 z-10 flex flex-col gap-2">
+    <div className="absolute top-2 left-2 z-10 flex gap-2">
       <Button
         variant="outline"
         size="sm"

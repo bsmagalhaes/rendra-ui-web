@@ -32,7 +32,7 @@ Dois jeitos de trazer o boilerplate: **clonar o repositório** (código-fonte in
 
 1. Instale o pacote (`@rendra-ui/web`, escopado na organização npm `rendra-ui`) e os peers: `react`, `react-dom` e `radix-ui`.
 2. Importe o CSS uma vez, na entrada do app: `import '@rendra-ui/web/tokens.css'`, `import '@rendra-ui/web/base.css'` e `import '@rendra-ui/web/components.css'`.
-3. Importe os componentes da entrada principal (`import { Button, AppShell } from '@rendra-ui/web'`) e, se usar react-router, a ponte do subcaminho próprio: `import { RendraRouterBridge } from '@rendra-ui/web/router-bridge'`. Os componentes pesados (`document-viewer`, `rich-text-editor`, `chart`, `widget-grid`) têm subcaminho próprio, para não pesar o pacote de quem não usa.
+3. Importe os componentes da entrada principal (`import { Button, AppShell } from '@rendra-ui/web'`) e, se usar react-router, a ponte do subcaminho próprio: `import { RendraRouterBridge } from '@rendra-ui/web/router-bridge'`. Os componentes pesados (`document-viewer`, `rich-text-editor`, `chart`, `widget-grid`, `flow`) têm subcaminho próprio, para não pesar o pacote de quem não usa.
 4. A CLI, sempre como `npx @rendra-ui/web codigos`, `npx @rendra-ui/web auditar` e `npx @rendra-ui/web trocar` (o nome `rendra` no npm pertence a outro pacote), e o detalhe completo de cada entrada do pacote estão no `README.md`.
 
 ## Caminho 2: projeto existente (no prompt de migração, é o Caminho B, "copiando os arquivos-fonte")
@@ -61,6 +61,42 @@ Vale para quem instalou o pacote (`1b`) e tem telas próprias. O CSS do pacote s
 `@utility` do Rendra (sempre presentes): `label-case`, `bg-gradient-brand`, `bg-gradient-soft`, `bg-gradient-accent`, `bg-sidebar-brand`, `pb-safe`, `pt-safe`, `mask-status-cutout`, `anim-delay-1`, `anim-delay-2`, `focus-ring`, `w-popover`, `w-popover-sm`, `w-sidebar-drawer`, `max-w-popover`, `pb-safe-inset`, `max-h-command`, `w-trigger`, `max-h-sheet`, `grid-actions-2`, `grid-actions-3`, `w-progress`, `progress-slide`, `skeleton-shimmer`, `tabs-clip`, `bg-swatch`, `swatch-check-light`, `swatch-check-dark`, `grid-cols-otp`, `calendar-event`, `calendar-now`, `grid-cols-week`, `grid-cols-week-time`, `w-ratio`, `bg-fill`, `gauge-needle`, `clip-trapezoid`, `h-board`, `scrollbar-subtle`, `field-sizing-content`, `h-autosize`, `w-sheet-30`, `w-sheet-40`, `w-sheet-50`, `w-sheet-75`, `grid-chat-2`, `grid-chat-3`, `w-kanban-col`, `w-flow-node`, `wave-bar`, `h-var`, `aspect-crop`, `cropper-image`, `size-var`.
 
 Uma `@utility` nova em `src/styles/globals.css` entra nesta lista no mesmo commit: o teste `src/lib/utilities-doc.test.ts` falha se a lista e o arquivo divergirem.
+
+## Fluxos de automação (opcional)
+
+`FlowEditor` e `FlowViewer` ficam no subcaminho `@rendra-ui/web/flow`, que depende do React Flow (`@xyflow/react`, MIT). O pacote traz o `@xyflow/react` como dependência, e o import do CSS dele (`@xyflow/react/dist/base.css`) sai preservado em `dist/flow.js`: o seu bundler resolve do `node_modules`, como acontece com o `react-grid-layout` do `widget-grid`. Quem copia o código-fonte (clone ou registry) instala o `@xyflow/react` sozinho pelo item `flow-editor` ou `flow-viewer`.
+
+```tsx
+import { useState } from 'react'
+import { FlowEditor, parseFlow, serializeFlow, validateFlow, type Flow } from '@rendra-ui/web/flow'
+
+const inicial: Flow = {
+  nodes: [
+    { id: 'g', type: 'gatilho', position: { x: 0, y: 0 }, data: { label: 'Novo pedido' } },
+    { id: 'f', type: 'fim', position: { x: 0, y: 120 }, data: { label: 'Concluído' } },
+  ],
+  edges: [{ id: 'g->f', source: 'g', target: 'f' }],
+}
+
+export function TelaDeFluxo() {
+  const [flow, setFlow] = useState(inicial)
+  const problemas = validateFlow(flow) // lista vazia = fluxo válido
+  return (
+    <FlowEditor
+      value={flow}
+      onChange={(novo) => {
+        setFlow(novo)
+        localStorage.setItem('fluxo', serializeFlow(novo)) // JSON estável, para guardar onde quiser
+      }}
+    />
+  )
+}
+// ler de volta: const r = parseFlow(texto); r.ok ? r.flow : r.errors (nunca lança)
+```
+
+O contrato do JSON (`Flow`): `{ nodes, edges }`. Cada bloco (`nodes[]`): `id` (texto único), `type` (`gatilho`, `acao`, `condicao`, `espera` ou `fim`), `position` (`{ x, y }`, números) e `data` (`{ label, config? }`). Cada ligação (`edges[]`): `id`, `source` e `target` (ids de blocos) e, só na saída de uma condição, `branch` (`sim` ou `nao`). A espera guarda `config: { duration, unit }` (`unit`: `segundos`, `minutos`, `horas` ou `dias`). Regras da validação: exatamente um gatilho; a condição tem as saídas "sim" e "não"; todo bloco que não é fim tem saída; o fim não tem saída; nenhum bloco fica inalcançável a partir do gatilho; sem ciclos.
+
+`readOnly` no editor deixa só ver, navegar e testar. O `FlowViewer` mostra o mesmo JSON só para leitura (`activeId` destaca um bloco). **No celular (abaixo de 768 px) o fluxo só se vê e se navega; tocar no bloco abre a gaveta**, onde se edita, se liga ao próximo bloco e se exclui. Montar arrastando começa no tablet.
 
 ## Movimento (opcional)
 

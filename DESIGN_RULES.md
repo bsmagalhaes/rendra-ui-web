@@ -277,6 +277,19 @@ Rótulo **sempre acima** do campo; obrigatório marcado no rótulo (`required`);
 - **Spinner:** carregamento breve dentro de um botão, campo ou lista; `label` só quando o carregamento precisar de anúncio para leitor de tela (padrão é decorativo).
 - **Barras de rolagem internas** usam `scrollbar-subtle`: finas, sem trilho, na cor da borda.
 
+### Fluxos de automação (`FlowEditor` e `FlowViewer`)
+
+Fora da entrada principal: `@rendra-ui/web/flow` (depende do `@xyflow/react`, o React Flow).
+
+- **Um componente por finalidade:** `FlowEditor` (`FLX-001`) monta, liga, apaga, valida e testa o fluxo; `FlowViewer` (`FLX-002`) só mostra, com zoom e mover o canvas. O fluxo é um JSON controlado (`value` e `onChange`); `validateFlow`, `serializeFlow` e `parseFlow` saem do mesmo subcaminho. Nunca crie um canvas paralelo.
+- **Blocos:** gatilho, ação, condição (com as saídas "Sim" e "Não"), espera e fim. O tipo aparece em texto e em ícone, nunca só pela cor; o bloco com problema ganha marca e a mensagem escrita no bloco.
+- **Celular (abaixo de 768 px) só vê e navega:** um dedo move o canvas, a pinça aproxima, os botões de zoom têm 44 px e a página não rola sob o dedo. Não há paleta nem arraste de bloco. Tocar no bloco abre a gaveta, onde se edita o rótulo, se escolhe o próximo bloco e se exclui. **Montar arrastando começa no tablet (768 px).**
+- **Arrastar nunca é o único caminho:** ligar um bloco ao próximo, apagar e editar se fazem pela gaveta (campo "Próximo bloco", ou "Se sim" e "Se não" na condição, e "Excluir bloco" no menu "Mais ações"), que serve ao toque e ao teclado. Enter no bloco abre a gaveta; Delete apaga o bloco ou a ligação selecionados; as setas movem o bloco selecionado.
+- **Sem hover:** nenhuma ação aparece só ao passar o mouse.
+- **Tema só por token:** o CSS do React Flow não tem camada e vence qualquer regra em `@layer`; por isso as cores e o traço entram pelas variáveis `--xy-*` no `style` do contêiner (exceção de variável dinâmica, `style={{ '--xy-…': 'var(--rendra-…)' }}`), nunca por declaração em `globals.css`. O link "React Flow" fica visível, com as cores do tema e 44 px de toque.
+- **Movimento** pelo `useMotionLib()`, como os demais componentes: em `off` o bloco ativo tem só o destaque, em `on` o anel pulsa (nunca no elemento raiz do bloco, onde a biblioteca escreve o `transform`).
+- **Teste do fluxo:** um passo por vez, sem executar nada; a espera só diz quanto aguardaria. O resultado vai para a `Timeline`.
+
 ### Rolagem
 
 Uma única área de rolagem por tela: o `<main>` do AppShell. Drawer e modal têm a própria, no body. **Nunca rolagem dentro de card.** No desktop, tabela muito larga pode rolar na horizontal só dentro do próprio contêiner (`data-allow-overflow`). No mobile, nunca.
