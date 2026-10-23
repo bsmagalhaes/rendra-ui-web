@@ -54,6 +54,7 @@ import {
   nextCandidates,
   removeEdge,
   removeNode,
+  resetSimulation,
   setNext,
   startSimulation,
   updateNodeData,
@@ -430,7 +431,7 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
   value.nodes.forEach((n) => everUsed.current.add(n.id))
 
   const [validated, setValidated] = useState(false)
-  const [sim, setSim] = useState<SimulationState | null>(null)
+  const [sim, setSim] = useState<SimulationState>(resetSimulation)
   const [notice, setNotice] = useState<string | null>(null)
   const [drawer, setDrawer] = useState<{ id: string; session: number } | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -448,7 +449,7 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
   const issues = useMemo(() => validateFlow(value), [value])
   const shownIssues = validated ? issues : undefined
   const activeId =
-    sim && (sim.status === 'running' || sim.status === 'waiting-choice') ? sim.currentId : null
+    sim.status === 'running' || sim.status === 'waiting-choice' ? sim.currentId : null
 
   // Estado de interface da biblioteca (medida, seleção, arraste) guardado por bloco; o fluxo em
   // si nunca é copiado: sempre vem de `value`.
@@ -618,7 +619,7 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
   }
 
   const startTest = () => setSim(startSimulation(value))
-  const closeTest = () => setSim(null)
+  const closeTest = () => setSim(resetSimulation())
 
   const deleteNode = deleting ? value.nodes.find((n) => n.id === deleting) : undefined
 
@@ -771,7 +772,9 @@ function FlowEditorInner({ value, onChange, readOnly = false, className }: FlowE
             )}
           </CardContent>
         </Card>
-        {sim && <SimulationPanel flow={value} sim={sim} onSim={setSim} onClose={closeTest} />}
+        {sim.status !== 'idle' && (
+          <SimulationPanel flow={value} sim={sim} onSim={setSim} onClose={closeTest} />
+        )}
       </div>
       {drag && (
         <div
