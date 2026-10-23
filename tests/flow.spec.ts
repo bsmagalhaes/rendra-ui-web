@@ -80,6 +80,23 @@ const translateOf = (page: Page) =>
 test.describe('desktop (1280, claro, mouse)', () => {
   test.use({ viewport: { width: 1280, height: 1000 } })
 
+  test('a vitrine tem as seções FlowEditor e FlowViewer, cada uma com o selo do catálogo', async ({
+    page,
+  }) => {
+    await abrir(page)
+    await expect(page.locator('#fluxo-editor h2')).toHaveText('FlowEditor')
+    await expect(page.locator('#fluxo-editor')).toContainText('FLX-001')
+    await expect(page.locator('#fluxo-editor [data-rendra="FLX-001"]')).toBeVisible()
+    await expect(page.locator('#fluxo-viewer h2')).toHaveText('FlowViewer')
+    await expect(page.locator('#fluxo-viewer')).toContainText('FLX-002')
+    await expect(page.locator('#fluxo-viewer [data-rendra="FLX-002"]')).toBeVisible()
+    // o viewer é só leitura: sem paleta, sem alças de ligar e o bloco ativo destacado
+    await expect(page.locator('#fluxo-viewer .react-flow__handle.connectable')).toHaveCount(0)
+    await expect(page.locator('#fluxo-viewer [data-flow-node][data-active="true"]')).toContainText(
+      'Pagamento aprovado?',
+    )
+  })
+
   test('arrastar da paleta, ligar pela alça, mover e apagar por Delete', async ({ page }) => {
     const errors = await abrir(page)
 
