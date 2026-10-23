@@ -5,6 +5,7 @@ import {
   Position,
   ReactFlow,
   useReactFlow,
+  useStore,
   type AriaLabelConfig,
   type Edge,
   type FitViewOptions,
@@ -25,13 +26,22 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
-import { useId, useMemo, type ComponentType, type CSSProperties, type ReactNode } from 'react'
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  type ComponentType,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import { Button } from '@/components/ui/button'
 import { useFillHeight } from '@/hooks/use-fill-height'
 import { cn } from '@/lib/cn'
 import {
   FLOW_TYPE_NAME,
   formatWait,
+  nodeName,
   type Flow,
   type FlowIssue,
   type FlowNodeType,
@@ -64,7 +74,7 @@ export interface FlowBlockData extends Record<string, unknown> {
 
 export type FlowRfNode = Node<FlowBlockData, 'bloco'>
 
-const ICON: Record<FlowNodeType, ComponentType<{ className?: string }>> = {
+export const FLOW_ICON: Record<FlowNodeType, ComponentType<{ className?: string }>> = {
   gatilho: Zap,
   acao: Play,
   condicao: GitBranch,
@@ -97,16 +107,7 @@ export const FLOW_ARIA: Partial<AriaLabelConfig> = {
     `Bloco movido ${DIRECTION[direction] ?? direction}. Nova posição, x: ${x}, y: ${y}`,
   'edge.a11yDescription.default':
     'Pressione Espaço para selecionar a ligação e Delete para apagá-la. Esc cancela.',
-  'controls.ariaLabel': 'Controles do canvas',
-  'controls.zoomIn.ariaLabel': 'Aproximar',
-  'controls.zoomOut.ariaLabel': 'Afastar',
-  'controls.fitView.ariaLabel': 'Enquadrar',
-  'controls.interactive.ariaLabel': 'Alternar interação',
-  'minimap.ariaLabel': 'Minimapa',
-  'handle.ariaLabel': 'Ponto de ligação',
 }
-
-const nameOf = (label: string, kind: FlowNodeType) => label.trim() || FLOW_TYPE_NAME[kind]
 
 interface RfNodeOptions {
   activeId?: string | null
@@ -140,7 +141,7 @@ export function toRfNodes(flow: Flow, opts: RfNodeOptions): FlowRfNode[] {
 
 /** As ligações do Rendra como arestas do React Flow, com a descrição em português. */
 export function toRfEdges(flow: Flow): Edge[] {
-  const labelOf = new Map(flow.nodes.map((n) => [n.id, nameOf(n.data.label, n.type)]))
+  const labelOf = new Map(flow.nodes.map((n) => [n.id, nodeName(n)]))
   return flow.edges.map((e) => ({
     id: e.id,
     source: e.source,
@@ -157,7 +158,7 @@ function FlowBlock({ id, data, selected, isConnectable }: NodeProps<FlowRfNode>)
   const lib = useMotionLib()
   const presets = useMotionPresets()
   const uid = useId()
-  const Icon = ICON[data.kind]
+  const Icon = FLOW_ICON[data.kind]
   const wait = data.kind === 'espera' ? formatWait(data.config) : null
   const invalid = data.issues.length > 0
   const issueId = `${uid}-problema`
@@ -227,14 +228,15 @@ function FlowBlock({ id, data, selected, isConnectable }: NodeProps<FlowRfNode>)
           {data.active && <span className="text-xs font-medium text-primary-text">Ativo</span>}
         </div>
         {data.edit && (
-          <button
-            type="button"
+          <Button
             data-flow-edit
-            aria-label={`Editar bloco ${nameOf(data.label, data.kind)}`}
-            className="nodrag nopan -mt-1 -mr-1 flex min-h-touch min-w-touch shrink-0 cursor-pointer items-center justify-center rounded-control text-muted-foreground hover:bg-primary-soft hover:text-primary-soft-foreground"
-          >
-            <SquarePen className="size-icon-sm" aria-hidden />
-          </button>
+            variant="ghost"
+            size="sm"
+            iconOnly
+            aria-label={`Editar bloco ${nodeName({ type: data.kind, data })}`}
+            className="nodrag nopan -mt-1 -mr-1 min-h-touch min-w-touch shrink-0"
+            icon={<SquarePen />}
+          />
         )}
       </div>
       {invalid && (
@@ -326,6 +328,18 @@ export function FlowZoomControls() {
   )
 }
 
+/** Enquadra de novo quando a largura do canvas muda (painel do teste abrindo, janela redimensionada). */
+function FlowAutoFit() {
+  const { fitView } = useReactFlow()
+  const width = useStore((st) => st.width)
+  const before = useRef(0)
+  useEffect(() => {
+    if (before.current > 0 && width > 0 && width !== before.current) void fitView(fitViewOptions)
+    if (width > 0) before.current = width
+  }, [width, fitView])
+  return null
+}
+
 export interface FlowSurfaceProps extends ReactFlowProps<FlowRfNode, Edge> {
   children?: ReactNode
 }
@@ -374,6 +388,7 @@ export function FlowSurface({ className, children, ...props }: FlowSurfaceProps)
         {...props}
       >
         <FlowZoomControls />
+        <FlowAutoFit />
         {children}
       </ReactFlow>
     </div>
