@@ -422,6 +422,11 @@ const HINT_CLOSE_DELAY = 150
 function ActivityHint({ card, status }: { card: KanbanCard; status: KanbanCardStatus }) {
   const [open, setOpen] = useState(false)
   const pressed = useRef(false)
+  // Botão do mouse (ou dedo) apertado no gatilho: nada fecha o hint até soltar. Sem isso, um
+  // fechamento atrasado (timer de saída, clique "fora" do Radix, foco) que cai no meio do
+  // aperto fecha o hint debaixo do dedo, e o clique seguinte o reabre (pisca).
+  const holding = useRef(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const lastPointer = useRef('')
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const { icon: Icon, circle } = activityIcon[status.activity]
@@ -434,22 +439,31 @@ function ActivityHint({ card, status }: { card: KanbanCard; status: KanbanCardSt
   const cancelClose = () => clearTimeout(timer.current)
   const scheduleClose = () => {
     cancelClose()
-    timer.current = setTimeout(() => setOpen(false), HINT_CLOSE_DELAY)
+    timer.current = setTimeout(() => {
+      if (!holding.current) setOpen(false)
+    }, HINT_CLOSE_DELAY)
   }
   useEffect(() => cancelClose, [])
   return (
-    <Popover open={open} onOpenChange={(next) => !next && setOpen(false)}>
+    <Popover open={open} onOpenChange={(next) => !next && !holding.current && setOpen(false)}>
       {/* Âncora, não `PopoverTrigger`: o Radix alternaria o hint a cada clique, e quem abre e
           fecha aqui é o hover, o foco e o clique, cada um com a sua regra. */}
       <PopoverAnchor asChild>
         <button
+          ref={triggerRef}
           type="button"
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-label={`${visible}. ${situationText(status)}`}
           className="relative z-10 -ml-1 inline-flex cursor-pointer items-center gap-1 rounded-item px-1 tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:min-h-touch"
           onPointerDown={(e) => {
+            cancelClose()
             pressed.current = true
+            holding.current = true
+            window.addEventListener('pointerup', () => (holding.current = false), { once: true })
+            window.addEventListener('pointercancel', () => (holding.current = false), {
+              once: true,
+            })
             lastPointer.current = e.pointerType
           }}
           onPointerEnter={(e) => {
@@ -463,7 +477,7 @@ function ActivityHint({ card, status }: { card: KanbanCard; status: KanbanCardSt
           }}
           onBlur={() => {
             pressed.current = false
-            setOpen(false)
+            if (!holding.current) setOpen(false)
           }}
           onClick={(e) => {
             e.preventDefault()
@@ -490,6 +504,10 @@ function ActivityHint({ card, status }: { card: KanbanCard; status: KanbanCardSt
         align="start"
         className="flex flex-col gap-1 p-3 text-xs"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        // Apertar ou focar o próprio gatilho não é "fora" do hint.
+        onInteractOutside={(e) => {
+          if (triggerRef.current?.contains(e.target as Node)) e.preventDefault()
+        }}
         onPointerEnter={cancelClose}
         onPointerLeave={scheduleClose}
       >
