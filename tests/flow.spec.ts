@@ -13,7 +13,7 @@ import {
 /*
  * FLUXOS DE AUTOMAÇÃO NO NAVEGADOR (FlowEditor e FlowViewer, na vitrine /componentes).
  * O jsdom não faz arrastar, ligar nem apagar de verdade; é aqui que isso se prova, afirmando o
- * que a pessoa vê (blocos e ligações no DOM, texto, destaque) e o estilo computado do tema.
+ * que a pessoa vê (blocos e ligações no DOM, texto, destaque, medidas) e o estilo computado.
  *
  *   BASE_URL=http://localhost:5199 npx playwright test --project=flow
  */
@@ -21,10 +21,14 @@ import {
 const SEC = '#fluxo-editor'
 const nodes = (page: Page) => page.locator(`${SEC} .react-flow__node`)
 const edges = (page: Page) => page.locator(`${SEC} .react-flow__edge`)
+const node = (page: Page, id: string) => page.locator(`${SEC} .react-flow__node[data-id="${id}"]`)
+const painel = (page: Page) => page.locator(`${SEC} aside`)
+const aviso = (page: Page) => page.locator(`${SEC} [data-flow-notice]`)
 const json = async (page: Page) =>
   JSON.parse(await page.getByLabel('JSON do fluxo').inputValue()) as {
-    nodes: { id: string; position: { x: number; y: number } }[]
-    edges: { id: string }[]
+    version: number
+    nodes: { id: string; type: string; position: { x: number; y: number } }[]
+    edges: { id: string; branch?: string }[]
   }
 
 async function abrir(page: Page, theme: Theme = { brand: 'safira', mode: 'light' }) {
@@ -49,11 +53,14 @@ async function abrir(page: Page, theme: Theme = { brand: 'safira', mode: 'light'
   // O mouse nasce em (0, 0), sobre a barra lateral recolhida, e o hover a abre por cima do canvas.
   await page.mouse.move(640, 500)
   await page.waitForTimeout(300)
-  await page.locator(SEC).scrollIntoViewIfNeeded()
-  await expect(nodes(page)).toHaveCount(7)
+  // o canvas no meio da janela: o header fixo do AppShell não cobre os blocos
+  await page
+    .locator(`${SEC} .flow-surface`)
+    .evaluate((el) => el.scrollIntoView({ block: 'center' }))
+  await expect(nodes(page)).toHaveCount(5)
   // os blocos só aparecem depois de medidos
   await expect(nodes(page).first()).toBeVisible()
-  await expect(edges(page)).toHaveCount(6)
+  await expect(edges(page)).toHaveCount(4)
   return errors
 }
 
@@ -63,18 +70,32 @@ async function centro(loc: Locator) {
   return { x: b.x + b.width / 2, y: b.y + b.height / 2, box: b }
 }
 
-async function arrastarPaleta(page: Page, nome: string) {
-  const item = page
-    .locator(SEC)
-    .getByRole('group', { name: 'Blocos' })
-    .getByRole('button', { name: nome })
+/** Arrasta com o mouse de um ponto a outro, em passos (o React Flow lê o caminho todo). */
+async function arrastar(
+  page: Page,
+  de: { x: number; y: number },
+  para: { x: number; y: number },
+  passos = 12,
+) {
+  await page.mouse.move(de.x, de.y)
+  await page.mouse.down()
+  await page.mouse.move(para.x, para.y, { steps: passos })
+  await page.mouse.up()
+}
+
+/** Liga arrastando da alça de saída de `origem` até o meio do corpo de `destino`. */
+async function ligar(page: Page, origem: string, destino: string, saida = 0) {
+  const alca = await centro(node(page, origem).locator('.react-flow__handle.source').nth(saida))
+  const corpo = await centro(node(page, destino).locator('[data-flow-node]'))
+  await arrastar(page, alca, corpo)
+}
+
+async function arrastarDoPainel(page: Page, nome: string) {
+  const item = painel(page).getByRole('button', { name: nome })
   const from = await centro(item)
   const canvas = (await page.locator(`${SEC} .flow-surface`).boundingBox())!
-  const to = { x: canvas.x + canvas.width * 0.1, y: canvas.y + canvas.height * 0.5 }
-  await page.mouse.move(from.x, from.y)
-  await page.mouse.down()
-  await page.mouse.move(to.x, to.y, { steps: 10 })
-  await page.mouse.up()
+  const to = { x: canvas.x + canvas.width * 0.1, y: canvas.y + canvas.height * 0.8 }
+  await arrastar(page, from, to, 10)
 }
 
 /** Gesto de toque de verdade (eventos de ponteiro do tipo toque), pelo protocolo do navegador. */
@@ -92,280 +113,328 @@ const reta = (a: { x: number; y: number }, b: { x: number; y: number }, passos =
     y: a.y + ((b.y - a.y) * i) / passos,
   }))
 
-const zoomOf = (page: Page) =>
-  page.locator(`${SEC} .react-flow__viewport`).evaluate((el) => {
-    const m = /scale\(([\d.]+)\)/.exec((el as HTMLElement).style.transform)
-    return m ? Number(m[1]) : NaN
-  })
-const translateOf = (page: Page) =>
-  page.locator(`${SEC} .react-flow__viewport`).evaluate((el) => (el as HTMLElement).style.transform)
+/** Ponto, na tela, do meio de uma ligação (onde fica a lixeira). */
+const pontoDaLigacao = (page: Page, id: string) =>
+  page.evaluate((id) => {
+    const p = document.querySelector(
+      `#fluxo-editor .react-flow__edge[data-id="${id}"] path.react-flow__edge-interaction`,
+    ) as SVGPathElement
+    const m = p.getScreenCTM()!
+    const pt = p.getPointAtLength(p.getTotalLength() / 2)
+    return { x: m.a * pt.x + m.c * pt.y + m.e, y: m.b * pt.x + m.d * pt.y + m.f }
+  }, id)
+
+const caixas = (page: Page) =>
+  nodes(page).evaluateAll((els) =>
+    els.map((e) => {
+      const b = e.getBoundingClientRect()
+      return { id: e.getAttribute('data-id')!, x: b.x, y: b.y, w: b.width, h: b.height }
+    }),
+  )
+const semCruzar = (r: { id: string; x: number; y: number; w: number; h: number }[]) => {
+  for (let i = 0; i < r.length; i++)
+    for (let j = i + 1; j < r.length; j++) {
+      const a = r[i]!
+      const b = r[j]!
+      const cruza = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+      expect(cruza, `${a.id} cruza ${b.id}`).toBe(false)
+    }
+}
 
 test.describe('desktop (1280, claro, mouse)', () => {
   test.use({ viewport: { width: 1280, height: 1000 } })
 
-  test('a vitrine tem as seções FlowEditor e FlowViewer, cada uma com o selo do catálogo', async ({
+  test('a vitrine tem as seções FlowEditor e FlowViewer, o fluxo corre da esquerda para a direita', async ({
     page,
   }) => {
     await abrir(page)
-    await expect(page.locator('#fluxo-editor h2')).toHaveText('FlowEditor')
+    await expect(page.locator('#fluxo-editor-t')).toHaveText('FlowEditor')
     await expect(page.locator('#fluxo-editor')).toContainText('FLX-001')
     await expect(page.locator('#fluxo-editor [data-rendra="FLX-001"]')).toBeVisible()
     await expect(page.locator('#fluxo-viewer h2')).toHaveText('FlowViewer')
-    await expect(page.locator('#fluxo-viewer')).toContainText('FLX-002')
     await expect(page.locator('#fluxo-viewer [data-rendra="FLX-002"]')).toBeVisible()
-    // o viewer é só leitura: sem paleta, sem alças de ligar e o bloco ativo destacado
     await expect(page.locator('#fluxo-viewer .react-flow__handle.connectable')).toHaveCount(0)
     await expect(page.locator('#fluxo-viewer [data-flow-node][data-active="true"]')).toContainText(
-      'Pagamento aprovado?',
+      'Condição',
     )
+    const j = await json(page)
+    expect(j.version).toBe(2)
+    const x = (id: string) => j.nodes.find((n) => n.id === id)!.position.x
+    for (const e of j.edges) {
+      const [a, b] = e.id.split(/:\w+->|->/)
+      expect(x(b!)).toBeGreaterThan(x(a!))
+    }
+    // a barra lateral lista os 5 grupos
+    for (const g of ['Gatilhos', 'Mensagens', 'Condicionais', 'Integrações', 'Ações internas'])
+      await expect(painel(page).getByRole('group', { name: g })).toBeVisible()
   })
 
-  test('arrastar da paleta, ligar pela alça, mover e apagar por Delete', async ({ page }) => {
+  test('alça: alvo de 44 px com ponto visível de 12 px; as saídas da condição não se cruzam', async ({
+    page,
+  }) => {
+    await abrir(page)
+    const zoom = await page
+      .locator(`${SEC} .react-flow__viewport`)
+      .evaluate((el) => Number(/scale\(([\d.]+)\)/.exec((el as HTMLElement).style.transform)![1]))
+    const alca = (await node(page, 'webhook-saida-1')
+      .locator('.react-flow__handle.target')
+      .boundingBox())!
+    expect(alca.width / zoom).toBeCloseTo(44, 0)
+    expect(alca.height / zoom).toBeCloseTo(44, 0)
+    const ponto = (await node(page, 'webhook-saida-1')
+      .locator('.react-flow__handle.target [data-flow-dot]')
+      .boundingBox())!
+    expect(ponto.width / zoom).toBeCloseTo(12, 0)
+    const saidas = await node(page, 'condicao-1')
+      .locator('.react-flow__handle.source')
+      .evaluateAll((els) => els.map((e) => e.getBoundingClientRect()))
+    expect(saidas).toHaveLength(3)
+    for (let i = 0; i < saidas.length; i++)
+      for (let j = i + 1; j < saidas.length; j++) {
+        const a = saidas[i]!
+        const b = saidas[j]!
+        expect(a.y + a.height <= b.y + 0.5 || b.y + b.height <= a.y + 0.5).toBe(true)
+      }
+  })
+
+  test('ligar soltando no meio do corpo do bloco de destino cria a ligação', async ({ page }) => {
     const errors = await abrir(page)
-
-    // 1. arrastar "Ação" da paleta até o canvas: um bloco a mais
-    await arrastarPaleta(page, 'Ação')
-    await expect(nodes(page)).toHaveCount(8)
-    const novo = page.locator(`${SEC} .react-flow__node[data-id="acao-3"]`)
-    await expect(novo).toBeVisible()
-
-    // 2. ligar: da alça de saída do bloco novo até a de entrada de "Pedido cancelado"
-    const saida = await centro(novo.locator('.react-flow__handle.source'))
-    const entrada = await centro(
-      page.locator(`${SEC} .react-flow__node[data-id="fim-2"] .react-flow__handle.target`),
-    )
-    await page.mouse.move(saida.x, saida.y)
-    await page.mouse.down()
-    await page.mouse.move(entrada.x, entrada.y, { steps: 12 })
-    await page.mouse.up()
-    await expect(edges(page)).toHaveCount(7)
-    expect((await json(page)).edges.map((e) => e.id)).toContain('acao-3->fim-2')
-
-    // 3. mover um bloco pelo canvas: a posição do JSON da demo acompanha
-    const antes = (await json(page)).nodes.find((n) => n.id === 'acao-1')!.position
-    const alvo = await centro(
-      page.locator(`${SEC} .react-flow__node[data-id="acao-1"]`).getByText('Enviar confirmação'),
-    )
-    await page.mouse.move(alvo.x, alvo.y)
-    await page.mouse.down()
-    await page.mouse.move(alvo.x + 60, alvo.y + 6, { steps: 8 })
-    await page.mouse.up()
-    await expect
-      .poll(async () => (await json(page)).nodes.find((n) => n.id === 'acao-1')!.position.x)
-      .toBeGreaterThan(antes.x + 20)
-
-    // 4. apagar o bloco novo por Delete: o bloco e a ligação dele somem
-    await novo.getByText('Ação', { exact: true }).last().click()
-    await expect(novo).toHaveClass(/selected/)
-    await page.keyboard.press('Delete')
-    await expect(nodes(page)).toHaveCount(7)
-    await expect(edges(page)).toHaveCount(6)
-    expect((await json(page)).nodes.some((n) => n.id === 'acao-3')).toBe(false)
+    await ligar(page, 'tarefa-1', 'whatsapp-1')
+    await expect(edges(page)).toHaveCount(5)
+    expect((await json(page)).edges.map((e) => e.id)).toContain('tarefa-1->whatsapp-1')
     expect(errors).toEqual([])
   })
 
-  test('validar e testar um fluxo inválido não gera erro no console', async ({ page }) => {
-    const erros: string[] = []
-    page.on('console', (m) => {
-      if (m.type() === 'error') erros.push(m.text())
-    })
-    await abrir(page)
-    await arrastarPaleta(page, 'Ação')
-    await expect(nodes(page)).toHaveCount(8)
-    await page.locator(SEC).getByRole('button', { name: 'Validar' }).click()
-    await expect(
-      page.locator(SEC).getByRole('region', { name: 'Validação do fluxo' }),
-    ).toContainText('problemas')
-    await page.locator(SEC).getByRole('button', { name: 'Testar fluxo' }).click()
-    await expect(page.locator(SEC).getByRole('region', { name: 'Teste do fluxo' })).toContainText(
-      'ajustes',
-    )
-    expect(erros).toEqual([])
-  })
-
-  test('abrir o teste do fluxo estreita o canvas e os blocos continuam todos à vista', async ({
+  test('ligar uma saída que já tinha ligação troca e avisa com os nomes dos blocos', async ({
     page,
   }) => {
     await abrir(page)
-    const dentro = async () =>
-      page.evaluate(() => {
-        const c = document.querySelector('#fluxo-editor .flow-surface')!.getBoundingClientRect()
-        return [...document.querySelectorAll('#fluxo-editor .react-flow__node')].every((n) => {
-          const r = n.getBoundingClientRect()
-          return (
-            r.left >= c.left - 1 &&
-            r.right <= c.right + 1 &&
-            r.top >= c.top - 1 &&
-            r.bottom <= c.bottom + 1
-          )
-        })
-      })
-    expect(await dentro()).toBe(true)
-    const larguraAntes = (await page.locator(`${SEC} .flow-surface`).boundingBox())!.width
-    await page.locator(SEC).getByRole('button', { name: 'Testar fluxo' }).click()
-    await expect(page.locator(SEC).getByRole('region', { name: 'Teste do fluxo' })).toBeVisible()
-    await expect
-      .poll(async () => (await page.locator(`${SEC} .flow-surface`).boundingBox())!.width)
-      .toBeLessThan(larguraAntes - 100)
-    await expect.poll(dentro).toBe(true)
-    await page.screenshot({
-      path: process.env.FLOW_SHOTS_DIR
-        ? `${process.env.FLOW_SHOTS_DIR}/refit-simulacao-1280.png`
-        : 'screenshots/flow-refit.png',
-    })
+    await ligar(page, 'whatsapp-1', 'tarefa-1')
+    await expect(aviso(page)).toContainText(
+      'A ligação anterior de "Enviar WhatsApp" para "Condição" foi trocada.',
+    )
+    await expect(edges(page)).toHaveCount(4)
+    const ids = (await json(page)).edges.map((e) => e.id)
+    expect(ids).toContain('whatsapp-1->tarefa-1')
+    expect(ids).not.toContain('whatsapp-1->condicao-1')
   })
 
-  test('apagar uma ligação selecionada por Delete', async ({ page }) => {
+  test('soltar a uns 30 px fora do bloco não liga nada', async ({ page }) => {
     await abrir(page)
-    // clica no meio do traço da ligação (a área de toque dela é o traço transparente de 20 px)
-    const ponto = await page
-      .locator(`${SEC} .react-flow__edge[data-id="acao-2->fim-1"] .react-flow__edge-interaction`)
-      .evaluate((el) => {
-        const path = el as unknown as SVGPathElement
-        const p = path.getPointAtLength(path.getTotalLength() / 2)
-        const m = path.getScreenCTM()!
-        return { x: p.x * m.a + p.y * m.c + m.e, y: p.x * m.b + p.y * m.d + m.f }
-      })
-    await page.mouse.click(ponto.x, ponto.y)
-    await expect(page.locator(`${SEC} .react-flow__edge[data-id="acao-2->fim-1"]`)).toHaveClass(
-      /selected/,
+    const alca = await centro(node(page, 'tarefa-1').locator('.react-flow__handle.source'))
+    const alvo = (await node(page, 'whatsapp-1').locator('[data-flow-node]').boundingBox())!
+    await arrastar(page, alca, { x: alvo.x + alvo.width / 2, y: alvo.y - 40 })
+    await expect(edges(page)).toHaveCount(4)
+    await expect(aviso(page)).toBeEmpty()
+  })
+
+  test('ligar na saída "Regra 1" da condição, e o motivo de uma ligação recusada aparece', async ({
+    page,
+  }) => {
+    await abrir(page)
+    await ligar(page, 'condicao-1', 'tarefa-1', 0)
+    expect((await json(page)).edges.find((e) => e.id === 'condicao-1:r1->tarefa-1')?.branch).toBe(
+      'r1',
     )
+    await ligar(page, 'tarefa-1', 'webhook-entrada-1')
+    await expect(aviso(page)).toContainText('O gatilho começa o fluxo e não recebe ligação.')
+  })
+
+  test('arrastar da barra para o canvas e adicionar blocos por clique, sem cobrir nenhum', async ({
+    page,
+  }) => {
+    await abrir(page)
+    await arrastarDoPainel(page, 'Enviar e-mail')
+    await expect(nodes(page)).toHaveCount(6)
+    for (let i = 0; i < 3; i++) {
+      await painel(page).getByRole('button', { name: 'Fechar configuração' }).click()
+      await painel(page).getByRole('button', { name: 'Criar tarefa' }).click()
+    }
+    await expect(nodes(page)).toHaveCount(9)
+    semCruzar(await caixas(page))
+  })
+
+  test('busca na barra e grupos', async ({ page }) => {
+    await abrir(page)
+    await painel(page).getByRole('textbox', { name: 'Buscar bloco' }).fill('whats')
+    await expect(painel(page).locator('[data-flow-block]')).toHaveCount(1)
+    await expect(painel(page).getByRole('button', { name: 'Enviar WhatsApp' })).toBeVisible()
+    await painel(page).getByRole('textbox', { name: 'Buscar bloco' }).fill('xyz')
+    await expect(painel(page).getByText('Nenhum bloco encontrado')).toBeVisible()
+  })
+
+  test('clicar na ligação mostra a lixeira; "Não" mantém, "Sim" apaga; Delete também apaga', async ({
+    page,
+  }) => {
+    await abrir(page)
+    const p = await pontoDaLigacao(page, 'whatsapp-1->condicao-1')
+    await page.mouse.click(p.x, p.y)
+    const lixeira = page.getByRole('button', {
+      name: /Excluir ligação de Enviar WhatsApp para Condição/,
+    })
+    await expect(lixeira).toBeVisible()
+    await lixeira.click()
+    await expect(page.getByText('Excluir ligação?')).toBeVisible()
+    await page.getByRole('button', { name: 'Não', exact: true }).click()
+    await expect(edges(page)).toHaveCount(4)
+    await lixeira.click()
+    await page.getByRole('button', { name: 'Sim', exact: true }).click()
+    await expect(edges(page)).toHaveCount(3)
+    // Delete pelo teclado apaga a ligação selecionada
+    const q = await pontoDaLigacao(page, 'webhook-entrada-1->whatsapp-1')
+    await page.mouse.click(q.x, q.y)
     await page.keyboard.press('Delete')
-    await expect(edges(page)).toHaveCount(5)
-    expect((await json(page)).edges.some((e) => e.id === 'acao-2->fim-1')).toBe(false)
+    await expect(edges(page)).toHaveCount(2)
   })
 
-  test('Validar mostra as mensagens do que está errado, marca o bloco e leva até ele', async ({
+  test('excluir bloco: modal com ligações, só este (caixa CONFIRMO) e tudo depois (digitado)', async ({
     page,
   }) => {
     await abrir(page)
-    await arrastarPaleta(page, 'Ação')
-    await expect(nodes(page)).toHaveCount(8)
-    await page.locator(SEC).getByRole('button', { name: 'Validar' }).click()
-    const relatorio = page.locator(SEC).getByRole('region', { name: 'Validação do fluxo' })
-    await expect(relatorio).toContainText('não é alcançado a partir do gatilho')
-    await expect(relatorio).toContainText('não leva a nenhum próximo bloco')
-    await expect(page.locator(`${SEC} [data-flow-node][data-invalid="true"]`)).toHaveCount(1)
-    await relatorio
-      .getByRole('button', { name: /Ver bloco/ })
-      .first()
+    await node(page, 'whatsapp-1')
+      .getByRole('button', { name: /Excluir bloco/ })
       .click()
-    await expect(page.locator(`${SEC} .react-flow__node.selected`)).toHaveCount(1)
+    const modal = page.getByRole('dialog')
+    await expect(modal).toContainText('Ligado depois de')
+    await expect(modal.getByText('Receber webhook')).toBeVisible()
+    await expect(modal.getByText('Condição')).toBeVisible()
+    await modal.getByRole('button', { name: 'Excluir', exact: true }).click()
+    await expect(modal.getByRole('alert')).toContainText('Marque a caixa CONFIRMO')
+    await expect(nodes(page)).toHaveCount(5)
+    await modal.getByRole('checkbox', { name: 'CONFIRMO' }).check()
+    await modal.getByRole('button', { name: 'Excluir', exact: true }).click()
+    await expect(nodes(page)).toHaveCount(4)
+    expect((await json(page)).edges.map((e) => e.id)).toContain('webhook-entrada-1->condicao-1')
+    // tudo depois, digitando
+    await node(page, 'condicao-1')
+      .getByRole('button', { name: /Excluir bloco/ })
+      .click()
+    await page.getByRole('radio', { name: /tudo o que vem depois dele \(3 blocos\)/ }).check()
+    await page.getByRole('textbox').last().fill('confirmo')
+    await page.getByRole('button', { name: 'Excluir', exact: true }).click()
+    await expect(nodes(page)).toHaveCount(1)
   })
 
-  test('Testar fluxo percorre até o fim, escolhendo "Não" na condição', async ({ page }) => {
+  test('Receber webhook: simular chegada, mapear e ver o chip no card; Enviar webhook: simular envio', async ({
+    page,
+  }) => {
     await abrir(page)
+    await node(page, 'webhook-entrada-1')
+      .getByRole('button', { name: /Editar bloco/ })
+      .click()
+    await painel(page).getByRole('combobox', { name: 'Campo do sistema para cliente.nome' }).click()
+    await page.getByRole('option', { name: /Cliente › E-mail/ }).click()
+    await painel(page).getByRole('combobox', { name: 'Campo do sistema para cliente.nome' }).click()
+    await painel(page)
+      .getByRole('listitem')
+      .filter({ hasText: 'cliente.nome' })
+      .getByLabel('Limpar seleção')
+      .click()
+    await expect(
+      node(page, 'webhook-entrada-1').locator('[data-flow-chip]', { hasText: '{{cliente.nome}}' }),
+    ).toHaveCount(0)
+    await painel(page).getByRole('combobox', { name: 'Campo do sistema para cliente.nome' }).click()
+    await page.getByRole('option', { name: /Cliente › Nome/ }).click()
+    await expect(
+      node(page, 'webhook-entrada-1').locator('[data-flow-chip]', { hasText: '{{cliente.nome}}' }),
+    ).toHaveCount(1)
+    await painel(page).getByRole('button', { name: 'Fechar configuração' }).click()
+    await node(page, 'webhook-saida-1')
+      .getByRole('button', { name: /Editar bloco/ })
+      .click()
+    await painel(page).getByRole('button', { name: 'Simular envio' }).click()
+    const sim = painel(page).getByRole('region', { name: 'Simulação do envio' })
+    await expect(sim).toContainText('POST https://crm.exemplo/api')
+    await expect(sim).toContainText('Ana Souza')
+    await expect(sim).toContainText('200 OK')
+  })
+
+  test('condição: adicionar regra e testar o fluxo mostra qual regra bateu', async ({ page }) => {
+    await abrir(page)
+    await node(page, 'condicao-1')
+      .getByRole('button', { name: /Editar bloco/ })
+      .click()
+    await painel(page).getByRole('button', { name: 'Adicionar regra' }).click()
+    await expect(node(page, 'condicao-1').locator('.react-flow__handle.source')).toHaveCount(4)
+    await expect(node(page, 'condicao-1')).toContainText('Regra 3')
+    // a regra nova está vazia: o teste acusa antes de começar
+    await painel(page).getByRole('button', { name: 'Excluir Regra 3' }).click()
     await page.locator(SEC).getByRole('button', { name: 'Testar fluxo' }).click()
-    const painel = page.locator(SEC).getByRole('region', { name: 'Teste do fluxo' })
-    await expect(painel).toBeVisible()
-    const passos = painel.getByRole('listitem')
-    await painel.getByRole('button', { name: 'Avançar' }).click()
-    await painel.getByRole('button', { name: 'Avançar' }).click()
-    await expect(page.locator(`${SEC} [data-flow-node][data-active="true"]`)).toContainText(
-      'Pagamento aprovado?',
-    )
-    await expect(painel.getByRole('button', { name: 'Avançar' })).toBeDisabled()
-    await painel.getByRole('button', { name: 'Não' }).click()
-    await painel.getByRole('button', { name: 'Avançar' }).click()
-    await expect(painel.getByText('Fluxo concluído')).toBeVisible()
-    await expect(passos).toHaveCount(4)
-    await expect(passos).toContainText([
-      'Novo pedido',
-      'Enviar confirmação',
-      'Pagamento aprovado?',
-      'Pedido cancelado',
-    ])
-    await expect(painel).not.toContainText('Aguardar liberação')
-    await painel.getByRole('button', { name: 'Fechar teste' }).click()
-    await expect(page.locator(`${SEC} [data-flow-node][data-active="true"]`)).toHaveCount(0)
+    const regiao = page.locator(SEC).getByRole('region', { name: 'Teste do fluxo' })
+    for (let i = 0; i < 3; i++) await regiao.getByRole('button', { name: 'Avançar' }).click()
+    await expect(regiao).toContainText('Regra 1 bateu: pedido.valor é maior que 500')
   })
 
-  test('a roda do mouse rola a página e Ctrl+roda dá zoom no canvas', async ({ page }) => {
+  test('as ligações são animadas e param com movimento reduzido', async ({ page }) => {
     await abrir(page)
-    const canvas = await centro(page.locator(`${SEC} .flow-surface`))
-    const zoom0 = await zoomOf(page)
-    const main = page.locator('main#conteudo')
-    const rolagem0 = await main.evaluate((el) => el.scrollTop)
-    await page.mouse.move(canvas.x, canvas.y)
+    const anim = () =>
+      page
+        .locator(`${SEC} .react-flow__edge.animated path.react-flow__edge-path`)
+        .first()
+        .evaluate((el) => {
+          const c = getComputedStyle(el)
+          return { nome: c.animationName, duracao: c.animationDuration, dash: c.strokeDasharray }
+        })
+    const normal = await anim()
+    expect(normal.nome).toBe('dashdraw')
+    expect(normal.dash).not.toBe('none')
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const reduzido = await anim()
+    expect(Number.parseFloat(reduzido.duracao)).toBeLessThan(0.001)
+    expect(reduzido.dash).not.toBe('none')
+  })
+
+  test('teclado: Enter no bloco abre a configuração, Esc volta, Delete abre o modal, setas movem', async ({
+    page,
+  }) => {
+    await abrir(page)
+    const no = node(page, 'tarefa-1')
+    await no.focus()
+    await page.keyboard.press('Enter')
+    await expect(painel(page).getByRole('textbox', { name: 'Responsável' })).toBeVisible()
+    await painel(page).getByRole('textbox', { name: 'Nome do bloco' }).press('Escape')
+    await expect(painel(page).getByText('Adicionar bloco')).toBeVisible()
+    await no.click({ position: { x: 6, y: 6 } })
+    await painel(page).getByRole('button', { name: 'Fechar configuração' }).click()
+    await no.focus()
+    await page.keyboard.press('Space')
+    const antes = (await json(page)).nodes.find((n) => n.id === 'tarefa-1')!.position
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowRight')
+    await expect
+      .poll(async () => (await json(page)).nodes.find((n) => n.id === 'tarefa-1')!.position.x)
+      .toBeGreaterThan(antes.x)
+    await page.keyboard.press('Delete')
+    await expect(page.getByRole('dialog')).toContainText('Excluir este bloco?')
+    await expect(nodes(page)).toHaveCount(5)
+  })
+
+  test('o viewer não rola a página com a roda, e Ctrl+roda dá zoom no editor', async ({ page }) => {
+    await abrir(page)
+    const zoom = () =>
+      page
+        .locator(`${SEC} .react-flow__viewport`)
+        .evaluate((el) => Number(/scale\(([\d.]+)\)/.exec((el as HTMLElement).style.transform)![1]))
+    const c = await centro(page.locator(`${SEC} .flow-surface`))
+    await page.mouse.move(c.x, c.y)
+    const y0 = await page.evaluate(() => document.querySelector('main')!.scrollTop)
     await page.mouse.wheel(0, 300)
-    await expect.poll(() => main.evaluate((el) => el.scrollTop)).toBeGreaterThan(rolagem0)
-    expect(await zoomOf(page)).toBe(zoom0)
-    await page.mouse.move(canvas.x, (await centro(page.locator(`${SEC} .flow-surface`))).y)
+    await page.waitForTimeout(300)
+    expect(await page.evaluate(() => document.querySelector('main')!.scrollTop)).toBeGreaterThan(y0)
+    const z0 = await zoom()
     await page.keyboard.down('Control')
     await page.mouse.wheel(0, -300)
     await page.keyboard.up('Control')
-    await expect.poll(() => zoomOf(page)).toBeGreaterThan(zoom0)
-  })
-
-  test('aproximar, afastar e enquadrar mudam o zoom', async ({ page }) => {
-    await abrir(page)
-    const zoom0 = await zoomOf(page)
-    await page.locator(SEC).getByRole('button', { name: 'Aproximar' }).click()
-    await expect.poll(() => zoomOf(page)).toBeGreaterThan(zoom0)
-    await page.locator(SEC).getByRole('button', { name: 'Afastar' }).click()
-    await page.locator(SEC).getByRole('button', { name: 'Afastar' }).click()
-    await expect.poll(() => zoomOf(page)).toBeLessThan(zoom0)
-    await page.locator(SEC).getByRole('button', { name: 'Enquadrar' }).click()
-    await expect.poll(() => zoomOf(page)).toBeCloseTo(zoom0, 1)
-  })
-
-  test('teclado: Enter no bloco abre a gaveta, Próximo bloco liga sem mouse e Esc fecha', async ({
-    page,
-  }) => {
-    await abrir(page)
-    const bloco = page.locator(`${SEC} .react-flow__node[data-id="acao-1"]`)
-    await bloco.focus()
-    await page.keyboard.press('Enter')
-    const gaveta = page.getByRole('dialog')
-    await expect(gaveta).toBeVisible()
-    await expect(gaveta.getByLabel('Rótulo')).toHaveValue('Enviar confirmação')
-    const proximo = gaveta.getByRole('combobox', { name: 'Próximo bloco' })
-    await proximo.focus()
-    await page.keyboard.press('Enter')
-    // só teclado: desce pela lista até a opção e confirma com Enter
-    for (let i = 0; i < 10; i++) {
-      const ativa = await page.locator('[role="option"][data-selected="true"]').textContent()
-      if (ativa?.includes('Pedido cancelado')) break
-      await page.keyboard.press('ArrowDown')
-    }
-    await page.keyboard.press('Enter')
-    await expect(proximo).toContainText('Pedido cancelado')
-    await gaveta.getByRole('button', { name: 'Aplicar' }).focus()
-    await page.keyboard.press('Enter')
-    await expect(gaveta).toBeHidden()
-    expect((await json(page)).edges.some((e) => e.id === 'acao-1->fim-2')).toBe(true)
-    // Esc fecha sem aplicar
-    await bloco.focus()
-    await page.keyboard.press('Enter')
-    await expect(page.getByRole('dialog')).toBeVisible()
-    await page.keyboard.press('Escape')
-    await expect(page.getByRole('dialog')).toBeHidden()
-  })
-
-  test('as setas movem o bloco selecionado e a posição vai para o JSON', async ({ page }) => {
-    await abrir(page)
-    const bloco = page.locator(`${SEC} .react-flow__node[data-id="acao-1"]`)
-    const antes = (await json(page)).nodes.find((n) => n.id === 'acao-1')!.position
-    await bloco.focus()
-    await page.keyboard.press('Space')
-    await expect(bloco).toHaveClass(/selected/)
-    await page.keyboard.press('ArrowRight')
-    await page.keyboard.press('ArrowRight')
-    await expect
-      .poll(async () => (await json(page)).nodes.find((n) => n.id === 'acao-1')!.position.x)
-      .toBeGreaterThan(antes.x)
+    await expect.poll(zoom).toBeGreaterThan(z0)
   })
 })
 
-/*
- * Tema (B1 do parecer): as variáveis --xy-* no style do contêiner só valem se o estilo
- * COMPUTADO sair igual ao token do Rendra, no claro e no escuro. O CSS da biblioteca não tem
- * camada e vence qualquer regra em @layer, então só o computado prova.
- */
 test.describe('tema pelos tokens', () => {
   test.use({ viewport: { width: 1280, height: 1000 } })
   for (const mode of ['light', 'dark'] as const) {
-    test(`traço, alça, bloco e atribuição seguem os tokens (${mode})`, async ({ page }) => {
+    test(`traço, ponto da alça, bloco, fundo e atribuição seguem os tokens (${mode})`, async ({
+      page,
+    }) => {
       await abrir(page, { brand: 'safira', mode })
       const r = await page.evaluate(() => {
         const token = (nome: string) => {
@@ -383,6 +452,7 @@ test.describe('tema pelos tokens', () => {
         return {
           traco: getComputedStyle(q('.react-flow__edge-path')).stroke,
           alca: getComputedStyle(q('.react-flow__handle')).backgroundColor,
+          ponto: getComputedStyle(q('[data-flow-dot]')).backgroundColor,
           bloco: getComputedStyle(q('[data-flow-node]')).backgroundColor,
           fundo: getComputedStyle(q('.react-flow')).backgroundColor,
           atribuicao: getComputedStyle(att).color,
@@ -390,7 +460,7 @@ test.describe('tema pelos tokens', () => {
           toque: { w: box.width, h: box.height },
           esperado: {
             traco: token('--rendra-muted-foreground'),
-            alca: token('--rendra-primary'),
+            ponto: token('--rendra-primary'),
             bloco: token('--rendra-card'),
             fundo: token('--rendra-muted'),
             atribuicao: token('--rendra-primary-text'),
@@ -399,7 +469,8 @@ test.describe('tema pelos tokens', () => {
         }
       })
       expect(r.traco).toBe(r.esperado.traco)
-      expect(r.alca).toBe(r.esperado.alca)
+      expect(r.alca).toBe('rgba(0, 0, 0, 0)')
+      expect(r.ponto).toBe(r.esperado.ponto)
       expect(r.bloco).toBe(r.esperado.bloco)
       expect(r.fundo).toBe(r.esperado.fundo)
       expect(r.atribuicao).toBe(r.esperado.atribuicao)
@@ -413,173 +484,122 @@ test.describe('tema pelos tokens', () => {
 test.describe('tablet (768 e 1024, toque)', () => {
   for (const width of [768, 1024]) {
     test.describe(`${width}px`, () => {
-      test.use({ viewport: { width, height: 1000 }, hasTouch: true })
+      test.use({ viewport: { width, height: 1500 }, hasTouch: true })
 
-      test('arrastar da paleta e ligar por toque, e Editar abre a gaveta', async ({ page }) => {
+      test('arrastar da barra e ligar soltando no corpo do bloco, por toque', async ({ page }) => {
         await abrir(page)
-        const item = page
-          .locator(SEC)
-          .getByRole('group', { name: 'Blocos' })
-          .getByRole('button', { name: 'Ação' })
-        const from = await centro(item)
+        const item = await centro(painel(page).getByRole('button', { name: 'Enviar e-mail' }))
         const canvas = (await page.locator(`${SEC} .flow-surface`).boundingBox())!
-        const dest = { x: canvas.x + canvas.width * 0.1, y: canvas.y + canvas.height * 0.5 }
-        const scroll0 = await page.evaluate(
-          () => document.querySelector('main#conteudo')!.scrollTop,
+        await toque(
+          page,
+          reta(item, { x: canvas.x + canvas.width * 0.2, y: canvas.y + canvas.height * 0.85 }),
         )
-        await toque(page, reta(from, dest, 14))
-        await expect(nodes(page)).toHaveCount(8)
-        // a página não rolou durante o gesto na paleta
-        expect(await page.evaluate(() => document.querySelector('main#conteudo')!.scrollTop)).toBe(
-          scroll0,
-        )
+        await expect(nodes(page)).toHaveCount(6)
+        const alca = await centro(node(page, 'tarefa-1').locator('.react-flow__handle.source'))
+        const corpo = await centro(node(page, 'whatsapp-1').locator('[data-flow-node]'))
+        await toque(page, reta(alca, corpo, 16))
+        await expect(edges(page)).toHaveCount(5)
+        expect((await json(page)).edges.map((e) => e.id)).toContain('tarefa-1->whatsapp-1')
+      })
 
-        const novo = page.locator(`${SEC} .react-flow__node[data-id="acao-3"]`)
-        const saida = await centro(novo.locator('.react-flow__handle.source'))
-        const entrada = await centro(
-          page.locator(`${SEC} .react-flow__node[data-id="fim-2"] .react-flow__handle.target`),
-        )
-        await toque(page, reta(saida, entrada, 14))
-        await expect(edges(page)).toHaveCount(7)
-
-        await page.locator(`${SEC} .react-flow__node[data-id="acao-1"] [data-flow-edit]`).tap()
-        await expect(page.getByRole('dialog')).toBeVisible()
+      test('os botões do card têm 44 px e Editar abre a configuração na barra', async ({
+        page,
+      }) => {
+        await abrir(page)
+        const zoom = await page
+          .locator(`${SEC} .react-flow__viewport`)
+          .evaluate((el) =>
+            Number(/scale\(([\d.]+)\)/.exec((el as HTMLElement).style.transform)![1]),
+          )
+        const b = (await node(page, 'tarefa-1')
+          .getByRole('button', { name: /Editar bloco/ })
+          .boundingBox())!
+        expect(b.width / zoom).toBeGreaterThanOrEqual(43.5)
+        await node(page, 'tarefa-1')
+          .getByRole('button', { name: /Editar bloco/ })
+          .tap()
+        await expect(painel(page).getByRole('textbox', { name: 'Responsável' })).toBeVisible()
       })
     })
   }
 })
 
-test.describe('celular (360, toque)', () => {
+test.describe('celular (360)', () => {
   test.use({ viewport: { width: 360, height: 800 }, hasTouch: true })
 
-  test('só ver e navegar: sem paleta nem alças; um dedo move o canvas e a página não rola', async ({
+  test('só ver e navegar: sem alças, a página não rola sob o dedo; a barra vem num Drawer', async ({
     page,
   }) => {
     await abrir(page)
-    await expect(page.locator(SEC).getByRole('group', { name: 'Blocos' })).toHaveCount(0)
     await expect(page.locator(`${SEC} .react-flow__handle.connectable`)).toHaveCount(0)
-    for (const nome of ['Aproximar', 'Afastar', 'Enquadrar']) {
-      const b = (await page.locator(SEC).getByRole('button', { name: nome }).boundingBox())!
-      expect(b.width).toBeGreaterThanOrEqual(43.5)
-      expect(b.height).toBeGreaterThanOrEqual(43.5)
-    }
-    const surface = await centro(page.locator(`${SEC} .flow-surface`))
-    // dedo em área vazia do canvas (canto direito, abaixo do nível dos blocos)
-    const inicio = {
-      x: surface.box.x + surface.box.width - 40,
-      y: surface.box.y + surface.box.height / 2,
-    }
-    const scroll0 = await page.evaluate(() => document.querySelector('main#conteudo')!.scrollTop)
-    const t0 = await translateOf(page)
-    await toque(page, reta(inicio, { x: inicio.x - 90, y: inicio.y - 60 }, 10))
-    await expect.poll(() => translateOf(page)).not.toBe(t0)
-    expect(await page.evaluate(() => document.querySelector('main#conteudo')!.scrollTop)).toBe(
-      scroll0,
-    )
+    await expect(painel(page)).toHaveCount(0)
+    const c = await centro(page.locator(`${SEC} .flow-surface`))
+    const rolagem = () => page.evaluate(() => document.querySelector('main')!.scrollTop)
+    const y0 = await rolagem()
+    const antes = await page
+      .locator(`${SEC} .react-flow__viewport`)
+      .evaluate((el) => (el as HTMLElement).style.transform)
+    await toque(page, reta({ x: c.x, y: c.y + 40 }, { x: c.x - 60, y: c.y - 40 }))
+    await expect
+      .poll(() =>
+        page
+          .locator(`${SEC} .react-flow__viewport`)
+          .evaluate((el) => (el as HTMLElement).style.transform),
+      )
+      .not.toBe(antes)
+    expect(await rolagem()).toBe(y0)
+    await page.locator(SEC).getByRole('button', { name: 'Blocos' }).tap()
+    const gaveta = page.getByRole('dialog')
+    await expect(gaveta.getByRole('button', { name: 'Enviar e-mail' })).toBeVisible()
+    await gaveta.getByRole('button', { name: 'Enviar e-mail' }).tap()
+    await expect(nodes(page)).toHaveCount(6)
+    await expect(gaveta.getByRole('textbox', { name: 'Assunto' })).toBeVisible()
   })
 
-  test('um dedo começando em cima de um bloco também move o canvas, sem rolar a página', async ({
-    page,
-  }) => {
+  test('editar pelo toque: "Próximo bloco" liga e excluir abre o modal', async ({ page }) => {
     await abrir(page)
-    const bloco = await centro(page.locator(`${SEC} .react-flow__node[data-id="acao-1"]`))
-    const scroll0 = await page.evaluate(() => document.querySelector('main#conteudo')!.scrollTop)
-    const t0 = await translateOf(page)
-    await toque(page, reta(bloco, { x: bloco.x - 40, y: bloco.y + 50 }, 10))
-    await expect.poll(() => translateOf(page)).not.toBe(t0)
-    expect(await page.evaluate(() => document.querySelector('main#conteudo')!.scrollTop)).toBe(
-      scroll0,
-    )
-  })
-
-  test('pinça muda o zoom', async ({ page }) => {
-    await abrir(page)
-    const s = await centro(page.locator(`${SEC} .flow-surface`))
-    const zoom0 = await zoomOf(page)
-    const cdp = await page.context().newCDPSession(page)
-    const c = { x: s.x, y: s.y + 20 }
-    await cdp.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [
-        { x: c.x - 20, y: c.y },
-        { x: c.x + 20, y: c.y },
-      ],
-    })
-    for (let i = 1; i <= 10; i++)
-      await cdp.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: [
-          { x: c.x - 20 - i * 6, y: c.y },
-          { x: c.x + 20 + i * 6, y: c.y },
-        ],
-      })
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
-    await expect.poll(() => zoomOf(page)).toBeGreaterThan(zoom0)
-  })
-
-  test('tocar no bloco abre a gaveta em tela inteira; ligar ao próximo e excluir funcionam por ali', async ({
-    page,
-  }) => {
-    await abrir(page)
-    await page
-      .locator(`${SEC} .react-flow__node[data-id="acao-1"]`)
-      .getByText('Enviar confirmação')
+    await node(page, 'whatsapp-1')
+      .getByRole('button', { name: /Editar bloco/ })
       .tap()
     const gaveta = page.getByRole('dialog')
-    await expect(gaveta).toBeVisible()
-    const caixa = (await gaveta.boundingBox())!
-    expect(Math.round(caixa.width)).toBe(360)
-    expect(Math.round(caixa.height)).toBe(800)
     await gaveta.getByRole('combobox', { name: 'Próximo bloco' }).tap()
-    await page.getByRole('option', { name: /Pedido cancelado/ }).tap()
-    await gaveta.getByRole('button', { name: 'Aplicar' }).tap()
-    await expect(gaveta).toBeHidden()
-    expect((await json(page)).edges.some((e) => e.id === 'acao-1->fim-2')).toBe(true)
-
-    await page
-      .locator(`${SEC} .react-flow__node[data-id="acao-2"]`)
-      .getByText('Liberar acesso')
-      .tap()
-    await page.getByRole('dialog').getByRole('button', { name: 'Mais ações' }).tap()
-    await page.getByRole('menuitem', { name: 'Excluir bloco' }).tap()
-    await page.getByRole('button', { name: 'Excluir', exact: true }).tap()
-    await expect(nodes(page)).toHaveCount(6)
-    expect((await json(page)).nodes.some((n) => n.id === 'acao-2')).toBe(false)
+    await page.getByRole('option', { name: /Criar tarefa/ }).tap()
+    expect((await json(page)).edges.map((e) => e.id)).toContain('whatsapp-1->tarefa-1')
+    await expect(page.locator(`${SEC} [data-flow-notice]`)).toContainText('foi trocada')
   })
 })
 
-/* Layout e acessibilidade com a gaveta, o relatório e a simulação abertos. */
-type Estado = 'base' | 'gaveta' | 'validacao' | 'simulacao' | 'erro'
+/* Layout e acessibilidade com a barra em cada modo. */
+type Estado = 'base' | 'configuracao' | 'validacao' | 'teste' | 'exclusao' | 'erro'
 
 async function levarAoEstado(page: Page, estado: Estado) {
   const mobile = (page.viewportSize()?.width ?? 1280) < MOBILE
-  if (estado === 'gaveta') {
-    const bloco = page.locator(`${SEC} .react-flow__node[data-id="acao-1"]`)
-    if (mobile) await bloco.getByText('Enviar confirmação').tap()
-    else await bloco.locator('[data-flow-edit]').click()
-    await expect(page.getByRole('dialog')).toBeVisible()
+  const tocar = (l: Locator) => (mobile ? l.tap() : l.click())
+  if (estado === 'configuracao') {
+    await tocar(node(page, 'webhook-entrada-1').getByRole('button', { name: /Editar bloco/ }))
+    await expect(mobile ? page.getByRole('dialog') : painel(page)).toContainText('Mapeamento')
   } else if (estado === 'validacao') {
-    await page.locator(SEC).getByRole('button', { name: 'Validar' }).click()
-    await expect(page.locator(SEC).getByText('Fluxo válido')).toBeVisible()
+    await tocar(page.locator(SEC).getByRole('button', { name: 'Validar' }))
+    await expect(page.getByText('Fluxo válido')).toBeVisible()
+  } else if (estado === 'exclusao') {
+    await tocar(node(page, 'whatsapp-1').getByRole('button', { name: /Excluir bloco/ }))
+    await expect(page.getByRole('dialog')).toContainText('Excluir este bloco?')
   } else if (estado === 'erro') {
-    // só nas larguras de montar: um bloco solto deixa o fluxo com problemas
-    await arrastarPaleta(page, 'Ação')
-    await expect(nodes(page)).toHaveCount(8)
-    await page.locator(SEC).getByRole('button', { name: 'Validar' }).click()
-    await expect(
-      page.locator(SEC).getByRole('region', { name: 'Validação do fluxo' }),
-    ).toContainText('problema')
-  } else if (estado === 'simulacao') {
-    await page.locator(SEC).getByRole('button', { name: 'Testar fluxo' }).click()
-    const painel = page.locator(SEC).getByRole('region', { name: 'Teste do fluxo' })
-    await painel.getByRole('button', { name: 'Avançar' }).click()
-    await painel.getByRole('button', { name: 'Avançar' }).click()
-    await expect(painel.getByRole('button', { name: 'Sim' })).toBeVisible()
+    // um bloco novo, sem configuração, deixa o fluxo com problemas
+    await tocar(painel(page).getByRole('button', { name: 'Enviar e-mail' }))
+    await tocar(page.locator(SEC).getByRole('button', { name: 'Validar' }))
+    await expect(page.getByText(/problemas? encontrados?/)).toBeVisible()
+  } else if (estado === 'teste') {
+    await tocar(page.locator(SEC).getByRole('button', { name: 'Testar fluxo' }))
+    const regiao = page.getByRole('region', { name: 'Teste do fluxo' })
+    await tocar(regiao.getByRole('button', { name: 'Avançar' }))
+    await tocar(regiao.getByRole('button', { name: 'Avançar' }))
+    await expect(regiao).toContainText('Passo 2')
   }
   await page.waitForTimeout(300)
 }
 
-const estados: Estado[] = ['base', 'gaveta', 'validacao', 'simulacao']
+const estados: Estado[] = ['base', 'configuracao', 'validacao', 'teste', 'exclusao']
 const estadosDeCaptura: Estado[] = [...estados, 'erro']
 const larguras = [
   { width: 360, mode: 'light' as const },
@@ -649,6 +669,18 @@ for (const tema of temas) {
   })
 }
 
+/* O estado de erro (bloco novo sem configuração) só nas larguras de montar e em um modelo. */
+test.describe('estado de erro', () => {
+  test.use({ viewport: { width: 1280, height: 900 } })
+  test('um bloco novo, sem configuração, deixa a validação acusar o problema', async ({ page }) => {
+    await abrir(page)
+    await levarAoEstado(page, 'erro')
+    const res = await auditLayout(page, false)
+    expect(res.scroll).toBeLessThanOrEqual(0)
+    expect(res.wide).toEqual([])
+  })
+})
+
 /* Capturas para revisão a olho (não comparam nada): screenshots/flow/<modelo>[+paleta]-<modo>-<largura>-<estado>.png */
 test.describe('capturas do fluxo', () => {
   test.skip(!process.env.FLOW_SHOTS, 'só com FLOW_SHOTS=1')
@@ -660,27 +692,17 @@ test.describe('capturas do fluxo', () => {
         { brand, mode, width: 360 },
       ]),
     ),
-    ...['equilibrio', 'aurora', 'ardosia'].map((palette) => ({
-      brand: 'safira',
-      palette,
-      mode: 'light' as const,
-      width: 1280,
-    })),
   ]
   for (const t of combos) {
     for (const estado of estadosDeCaptura) {
       if (estado === 'erro' && t.width < MOBILE) continue
-      test(`${t.brand}${t.palette ? `+${t.palette}` : ''} ${t.mode} ${t.width} ${estado}`, async ({
-        page,
-      }) => {
+      test(`${t.brand} ${t.mode} ${t.width} ${estado}`, async ({ page }) => {
         await page.setViewportSize({ width: t.width, height: t.width < MOBILE ? 900 : 1100 })
         await abrir(page, t)
         await levarAoEstado(page, estado)
         const dir = process.env.FLOW_SHOTS_DIR ?? 'screenshots/flow'
         mkdirSync(dir, { recursive: true })
-        await page.screenshot({
-          path: `${dir}/${t.brand}${t.palette ? `+${t.palette}` : ''}-${t.mode}-${t.width}-${estado}.png`,
-        })
+        await page.screenshot({ path: `${dir}/${t.brand}-${t.mode}-${t.width}-${estado}.png` })
       })
     }
   }

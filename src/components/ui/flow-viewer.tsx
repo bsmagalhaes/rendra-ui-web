@@ -489,7 +489,7 @@ function FlowLink({
         )}
         {showTrash && actions?.removeEdge && (
           <div
-            className="pointer-events-none absolute top-0 left-0 translate-x-(--flow-x) translate-y-(--flow-y)"
+            className="pointer-events-none absolute top-0 left-0 z-50 translate-x-(--flow-x) translate-y-(--flow-y)"
             style={{ '--flow-x': `${midX}px`, '--flow-y': `${midY}px` } as CSSProperties}
           >
             <div
@@ -664,7 +664,7 @@ export function FlowSurface({ className, children, fill = true, ...props }: Flow
         ariaLabelConfig={FLOW_ARIA}
         fitView
         fitViewOptions={fitViewOptions}
-        minZoom={0.25}
+        minZoom={0.1}
         maxZoom={2}
         zoomOnDoubleClick={false}
         zoomOnScroll={false}
