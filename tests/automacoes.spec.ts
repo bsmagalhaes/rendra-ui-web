@@ -235,3 +235,55 @@ for (const brand of templates) {
     })
   }
 }
+
+/* Capturas para revisão a olho (não comparam nada): FLOW_SHOTS=1 e FLOW_SHOTS_DIR. */
+test.describe('capturas das telas de automação', () => {
+  test.skip(!process.env.FLOW_SHOTS, 'só com FLOW_SHOTS=1')
+  test.use({ hasTouch: true })
+  const dir = process.env.FLOW_SHOTS_DIR ?? 'screenshots/automacoes'
+  const combos = templates.flatMap((brand) =>
+    (['light', 'dark'] as const).flatMap((mode) => [
+      { brand, mode, width: 1280 },
+      { brand, mode, width: 360 },
+    ]),
+  )
+  for (const t of combos) {
+    test(`${t.brand} ${t.mode} ${t.width}`, async ({ page }) => {
+      await page.setViewportSize({ width: t.width, height: t.width < MOBILE ? 800 : 900 })
+      await useTheme(page, { brand: t.brand, mode: t.mode })
+      const mobile = t.width < MOBILE
+      const nome = `${dir}/auto-${t.brand}-${t.mode}-${t.width}`
+      const toque = (l: ReturnType<Page['locator']>) => (mobile ? l.tap() : l.click())
+      await openRoute(page, '/automacoes')
+      await page.screenshot({ path: `${nome}-lista.png` })
+      await openRoute(page, '/automacoes/nova')
+      await expect(nodes(page).first()).toBeVisible()
+      await page.screenshot({ path: `${nome}-workflow.png` })
+      await toque(page.getByRole('button', { name: /Editar bloco Receber webhook/ }))
+      await page.waitForTimeout(400)
+      await page.screenshot({ path: `${nome}-webhook.png` })
+      if (mobile) {
+        await page.keyboard.press('Escape')
+        await page.waitForTimeout(400)
+      }
+      await toque(page.getByRole('button', { name: /Excluir bloco Enviar WhatsApp/ }))
+      await page.waitForTimeout(400)
+      await page.screenshot({ path: `${nome}-exclusao.png` })
+      await page.keyboard.press('Escape')
+      await openRoute(page, '/automacoes/nova')
+      await toque(page.getByRole('banner').getByRole('button', { name: 'Testar fluxo' }))
+      const regiao = page.getByRole('region', { name: 'Teste do fluxo' })
+      for (let i = 0; i < 3; i++) await toque(regiao.getByRole('button', { name: 'Avançar' }))
+      await page.waitForTimeout(400)
+      await page.screenshot({ path: `${nome}-teste.png` })
+      for (const aba of ['Geral', 'Configurações', 'Histórico de execuções'] as const) {
+        await openRoute(page, '/automacoes/nova')
+        await irParaAba(page, aba)
+        await page.waitForTimeout(500)
+        await page.screenshot({
+          path: `${nome}-${aba === 'Histórico de execuções' ? 'historico' : aba === 'Geral' ? 'geral' : 'config'}.png`,
+        })
+      }
+    })
+  }
+})

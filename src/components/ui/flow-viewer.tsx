@@ -229,7 +229,7 @@ function Port({
       <span
         aria-hidden
         data-flow-dot
-        className="pointer-events-none absolute inset-0 m-auto size-3 rounded-full border-2 border-card bg-primary"
+        className="pointer-events-none absolute inset-0 m-auto size-3 rounded-full border-2 border-card bg-primary-text"
       />
     </Handle>
   )
@@ -647,7 +647,7 @@ export function FlowSurface({ className, children, fill = true, ...props }: Flow
           '--xy-edge-stroke-width': '2',
           '--xy-connectionline-stroke': 'var(--rendra-primary)',
           '--xy-connectionline-stroke-width': '2',
-          '--xy-handle-background-color': 'var(--rendra-primary)',
+          '--xy-handle-background-color': 'var(--rendra-primary-text)',
           '--xy-attribution-background-color': 'var(--rendra-card)',
           '--xy-background-color': 'var(--rendra-muted)',
         } as CSSProperties

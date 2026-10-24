@@ -55,12 +55,21 @@ export function AutomationEditorPage() {
             <ArrowLeft className="size-icon-md" aria-hidden />
           </Link>
           <div className="flex min-w-0 flex-1 flex-col">
-            <p className="truncate text-xs text-muted-foreground">Automações / Nova automação</p>
-            <div className="flex min-w-0 items-center gap-2">
-              <h1 className="truncate text-base font-semibold">{draft.name || 'Sem nome'}</h1>
-              <Badge tone={automationStatusTone[draft.status]}>
+            <p className="hidden truncate text-xs text-muted-foreground md:block">
+              Automações / Nova automação
+            </p>
+            {isMobile && (
+              <Badge tone={automationStatusTone[draft.status]} className="w-fit">
                 {automationStatusLabel[draft.status]}
               </Badge>
+            )}
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="truncate text-base font-semibold">{draft.name || 'Sem nome'}</h1>
+              {!isMobile && (
+                <Badge tone={automationStatusTone[draft.status]}>
+                  {automationStatusLabel[draft.status]}
+                </Badge>
+              )}
             </div>
           </div>
           <Button

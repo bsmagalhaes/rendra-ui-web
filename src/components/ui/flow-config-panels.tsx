@@ -59,7 +59,8 @@ export interface BlockConfigPanelProps {
   nodeId: string
   /** Recebe o fluxo novo e, quando uma ligação foi trocada, o aviso para mostrar. */
   onApply: (flow: Flow, notice?: string) => void
-  onClose: () => void
+  /** Ausente no Drawer do celular: quem fecha é o próprio Drawer. */
+  onClose?: () => void
 }
 
 interface PanelCtx {

@@ -460,7 +460,7 @@ test.describe('tema pelos tokens', () => {
           toque: { w: box.width, h: box.height },
           esperado: {
             traco: token('--rendra-muted-foreground'),
-            ponto: token('--rendra-primary'),
+            ponto: token('--rendra-primary-text'),
             bloco: token('--rendra-card'),
             fundo: token('--rendra-muted'),
             atribuicao: token('--rendra-primary-text'),

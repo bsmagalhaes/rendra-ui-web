@@ -60,7 +60,8 @@ export interface FlowSimulationPanelProps {
   /** Resultado de rodar só um bloco (o play do card); aparece enquanto não há teste completo. */
   blockStep: SimulationStep | null
   onSim: (sim: SimulationState) => void
-  onClose: () => void
+  /** Ausente no Drawer do celular: quem fecha é o próprio Drawer. */
+  onClose?: () => void
   onViewBlock: (id: string) => void
 }
 
@@ -116,7 +117,7 @@ export function FlowSimulationPanel({
 export interface FlowValidationPanelProps {
   flow: Flow
   issues: FlowIssue[]
-  onClose: () => void
+  onClose?: () => void
   onViewBlock: (id: string) => void
 }
 

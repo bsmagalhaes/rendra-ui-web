@@ -1099,7 +1099,7 @@ describe('FlowEditor: celular (360 px)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Testar fluxo' }))
     const gaveta = await screen.findByRole('dialog')
     expect(within(gaveta).getByRole('region', { name: 'Teste do fluxo' })).toBeInTheDocument()
-    await userEvent.click(within(gaveta).getByRole('button', { name: 'Fechar teste' }))
+    await userEvent.click(within(gaveta).getByRole('button', { name: 'Fechar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await userEvent.click(screen.getByRole('button', { name: 'Validar' }))
     expect(within(await screen.findByRole('dialog')).getByText('Fluxo válido')).toBeInTheDocument()
