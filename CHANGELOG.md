@@ -2,6 +2,42 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
+## 2.9.0 (24/10/2026)
+
+Editor de automações no estilo N8N e telas de automações. Versão minor: o formato do JSON do fluxo muda para a v2, e todo JSON salvo na 2.7.0 continua abrindo (conversão automática). `FlowEditor`, `FlowViewer`, `validateFlow`, `serializeFlow` e `parseFlow` seguem exportados com os mesmos nomes.
+
+### Adicionado
+
+- **Editor horizontal com cards.** O fluxo corre da esquerda para a direita; cada bloco é um card com ícone, título, descrição curta, divisor e o resumo da configuração (variáveis `{{x}}` em chips), com play (roda só aquele bloco), editar e excluir sempre visíveis. Ligações pontilhadas e animadas no sentido do fluxo (paradas com "reduzir movimento"), com o rótulo da regra. Alças de 12 px com alvo de toque de 44 px.
+- **Barra lateral à direita** com busca e blocos agrupados: Gatilhos (Receber webhook, Agendamento, Registro criado), Mensagens (Enviar WhatsApp, Enviar e-mail), Condicionais (Condição, Esperar), Integrações (Enviar webhook) e Ações internas (Criar tarefa). Clicar adiciona e arrastar para o canvas também; o bloco novo nunca cobre outro. A mesma barra vira a configuração do bloco selecionado, o teste e a validação; no celular abre num `Drawer`.
+- **Configuração editável de cada bloco**, com variáveis `{{x}}` onde há texto, e o campo "Próximo bloco" por saída (liga, troca e desliga sem arrastar).
+- **Condição com várias regras** (campo, operador, valor e a própria saída) mais a saída "Senão"; a primeira regra que bater segue.
+- **Webhooks simulados.** Receber webhook: "Simular chegada" mostra o JSON de exemplo e cada campo recebido é ligado a um campo do sistema (vira variável para os blocos seguintes), com as abas Mapeamento e Configurações. Enviar webhook: Corpo (cada campo recebe uma variável) e Configurações, com "Simular envio" mostrando a requisição montada e a resposta de exemplo. Nada é enviado nem recebido de verdade.
+- **Ligar soltando em qualquer ponto do bloco de destino**, também por toque. A ligação recusada mostra o motivo, e a que substitui outra avisa ("A ligação anterior de X para Y foi trocada"). O raio de atração das alças é menor que o padrão da biblioteca, para não ligar sozinho.
+- **Lixeira na ligação** (clicar nela a seleciona) com confirmação curta ali mesmo ("Excluir ligação? Sim, Não"); Delete continua valendo.
+- **Excluir bloco com modal:** detalhes do bloco, onde ele está ligado (antes e depois) e duas opções, só este (religa anterior e posterior, exceto na condição) ou este e tudo o que vem depois (com o número de blocos), com a caixa CONFIRMO na primeira e a palavra digitada na segunda. Delete no bloco abre o mesmo modal; vários blocos selecionados pedem um de cada vez.
+- **Teste do fluxo** avalia a condição sozinho contra os dados de exemplo e diz qual regra bateu; o play do card mostra o resultado só daquele bloco.
+- **Props do `FlowEditor`:** `toolbar` (tira "Validar" e "Testar fluxo" do quadro), `testOpen` e `onTestOpenChange` (controle do painel de teste de fora).
+- **Telas `/automacoes` e `/automacoes/nova`, item "Automações" no menu** (grupo Operação, depois do Funil de vendas), `src/mocks/automations.ts` (6 automações e 20 execuções) e o projeto de testes `automacoes` (`npm run test:automacoes`). A listagem segue o padrão das listagens. A automação abre **sempre em tela cheia**, fora do `AppShell` (sem sidebar nem header do sistema), com a própria barra (voltar, nome, situação, "Testar fluxo" e "Salvar") e as abas Geral, Workflow, Configurações (alertas de erro, aplicação e a situação em cartões) e Histórico de execuções (tabela com filtros e o passo a passo de cada execução). Exceções registradas no `DESIGN_RULES.md`.
+- Utilitário `w-flow-panel` (largura da barra do editor) e token `--spacing-flow`.
+
+### Alterado
+
+- **Formato do JSON v2.** `Flow` ganha `version: 2`; `FlowNodeType` ganha os tipos novos (os da 2.7.0 `gatilho` e `acao` seguem válidos, como "Gatilho personalizado" e "Ação personalizada"); `FlowBranch` passa a ser texto (o id da regra ou `senao`). Quem usa `Record<FlowNodeType, …>` precisa acrescentar os membros novos.
+- **Conversão automática da 2.7.0.** O JSON sem `version` é lido e convertido por `parseFlow`, `validateFlow`, `serializeFlow`, `FlowEditor` e `FlowViewer`: o bloco `fim` some (quem apontava para ele fica sem saída), a condição vira uma regra "Sim" mais "Senão", e os blocos são arrumados da esquerda para a direita. `serializeFlow` grava sempre em v2.
+- **Bloco "Fim" removido:** o bloco sem saída encerra o caminho (e o teste termina com sucesso). Um `fim` num JSON `version: 2` é recusado.
+- **Validação nova:** saem `fim-com-saida`, `condicao-sem-sim`, `condicao-sem-nao` e `sem-saida`; entram `condicao-sem-regra`, `regra-incompleta` e `config-obrigatoria-vazia`. **Quem só deixa salvar com o `validateFlow` limpo vai sentir:** uma condição vinda da 2.7.0 chega com a regra incompleta e acusa `regra-incompleta` até ser preenchida.
+- `FlowEditor` sem o `Card` e sem a gaveta lateral: quadro e barra num só bloco. `FlowViewer` com o mesmo visual (horizontal, cards, ligações animadas), só leitura.
+- O zoom mínimo do canvas passa de 25% para 10% (o fluxo horizontal é mais largo).
+- `whenToUse` de `FLX-001` e a vitrine; `flow-sidebar`, `flow-config-panels` e `flow-simulation-panel` são peças internas do editor (fora do catálogo, como o `picker-panel`); a lógica pura nova (`flow-blocks`, `flow-edit`, `flow-sim`, `flow-layout`) entra no item `core` do registry.
+
+### Limites
+
+- Nada executa de verdade: webhook, play, teste e histórico são simulações com dados de exemplo.
+- Todas as linhas da listagem de `/automacoes` abrem a mesma automação de demonstração (`/automacoes/nova`).
+- As referências da regressão visual das duas rotas novas não são geradas na máquina local: dependem do rótulo `atualizar-visual` no pull request (8 capturas por rota).
+- Os blocos da barra se acrescentam no celular por toque, mas montar arrastando começa no tablet (768 px).
+
 ## 2.8.0 (24/10/2026)
 
 Kanban com status, valores, barra do quadro e ações por arraste. Versão minor, aditiva na API: todo campo e prop novo é opcional e nenhuma assinatura existente muda (`onDropTarget` ganha um terceiro argumento opcional).

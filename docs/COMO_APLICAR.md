@@ -71,11 +71,36 @@ import { useState } from 'react'
 import { FlowEditor, parseFlow, serializeFlow, validateFlow, type Flow } from '@rendra-ui/web/flow'
 
 const inicial: Flow = {
+  version: 2,
   nodes: [
-    { id: 'g', type: 'gatilho', position: { x: 0, y: 0 }, data: { label: 'Novo pedido' } },
-    { id: 'f', type: 'fim', position: { x: 0, y: 120 }, data: { label: 'Concluído' } },
+    {
+      id: 'webhook-entrada-1',
+      type: 'webhook-entrada',
+      position: { x: 0, y: 0 },
+      data: {
+        label: 'Receber webhook',
+        config: {
+          method: 'POST',
+          path: '/hooks/novo-cliente',
+          responseCode: 200,
+          received: true,
+          mapping: [{ from: 'cliente.nome', to: 'cliente.nome' }],
+        },
+      },
+    },
+    {
+      id: 'whatsapp-1',
+      type: 'whatsapp',
+      position: { x: 416, y: 0 },
+      data: {
+        label: 'Enviar WhatsApp',
+        config: { to: '+55 11 98888-0000', message: 'Olá, {{cliente.nome}}!' },
+      },
+    },
   ],
-  edges: [{ id: 'g->f', source: 'g', target: 'f' }],
+  edges: [
+    { id: 'webhook-entrada-1->whatsapp-1', source: 'webhook-entrada-1', target: 'whatsapp-1' },
+  ],
 }
 
 export function TelaDeFluxo() {
@@ -94,9 +119,19 @@ export function TelaDeFluxo() {
 // ler de volta: const r = parseFlow(texto); r.ok ? r.flow : r.errors (nunca lança)
 ```
 
-O contrato do JSON (`Flow`): `{ nodes, edges }`. Cada bloco (`nodes[]`): `id` (texto único), `type` (`gatilho`, `acao`, `condicao`, `espera` ou `fim`), `position` (`{ x, y }`, números) e `data` (`{ label, config? }`). Cada ligação (`edges[]`): `id`, `source` e `target` (ids de blocos) e, só na saída de uma condição, `branch` (`sim` ou `nao`). A espera guarda `config: { duration, unit }` (`unit`: `segundos`, `minutos`, `horas` ou `dias`). Regras da validação: exatamente um gatilho; a condição tem as saídas "sim" e "não"; todo bloco que não é fim tem saída; o fim não tem saída; nenhum bloco fica inalcançável a partir do gatilho; sem ciclos.
+**Props do `FlowEditor`:** `value` e `onChange` (controlado), `readOnly` (só ver, navegar e testar), `toolbar` (padrão `true`: os botões "Validar" e "Testar fluxo" no canto do quadro; `false` quando a tela já tem os dela), `testOpen` e `onTestOpenChange` (controle de fora do painel de teste, por exemplo o botão "Testar fluxo" da barra de uma tela cheia) e `className`. O `FlowViewer` mostra o mesmo JSON só para leitura (`activeId` destaca um bloco, `issues` marca blocos com problema).
 
-`readOnly` no editor deixa só ver, navegar e testar. O `FlowViewer` mostra o mesmo JSON só para leitura (`activeId` destaca um bloco). **No celular (abaixo de 768 px) o fluxo só se vê e se navega; tocar no bloco abre a gaveta**, onde se edita, se liga ao próximo bloco e se exclui. Montar arrastando começa no tablet.
+**Contrato do JSON (formato v2).** `Flow` é `{ version: 2, nodes, edges }`. Cada bloco (`nodes[]`): `id` (texto único), `type`, `position` (`{ x, y }`, números) e `data` (`{ label, config? }`). Tipos: `webhook-entrada`, `agendamento`, `registro-criado` (gatilhos); `whatsapp`, `email`; `condicao`, `espera`; `webhook-saida`; `tarefa`; e os legados `gatilho` e `acao` ("Gatilho personalizado" e "Ação personalizada", sem configuração). Cada ligação (`edges[]`): `id` (`origem->destino`, ou `origem:saida->destino`), `source`, `target` e, só na saída de uma condição, `branch`: o `id` de uma regra ou `senao`. O `config` de cada tipo: `webhook-entrada` `{ method, path, responseCode, received?, mapping: [{ from, to }] }` (`from` é o caminho recebido, `to` o campo do sistema); `agendamento` `{ frequency: diario|semanal|mensal, time }`; `registro-criado` `{ record: cliente|pedido|negocio }`; `whatsapp` `{ to, message }`; `email` `{ to, subject, message }` (texto com variáveis `{{caminho}}`); `condicao` `{ rules: [{ id, label?, field, operator, value }] }` com `operator` `igual`, `diferente`, `maior`, `menor`, `contem`, `vazio` ou `nao-vazio` (o "Senão" é implícito); `espera` `{ duration, unit: segundos|minutos|horas|dias }`; `webhook-saida` `{ method, url, headers: [{ name, value }], body: [{ key, value }] }`; `tarefa` `{ title, assignee, dueDays }`.
+
+**Validação (`validateFlow`).** Exatamente um gatilho; ligação só entre blocos que existem; só a condição tem saídas por regra (a regra ou `senao`), uma ligação por saída; a condição tem ao menos uma regra e cada regra tem campo, operador e valor (`vazio` e `nao-vazio` dispensam o valor); campos obrigatórios preenchidos (endereço do webhook, destino e texto das mensagens, título da tarefa, duração da espera maior que zero, horário do agendamento); nenhum bloco inalcançável a partir do gatilho; sem ciclos. Bloco sem saída é válido e encerra o caminho, e o "Senão" pode ficar sem ligação.
+
+**Quem usa a 2.7.0.** O JSON sem `version` (formato antigo) continua abrindo: `parseFlow`, `validateFlow`, `serializeFlow`, o `FlowEditor` e o `FlowViewer` o convertem sozinhos. A conversão tira os blocos `fim` (quem apontava para eles fica sem saída), transforma cada condição em uma regra "Sim" (vazia, a validação a acusa até ser preenchida) mais o "Senão" (o antigo "nao"), mantém `gatilho`, `acao` e `espera` e arruma os blocos da esquerda para a direita. `serializeFlow` grava sempre em v2, com `version` na primeira chave. O tipo `FlowNodeType` ganhou membros: quem usa `Record<FlowNodeType, …>` precisa acrescentá-los.
+
+**Webhooks, play e teste são simulações:** nada é enviado, recebido nem executado de verdade. A condição avalia as regras contra os dados de exemplo do gatilho e o passo do teste diz qual bateu.
+
+**Celular (abaixo de 768 px):** o fluxo só se vê e se navega; a barra (blocos, configuração, teste e validação) abre num `Drawer`, onde se acrescenta bloco por toque, se liga pelo campo "Próximo bloco" e se edita. Montar arrastando começa no tablet.
+
+**Telas prontas no template.** `/automacoes` (listagem no padrão das listagens, com os dados de `src/mocks/automations.ts`) e `/automacoes/nova` (tela cheia, fora do `AppShell`, com as abas Geral, Workflow, Configurações e Histórico de execuções). O clone leva as duas telas e os mocks; o registry e o pacote não (são telas do template).
 
 ## Kanban com status, barra e confirmação (opcional)
 
