@@ -111,7 +111,7 @@ export default defineConfig({
         'src/components/ui/button-group.tsx': { lines: 80 },
         'src/components/ui/dropdown-menu.tsx': { lines: 60 },
         'src/lib/sortable.ts': { lines: 95 },
-        'src/lib/flow.ts': { lines: 95 },
+        'src/lib/{flow,flow-blocks,flow-edit,flow-sim,flow-layout}.ts': { lines: 95 },
         'src/lib/initials.ts': { lines: 100 },
         'src/lib/motion/*.{ts,tsx}': { lines: 90 },
         'src/components/ui/{list,timeline}.tsx': { lines: 95 },
