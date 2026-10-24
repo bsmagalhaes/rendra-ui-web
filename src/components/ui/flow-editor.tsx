@@ -664,7 +664,7 @@ function FlowEditorInner({
       <div
         ref={canvasRef}
         className={cn(
-          'relative h-board min-w-0 flex-1 md:h-viewer lg:h-full',
+          'relative h-board min-w-0 md:h-viewer lg:h-full lg:flex-1',
           drag?.over && 'ring-2 ring-primary ring-inset',
         )}
       >
