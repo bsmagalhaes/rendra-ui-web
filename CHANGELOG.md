@@ -27,6 +27,7 @@ Kanban com status, valores, barra do quadro e ações por arraste. Versão minor
 
 - Lixeira com restauração e descongelar não existem: o componente só entrega o evento e a demonstração remove o card e mostra um aviso.
 - Busca e filtros trabalham sobre os cards recebidos em `cards` (nada vem do servidor). O Customizar é por navegador.
+- Os textos "Novo card", "Buscar card", "Customizar" e "Empresa" (no modal de confirmação) são fixos em português, como os demais textos do `Kanban` ("Cards em ...", "Soltar em"); para outro texto, edite o arquivo copiado.
 - O `Kanban` passa a importar `DataToolbar`, `Modal`, `Drawer`, `Popover` e `Checkbox`: quem copia o arquivo leva essas peças pelo registry, mesmo sem ligar a barra.
 
 ## 2.7.0 (23/10/2026)

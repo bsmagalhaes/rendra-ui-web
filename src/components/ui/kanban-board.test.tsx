@@ -131,6 +131,21 @@ describe('Kanban: barra do quadro', () => {
     expect(screen.getByRole('button', { name: /Filtros/ })).not.toHaveTextContent('2')
   })
 
+  it('os filtros têm rótulo visível, ligado ao campo', async () => {
+    renderApp(board({ toolbar: true }))
+    await userEvent.click(screen.getByRole('button', { name: /Filtros/ }))
+    const responsavel = await screen.findByRole('combobox', { name: 'Responsável' })
+    const situacao = screen.getByRole('combobox', { name: 'Situação' })
+    for (const [texto, campo] of [
+      ['Responsável', responsavel],
+      ['Situação', situacao],
+    ] as const) {
+      const rotulo = screen.getByText(texto, { selector: 'label' })
+      expect(rotulo).toBeVisible()
+      expect(rotulo).toHaveAttribute('for', campo.id)
+    }
+  })
+
   it('o filtro "Atividade atrasada" casa pela atividade, independente do fundo', async () => {
     const list: KanbanCard[] = [
       { ...cards[0]!, id: 'x', title: 'Atrasada Cia', activity: { type: 'Ligação', at: dia(-2) } },
