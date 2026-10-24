@@ -25,6 +25,9 @@ const COMPONENTES = [
   'widget-grid',
   'flow-editor',
   'flow-viewer',
+  'flow-sidebar',
+  'flow-config-panels',
+  'flow-simulation-panel',
   'list',
   'table',
   'timeline',
@@ -71,8 +74,8 @@ describe('nenhum literal de duração ou de curva nos componentes', () => {
     },
   )
 
-  it('o mapa de nomes está completo: os 32 componentes da lista existem (mais o painel interno)', () => {
-    expect(COMPONENTES).toHaveLength(33)
+  it('o mapa de nomes está completo: os 35 componentes da lista existem (mais o painel interno)', () => {
+    expect(COMPONENTES).toHaveLength(36)
     for (const nome of COMPONENTES) expect(() => fonte(nome)).not.toThrow()
   })
 

@@ -45,7 +45,7 @@ function legado(): Flow {
   }
 }
 
-const rule = (id: string, over: Record<string, string> = {}) => ({
+const rule = (id: string, over: object = {}) => ({
   id,
   field: 'pedido.valor',
   operator: 'maior',

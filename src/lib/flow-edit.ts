@@ -15,6 +15,7 @@ import {
 } from './flow-blocks'
 import {
   migrateFlow,
+  nodeName,
   type Flow,
   type FlowBranch,
   type FlowEdge,
@@ -269,4 +270,13 @@ export function findFreePosition(
     }
   }
   return { x: from.x, y: from.y }
+}
+
+/** Aviso de troca: "A ligação anterior de "X" para "Y" foi trocada." */
+export function replacedMessage(flow: Flow, replaced: { source: string; target: string }): string {
+  const name = (id: string) => {
+    const n = flow.nodes.find((x) => x.id === id)
+    return n ? nodeName(n) : id
+  }
+  return `A ligação anterior de "${name(replaced.source)}" para "${name(replaced.target)}" foi trocada.`
 }

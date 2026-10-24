@@ -50,6 +50,10 @@ export const CATALOG_EXCLUDED_FILES = [
   'components/ui/overlay-shell.tsx',
   'components/ui/picker-panel.tsx',
   'components/ui/sortable-handle.tsx',
+  // peças internas do FlowEditor (barra lateral, configuração, teste e validação)
+  'components/ui/flow-sidebar.tsx',
+  'components/ui/flow-config-panels.tsx',
+  'components/ui/flow-simulation-panel.tsx',
 ]
 
 export const CATALOG: ComponentCatalogEntry[] = [
