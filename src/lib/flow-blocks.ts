@@ -16,8 +16,8 @@ import type {
 
 /* ----------------------------------------------------------------------- medidas */
 
-/** Largura do card do bloco em px (igual a `w-flow-node`, 17rem). */
-export const FLOW_CARD_W = 272
+/** Largura do card do bloco em px (igual a `w-flow-node`, 20rem). */
+export const FLOW_CARD_W = 320
 export const FLOW_GAP_X = 96
 export const FLOW_GAP_Y = 32
 /** Altura mínima de uma linha de saída da condição em px (alvo de toque, `min-h-touch`). */

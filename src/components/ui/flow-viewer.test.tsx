@@ -4,155 +4,190 @@ import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Flow } from '@/lib/flow'
+import { mockFlowLayout, restoreFlowLayout } from '@/test/flow-layout'
 import { renderApp } from '@/test/render'
 import { FlowViewer } from './flow-viewer'
 
-/*
- * jsdom não faz layout nem tem ResizeObserver que mede, DOMMatrixReadOnly ou getBBox, e o React
- * Flow depende dos quatro para medir os blocos e desenhar as ligações. O mock mora aqui, no
- * teste (como o clientWidth do widget-grid.test.tsx), e é desfeito no afterEach.
- */
-const proto = HTMLElement.prototype
-const saved = {
-  offsetWidth: Object.getOwnPropertyDescriptor(proto, 'offsetWidth'),
-  offsetHeight: Object.getOwnPropertyDescriptor(proto, 'offsetHeight'),
-  clientWidth: Object.getOwnPropertyDescriptor(proto, 'clientWidth'),
-  clientHeight: Object.getOwnPropertyDescriptor(proto, 'clientHeight'),
-  getBBox: Object.getOwnPropertyDescriptor(SVGElement.prototype, 'getBBox'),
-}
-function mockLayout() {
-  const size = (el: HTMLElement) =>
-    el.classList.contains('react-flow__node') ? { w: 224, h: 64 } : { w: 800, h: 600 }
-  Object.defineProperty(proto, 'offsetWidth', {
-    configurable: true,
-    get(this: HTMLElement) {
-      return size(this).w
-    },
-  })
-  Object.defineProperty(proto, 'offsetHeight', {
-    configurable: true,
-    get(this: HTMLElement) {
-      return size(this).h
-    },
-  })
-  Object.defineProperty(proto, 'clientWidth', { configurable: true, get: () => 800 })
-  Object.defineProperty(proto, 'clientHeight', { configurable: true, get: () => 600 })
-  Object.defineProperty(SVGElement.prototype, 'getBBox', {
-    configurable: true,
-    value: () => ({ x: 0, y: 0, width: 0, height: 0 }),
-  })
-  class MeasuringResizeObserver {
-    private timers = new Set<ReturnType<typeof setTimeout>>()
-    constructor(private cb: ResizeObserverCallback) {}
-    observe(target: Element) {
-      const { w, h } = size(target as HTMLElement)
-      const entry = { target, contentRect: { width: w, height: h } } as ResizeObserverEntry
-      // depois do primeiro commit: a biblioteca só guarda a medida quando o canvas já existe
-      this.timers.add(setTimeout(() => this.cb([entry], this as unknown as ResizeObserver), 0))
-    }
-    unobserve() {}
-    disconnect() {
-      this.timers.forEach(clearTimeout)
-      this.timers.clear()
-    }
-  }
-  class Matrix {
-    m22: number
-    constructor(transform?: string) {
-      const scale = /scale\(([\d.]+)\)/.exec(transform ?? '')
-      this.m22 = scale ? Number(scale[1]) : 1
-    }
-  }
-  vi.stubGlobal('ResizeObserver', MeasuringResizeObserver)
-  vi.stubGlobal('DOMMatrixReadOnly', Matrix)
-}
-function restoreLayout() {
-  for (const [key, d] of Object.entries(saved)) {
-    const target = key === 'getBBox' ? SVGElement.prototype : proto
-    if (d) Object.defineProperty(target, key, d)
-    else delete (target as unknown as Record<string, unknown>)[key]
-  }
-  vi.unstubAllGlobals()
-}
-beforeEach(mockLayout)
-afterEach(restoreLayout)
+beforeEach(mockFlowLayout)
+afterEach(restoreFlowLayout)
 
+/** Webhook, WhatsApp com variáveis, condição de duas regras (a regra 2 e o Senão ficam soltos). */
 const flow: Flow = {
+  version: 2,
   nodes: [
-    { id: 'g', type: 'gatilho', position: { x: 0, y: 0 }, data: { label: 'Novo pedido' } },
-    { id: 'a', type: 'acao', position: { x: 0, y: 120 }, data: { label: 'Enviar e-mail' } },
-    { id: 'c', type: 'condicao', position: { x: 0, y: 240 }, data: { label: 'Pedido pago?' } },
     {
-      id: 'e',
-      type: 'espera',
-      position: { x: 300, y: 240 },
-      data: { label: 'Esperar', config: { duration: 5, unit: 'minutos' } },
+      id: 'w',
+      type: 'webhook-entrada',
+      position: { x: 0, y: 0 },
+      data: {
+        label: 'Receber webhook',
+        config: {
+          method: 'POST',
+          path: '/hooks/novo-cliente',
+          responseCode: 200,
+          received: true,
+          mapping: [{ from: 'cliente.nome', to: 'cliente.nome' }],
+        },
+      },
     },
-    { id: 'f', type: 'fim', position: { x: 0, y: 360 }, data: { label: 'Concluído' } },
+    {
+      id: 'm',
+      type: 'whatsapp',
+      position: { x: 420, y: 0 },
+      data: {
+        label: 'Enviar WhatsApp',
+        config: { to: '{{cliente.telefone}}', message: 'Olá, {{cliente.nome}}!' },
+      },
+    },
+    {
+      id: 'c',
+      type: 'condicao',
+      position: { x: 840, y: 0 },
+      data: {
+        label: 'Condição',
+        config: {
+          rules: [
+            { id: 'r1', field: 'pedido.valor', operator: 'maior', value: '500' },
+            { id: 'r2', field: 'cliente.plano', operator: 'igual', value: 'pro' },
+          ],
+        },
+      },
+    },
+    {
+      id: 't',
+      type: 'tarefa',
+      position: { x: 1260, y: 0 },
+      data: { label: 'Criar tarefa', config: { title: 'Ligar', assignee: 'Ana', dueDays: 1 } },
+    },
   ],
   edges: [
-    { id: 'g->a', source: 'g', target: 'a' },
-    { id: 'a->c', source: 'a', target: 'c' },
-    { id: 'c:sim->e', source: 'c', target: 'e', branch: 'sim' },
-    { id: 'c:nao->f', source: 'c', target: 'f', branch: 'nao' },
-    { id: 'e->f', source: 'e', target: 'f' },
+    { id: 'w->m', source: 'w', target: 'm' },
+    { id: 'm->c', source: 'm', target: 'c' },
+    { id: 'c:r1->t', source: 'c', target: 't', branch: 'r1' },
   ],
 }
 
+const edges = (c: HTMLElement) => c.querySelectorAll('.react-flow__edge')
+const card = (label: string) =>
+  screen
+    .getByText(label, { selector: '[data-flow-title]' })
+    .closest('[data-flow-node]') as HTMLElement
+
 describe('FlowViewer', () => {
-  it('mostra o rótulo e o tipo de cada bloco, o código do catálogo e as saídas Sim e Não', async () => {
+  it('mostra o card: título, descrição, divisor, resumo com variáveis em chips e o selo', async () => {
     const { container } = renderApp(<FlowViewer value={flow} />)
     expect(container.querySelector('[data-rendra="FLX-002"]')).toBeInTheDocument()
-    for (const label of ['Novo pedido', 'Enviar e-mail', 'Pedido pago?', 'Esperar', 'Concluído'])
-      expect(screen.getByText(label)).toBeInTheDocument()
-    // o tipo aparece em texto, não só pela cor
-    for (const tipo of ['Gatilho', 'Ação', 'Condição', 'Espera', 'Fim'])
-      expect(screen.getAllByText(tipo).length).toBeGreaterThan(0)
-    expect(screen.getByText('5 minutos')).toBeInTheDocument()
-    const condicao = screen.getByText('Pedido pago?').closest('[data-flow-node]') as HTMLElement
-    expect(within(condicao).getByText('Sim')).toBeInTheDocument()
-    expect(within(condicao).getByText('Não')).toBeInTheDocument()
-    expect(container.querySelectorAll('.react-flow__node')).toHaveLength(5)
-    await vi.waitFor(() => expect(container.querySelectorAll('.react-flow__edge')).toHaveLength(5))
+    expect(container.querySelectorAll('.react-flow__node')).toHaveLength(4)
+    const zap = card('Enviar WhatsApp')
+    expect(within(zap).getByText('Envia uma mensagem de WhatsApp.')).toBeInTheDocument()
+    expect(within(zap).getByText('Para')).toBeInTheDocument()
+    const chips = Array.from(zap.querySelectorAll('[data-flow-chip]')).map((c) => c.textContent)
+    expect(chips).toEqual(['{{cliente.telefone}}', '{{cliente.nome}}'])
+    expect(zap.querySelector('dl.border-t')).toBeInTheDocument()
+    // o tipo também aparece em texto, não só pela cor
+    expect(
+      within(zap).getByText('Enviar WhatsApp', { selector: 'span.text-xs' }),
+    ).toBeInTheDocument()
+    // o selo só existe no webhook de entrada, e o mapeado vira chip
+    expect(screen.getAllByText('Dados de exemplo recebidos')).toHaveLength(1)
+    expect(within(card('Receber webhook')).getByText('{{cliente.nome}}')).toBeInTheDocument()
+    await vi.waitFor(() => expect(edges(container)).toHaveLength(3))
   })
 
-  it('descreve blocos e ligações em português para quem usa leitor de tela', async () => {
+  it('a condição mostra uma linha por regra, "Senão" e uma alça de saída para cada', () => {
     const { container } = renderApp(<FlowViewer value={flow} />)
-    await vi.waitFor(() => expect(container.querySelectorAll('.react-flow__edge')).toHaveLength(5))
-    const node = container.querySelector('.react-flow__node[data-id="g"]')!
-    expect(node.getAttribute('aria-roledescription')).toBe('bloco')
-    expect(node.getAttribute('aria-label')).toBe('Novo pedido')
-    const edge = container.querySelector('.react-flow__edge[data-id="c:sim->e"]')!
-    expect(edge.getAttribute('aria-roledescription')).toBe('ligação')
-    expect(edge.getAttribute('aria-label')).toBe('De "Pedido pago?" para "Esperar", se sim')
-    const ligacao = container.querySelector('.react-flow__edge[data-id="g->a"]')!
-    expect(ligacao.getAttribute('aria-label')).toBe('De "Novo pedido" para "Enviar e-mail"')
-    // as descrições que a biblioteca escreve no DOM não ficam em inglês
-    const texto = document.body.textContent ?? ''
-    expect(texto).not.toMatch(/Press enter|Press delete|Control Panel/)
+    const cond = card('Condição')
+    for (const t of ['Regra 1', 'Regra 2', 'Senão'])
+      expect(within(cond).getByText(t)).toBeInTheDocument()
+    expect(within(cond).getByText('pedido.valor é maior que 500')).toBeInTheDocument()
+    expect(cond.querySelectorAll('.react-flow__handle.source')).toHaveLength(3)
+    expect(cond.querySelector('.react-flow__handle.target')).toBeInTheDocument()
+    // cada saída da condição tem altura mínima de 44 px (os alvos não se sobrepõem)
+    for (const row of cond.querySelectorAll('[data-flow-output]'))
+      expect(row.className).toContain('min-h-touch')
+    // o gatilho não tem entrada; os demais, uma
+    const nodes = Array.from(container.querySelectorAll<HTMLElement>('.react-flow__node'))
+    expect(nodes.map((n) => n.querySelectorAll('.react-flow__handle.target').length)).toEqual([
+      0, 1, 1, 1,
+    ])
   })
 
-  it('é só leitura: sem alça de ligar, bloco não arrasta, nem seleciona', async () => {
+  it('o alvo da alça tem 44 px e o ponto visível 12 px, sem estilo inline', () => {
+    const { container } = renderApp(<FlowViewer value={flow} />)
+    const handle = container.querySelector('.react-flow__handle') as HTMLElement
+    expect(handle.className).toContain('size-touch')
+    expect(handle.getAttribute('style')).toBeNull()
+    const dot = handle.querySelector('[data-flow-dot]') as HTMLElement
+    expect(dot.className).toContain('size-3')
+    expect(dot.className).toContain('pointer-events-none')
+  })
+
+  it('no viewer não há botões de ação nos cards', () => {
+    renderApp(<FlowViewer value={flow} />)
+    expect(screen.queryByRole('button', { name: /Executar bloco/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Editar bloco/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Excluir bloco/ })).toBeNull()
+  })
+
+  it('toda ligação é animada e descrita em português, com o rótulo da regra', async () => {
+    const { container } = renderApp(<FlowViewer value={flow} />)
+    await vi.waitFor(() => expect(edges(container)).toHaveLength(3))
+    for (const e of edges(container)) expect(e.classList.contains('animated')).toBe(true)
+    const regra = container.querySelector('.react-flow__edge[data-id="c:r1->t"]')!
+    expect(regra.getAttribute('aria-roledescription')).toBe('ligação')
+    expect(regra.getAttribute('aria-label')).toBe('De "Condição" para "Criar tarefa", se > 500')
+    expect(
+      container.querySelector('.react-flow__edge[data-id="w->m"]')!.getAttribute('aria-label'),
+    ).toBe('De "Receber webhook" para "Enviar WhatsApp"')
+    await vi.waitFor(() =>
+      expect(container.querySelector('[data-flow-edge-label]')?.textContent).toBe('> 500'),
+    )
+    const node = container.querySelector('.react-flow__node[data-id="w"]')!
+    expect(node.getAttribute('aria-roledescription')).toBe('bloco')
+    expect(node.getAttribute('aria-label')).toBe('Receber webhook')
+    expect(document.body.textContent ?? '').not.toMatch(/Press enter|Press delete|Control Panel/)
+  })
+
+  it('o JSON da 2.7.0 abre convertido, sem o bloco Fim', async () => {
+    const velho = {
+      nodes: [
+        { id: 'g', type: 'gatilho', position: { x: 0, y: 0 }, data: { label: 'Novo pedido' } },
+        { id: 'c', type: 'condicao', position: { x: 0, y: 120 }, data: { label: 'Pago?' } },
+        { id: 'f', type: 'fim', position: { x: 0, y: 240 }, data: { label: 'Concluído' } },
+      ],
+      edges: [
+        { id: 'g->c', source: 'g', target: 'c' },
+        { id: 'c:sim->f', source: 'c', target: 'f', branch: 'sim' },
+      ],
+    } as Flow
+    const { container } = renderApp(<FlowViewer value={velho} />)
+    expect(container.querySelectorAll('.react-flow__node')).toHaveLength(2)
+    expect(screen.queryByText('Concluído')).toBeNull()
+    const cond = card('Pago?')
+    expect(within(cond).getByText('Sim')).toBeInTheDocument()
+    expect(within(cond).getByText('Senão')).toBeInTheDocument()
+    await vi.waitFor(() => expect(edges(container)).toHaveLength(1))
+  })
+
+  it('é só leitura: sem alça conectável, bloco não arrasta, nem seleciona', async () => {
     const { container } = renderApp(<FlowViewer value={flow} />)
     expect(container.querySelectorAll('.react-flow__handle.connectable')).toHaveLength(0)
-    const node = container.querySelector('.react-flow__node[data-id="a"]') as HTMLElement
+    const node = container.querySelector('.react-flow__node[data-id="m"]') as HTMLElement
     expect(node.classList.contains('draggable')).toBe(false)
     expect(node.classList.contains('selectable')).toBe(false)
-    // Delete com o bloco focado não apaga nada: o viewer nem recebe onChange
     node.focus()
     await userEvent.keyboard('{Delete}')
-    expect(container.querySelectorAll('.react-flow__node')).toHaveLength(5)
+    expect(container.querySelectorAll('.react-flow__node')).toHaveLength(4)
     expect(container.querySelector('.react-flow__node.selected')).toBeNull()
   })
 
   it('activeId destaca só o bloco indicado, e o destaque muda de lugar', () => {
-    const { container, rerender } = renderApp(<FlowViewer value={flow} activeId="a" />)
+    const { container, rerender } = renderApp(<FlowViewer value={flow} activeId="m" />)
     const ativos = () =>
       Array.from(container.querySelectorAll('[data-flow-node][data-active="true"]')).map((el) =>
         el.closest('.react-flow__node')?.getAttribute('data-id'),
       )
-    expect(ativos()).toEqual(['a'])
-    // texto, não só cor
+    expect(ativos()).toEqual(['m'])
     expect(
       within(container.querySelector('[data-active="true"]') as HTMLElement).getByText('Ativo'),
     ).toBeInTheDocument()
@@ -168,20 +203,18 @@ describe('FlowViewer', () => {
         value={flow}
         issues={[
           {
-            code: 'sem-saida',
-            message: 'O bloco "Enviar e-mail" não leva a nenhum próximo bloco.',
-            nodeId: 'a',
+            code: 'config-obrigatoria-vazia',
+            message: 'O bloco "Enviar WhatsApp" precisa do campo "Para".',
+            nodeId: 'm',
           },
         ]}
       />,
     )
-    const bloco = screen.getByText('Enviar e-mail').closest('[data-flow-node]') as HTMLElement
+    const bloco = card('Enviar WhatsApp')
     expect(bloco.getAttribute('data-invalid')).toBe('true')
-    const texto = within(bloco).getByText(/não leva a nenhum próximo bloco/)
-    expect(bloco.getAttribute('aria-describedby')).toBe(texto.id)
+    const texto = within(bloco).getByText(/precisa do campo "Para"/)
+    expect(bloco.getAttribute('aria-describedby')).toContain(texto.id)
     expect(within(bloco).getByText('Problema')).toBeInTheDocument()
-    const outro = screen.getByText('Esperar').closest('[data-flow-node]') as HTMLElement
-    expect(outro.getAttribute('data-invalid')).toBeNull()
     expect(container.querySelectorAll('[data-invalid="true"]')).toHaveLength(1)
   })
 
@@ -226,6 +259,13 @@ describe('tema do fluxo (bloco em @layer rendra.components)', () => {
     const bloco = css.slice(css.indexOf('.flow-surface'))
     expect(bloco).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(bloco).toContain('var(--rendra-')
+  })
+
+  it('o alvo da alça é transparente (!important vence o CSS sem camada) e o ponto usa o token', () => {
+    expect(css).toMatch(
+      /\.flow-surface \.react-flow__handle\s*\{[^}]*background-color:\s*transparent !important/,
+    )
+    expect(fonte).toMatch(/data-flow-dot[\s\S]*bg-primary/)
   })
 
   it('a ponte --xy-* vai no style do contêiner, apontando para os tokens do Rendra', () => {

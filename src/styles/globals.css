@@ -933,7 +933,12 @@
 
 /* Fluxo de automação (FlowEditor e FlowViewer, React Flow): o bloco tem largura própria. */
 @utility w-flow-node {
-  width: 16rem;
+  width: 20rem;
+}
+
+/* Barra lateral do FlowEditor (blocos, configuração e teste). */
+@utility w-flow-panel {
+  width: 21rem;
 }
 
 /*
@@ -946,6 +951,12 @@
 @layer rendra.components {
   .flow-surface .react-flow__node {
     touch-action: none;
+  }
+  /* O Handle é só o alvo de toque (44 px, transparente); o ponto visível é um filho dele. A regra
+     da biblioteca não tem camada, então o fundo transparente precisa de !important. */
+  .flow-surface .react-flow__handle {
+    background-color: transparent !important;
+    border: 0;
   }
   .flow-surface .react-flow__node:focus-visible {
     border-radius: var(--rendra-shape-block);

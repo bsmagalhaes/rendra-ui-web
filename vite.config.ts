@@ -99,6 +99,7 @@ export default defineConfig({
         'src/components/ui/widget-grid.tsx': { lines: 90 },
         'src/components/ui/flow-viewer.tsx': { lines: 80 },
         'src/components/ui/flow-editor.tsx': { lines: 80 },
+        'src/components/ui/flow-{sidebar,config-panels,simulation-panel}.tsx': { lines: 80 },
         'src/components/ui/brand-logo.tsx': { lines: 100 },
         'src/components/ui/action-bar.tsx': { lines: 100 },
         'src/components/ui/avatar.tsx': { lines: 100 },
