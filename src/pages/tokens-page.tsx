@@ -163,6 +163,19 @@ const semantic = [
   },
 ] as const
 
+const statusExtra = [
+  {
+    name: 'critical-soft',
+    title: 'Crítico (fundo do card do Kanban)',
+    swatch: 'bg-critical-soft text-critical-soft-foreground',
+  },
+  {
+    name: 'warning-mid',
+    title: 'Vence hoje (calendário do Kanban)',
+    swatch: 'bg-warning-mid text-warning-mid-foreground',
+  },
+] as const
+
 const neutrals = [
   {
     token: 'background',
@@ -474,6 +487,27 @@ export function TokensPage() {
                   <span>{s.name}-foreground</span>
                   <span>{s.name}-soft</span>
                   <span>{s.name}-soft-foreground</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          id="status-kanban"
+          title="Status do Kanban"
+          description="Dois tons de apoio ao status do card, cada um com a cor de texto própria e o contraste medido agora."
+        >
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {statusExtra.map((s) => (
+              <div key={s.name} className="overflow-hidden rounded-surface border bg-card">
+                <div className={cn('flex items-center justify-between gap-2 p-4', s.swatch)}>
+                  <span className="text-sm font-medium">{s.title}</span>
+                  <RatioChip fg={`--rendra-${s.name}-foreground`} bg={`--rendra-${s.name}`} />
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 border-t p-4 font-mono text-xs text-muted-foreground">
+                  <span>{s.name}</span>
+                  <span>{s.name}-foreground</span>
                 </div>
               </div>
             ))}

@@ -1,4 +1,4 @@
-import { Handshake, ThumbsDown } from 'lucide-react'
+import { ThumbsDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Inline, Stack } from '@/components/layout'
 import { Button } from '@/components/ui/button'
@@ -14,18 +14,12 @@ import {
 } from '@/components/ui/kanban'
 import { toast } from '@/components/ui/toast'
 import { demoTickets } from '@/mocks/chat'
-import { demoCards, demoEvents, pipelineColumns } from '@/mocks/planning'
+import { demoTargetMessage, kanbanDemoTargets } from '@/mocks/kanban-targets'
+import { demoCards, demoEvents, pipelineColumns, pipelineValues } from '@/mocks/planning'
 import { Demo, Row } from './demo'
 
 const dropTargets: KanbanDropTarget[] = [
-  { id: 'ganho', label: 'Marcar como ganho', icon: <Handshake />, tone: 'success' },
-  {
-    id: 'perdido',
-    label: 'Marcar como perdido',
-    hint: 'Encerra o negócio',
-    icon: <ThumbsDown />,
-    tone: 'error',
-  },
+  ...kanbanDemoTargets,
   {
     id: 'arquivar',
     label: 'Arquivar',
@@ -44,7 +38,7 @@ const SAMPLE_PDF =
 export function PlanningSection() {
   const events = useMemo(() => demoEvents(), [])
   const [cards, setCards] = useState<KanbanCard[]>(() => demoCards())
-  const [targetCards] = useState<KanbanCard[]>(() => demoCards())
+  const [targetCards, setTargetCards] = useState<KanbanCard[]>(() => demoCards())
   const [image, setImage] = useState<number | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const tickets = useMemo(() => demoTickets().slice(0, 3), [])
@@ -85,8 +79,8 @@ export function PlanningSection() {
       <Demo
         id="kanban"
         title="Kanban"
-        description="Colunas com cards. Arraste no computador; no toque e no teclado, o menu do card move para outra coluna. No celular, uma coluna por vez. Limite por coluna (limit) deixa o contador em alerta."
-        props="columns (id, title, tone, limit), cards (title, description, tags, assignee, dueDate, meta), onCardMove, onCardClick, onAddCard, renderCard"
+        description="Colunas com cards. Arraste no computador; no toque e no teclado, o menu do card move para outra coluna. No celular, uma coluna por vez. A cadência da etapa e a próxima atividade colorem o card pela situação, o calendário mostra os detalhes num hint e a barra do quadro traz busca, filtros, totais, Customizar e Novo card."
+        props="columns (id, title, tone, limit, cadenceDays), cards (title, description, tags, assignee, dueDate, meta, values, activity, enteredColumnAt), valueFields, toolbar, onNewCard, storageKey, referenceDate, onCardMove, onCardClick, onAddCard, renderCard"
         code="KANB-001"
         bare
       >
@@ -94,15 +88,19 @@ export function PlanningSection() {
           aria-label="Exemplo de kanban"
           columns={pipelineColumns}
           cards={cards}
+          valueFields={pipelineValues}
+          toolbar
+          storageKey="rendra-kanban-vitrine"
           onCardMove={(id, to, index) => setCards((l) => moveKanbanCard(l, id, to, index))}
           onAddCard={() => toast.info('Novo card')}
+          onNewCard={() => toast.info('Novo card')}
         />
       </Demo>
       <Demo
         id="kanban-destinos"
         title="Kanban com destinos de arraste"
-        description="Além de mudar de coluna, o card pode ir para uma ação (ganho, perdido). A barra aparece durante o arraste; o menu 'Mover para' lista os mesmos destinos, com o desabilitado mostrando o motivo."
-        props="dropTargets (id, label, hint, icon, tone, disabled, disabledReason), onDropTarget"
+        description="Além de mudar de coluna, o card pode ir para uma ação (lixeira, congelar, perder, ganhar). O rodapé flutuante aparece durante o arraste, com descrição e realce, e cada destino pode pedir confirmação (com motivo, no caso de perder). O menu 'Mover para' lista os mesmos destinos, com o desabilitado mostrando o motivo."
+        props="dropTargets (id, label, hint, icon, tone, disabled, disabledReason, confirm: title, description, confirmLabel, destructive, reasons), onDropTarget (cardId, targetId, reason)"
         code="KANB-002"
         bare
       >
@@ -110,10 +108,11 @@ export function PlanningSection() {
           aria-label="Funil com destinos de arraste"
           columns={pipelineColumns}
           cards={targetCards}
+          valueFields={pipelineValues}
           dropTargets={dropTargets}
-          onDropTarget={(cardId, targetId) => {
-            const target = dropTargets.find((t) => t.id === targetId)
-            toast.info(`${target?.label} · card ${cardId}`)
+          onDropTarget={(cardId, targetId, reason) => {
+            setTargetCards((l) => l.filter((c) => c.id !== cardId))
+            toast.info(demoTargetMessage(targetId, reason))
           }}
         />
       </Demo>

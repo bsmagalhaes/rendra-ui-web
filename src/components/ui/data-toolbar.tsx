@@ -53,6 +53,11 @@ export interface DataToolbarProps {
   columns?: ToolbarColumn[]
   /** Ações secundárias à direita (exportar etc.). No mobile, numa linha abaixo. */
   actions?: ReactNode
+  /**
+   * Resumo logo depois da busca (ex.: totais de um quadro). No desktop fica entre a busca e as
+   * ações; no mobile, numa linha própria abaixo da busca. Sem ele, nada é desenhado.
+   */
+  summary?: ReactNode
   /** Ação principal da listagem (ex.: Novo cliente). Sempre a última à direita. */
   primaryAction?: ReactNode
   /** Substitui a barra quando há itens selecionados (ações em massa, só desktop). */
@@ -68,6 +73,7 @@ export function DataToolbar({
   sort,
   columns,
   actions,
+  summary,
   primaryAction,
   selectionBar,
 }: DataToolbarProps) {
@@ -126,6 +132,12 @@ export function DataToolbar({
               type="search"
               className="md:w-3xs lg:w-sm"
             />
+          )}
+
+          {summary && (
+            <div data-toolbar-summary className="flex flex-col gap-1 text-sm">
+              {summary}
+            </div>
           )}
 
           {isMobile ? (

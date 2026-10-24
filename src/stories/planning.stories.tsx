@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Handshake, ThumbsDown } from 'lucide-react'
 import { useState } from 'react'
 import { Calendar } from '@/components/ui/calendar'
 import { ChatComposer, ChatThread, ConversationList } from '@/components/ui/chat'
@@ -11,17 +10,11 @@ import {
   type KanbanDropTarget,
 } from '@/components/ui/kanban'
 import { demoTickets } from '@/mocks/chat'
-import { demoCards, demoEvents, pipelineColumns } from '@/mocks/planning'
+import { kanbanDemoTargets } from '@/mocks/kanban-targets'
+import { demoCards, demoEvents, pipelineColumns, pipelineValues } from '@/mocks/planning'
 
 const dropTargets: KanbanDropTarget[] = [
-  { id: 'ganho', label: 'Marcar como ganho', icon: <Handshake />, tone: 'success' },
-  {
-    id: 'perdido',
-    label: 'Marcar como perdido',
-    hint: 'Encerra o negócio',
-    icon: <ThumbsDown />,
-    tone: 'error',
-  },
+  ...kanbanDemoTargets,
   {
     id: 'arquivar',
     label: 'Arquivar',
@@ -57,8 +50,12 @@ function KanbanDemo() {
       aria-label="Funil de vendas"
       columns={pipelineColumns}
       cards={cards}
+      valueFields={pipelineValues}
+      toolbar
+      storageKey="rendra-kanban-story"
       onCardMove={(id, to, index) => setCards((l) => moveKanbanCard(l, id, to, index))}
       onAddCard={() => undefined}
+      onNewCard={() => undefined}
     />
   )
 }
@@ -66,14 +63,15 @@ function KanbanDemo() {
 export const QuadroKanban: Story = { render: () => <KanbanDemo /> }
 
 function KanbanDropTargetsDemo() {
-  const [cards] = useState<KanbanCard[]>(() => demoCards())
+  const [cards, setCards] = useState<KanbanCard[]>(() => demoCards())
   return (
     <Kanban
       aria-label="Funil com destinos de arraste"
       columns={pipelineColumns}
       cards={cards}
+      valueFields={pipelineValues}
       dropTargets={dropTargets}
-      onDropTarget={() => undefined}
+      onDropTarget={(cardId) => setCards((l) => l.filter((c) => c.id !== cardId))}
     />
   )
 }

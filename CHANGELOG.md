@@ -2,6 +2,33 @@
 
 O que mudou em cada versão e o que um projeto derivado precisa fazer para atualizar. Segue o [versionamento semântico](https://semver.org/lang/pt-BR/). Datas em DD/MM/AAAA.
 
+## 2.8.0 (24/10/2026)
+
+Kanban com status, valores, barra do quadro e ações por arraste. Versão minor, aditiva na API: todo campo e prop novo é opcional e nenhuma assinatura existente muda (`onDropTarget` ganha um terceiro argumento opcional).
+
+### Adicionado
+
+- **Status por cor no card do `Kanban`.** `KanbanColumn.cadenceDays` (dias máximos na etapa) e `KanbanCard.activity` (tipo, data com hora e com quem) e `enteredColumnAt` (quando entrou na etapa) pintam o card: crítico (cadência vencida e sem atividade ou com atividade atrasada), cadência vencida, sem atividade ou normal. Só liga quando o quadro traz cadência ou atividade; sem elas o card fica como sempre foi. O leitor de tela recebe a situação em texto, e `referenceDate` injeta o "hoje" (para teste). `getKanbanCardStatus` é exportado.
+- **Calendário da próxima atividade** no rodapé do card, com a data ao lado e um hint (tipo, quando, com quem, responsável e situação) por mouse, foco de teclado e toque. O gatilho é um botão fora do botão de clique do card.
+- **Barra do quadro** (`toolbar`, `onNewCard`): o `DataToolbar` com busca (empresa, CNPJ ou CPF e contato, sem acento), filtros de responsável e de situação, totais do quadro visível, **Customizar** e Novo card. `DataToolbar` ganha a prop opcional `summary`, um lugar para o resumo logo depois da busca.
+- **Customizar** (`storageKey`): a pessoa escolhe os campos visíveis do card numa gaveta com Restaurar e Pronto; a escolha fica no `localStorage`, por quadro, e uma falha do armazenamento cai no padrão, sem erro.
+- **Cadência no cabeçalho da coluna** ("Cadência: 3 dias") e **percentual** de cada total sobre o total do quadro visível ("(18%)").
+- **Rodapé flutuante com descrição, cor e realce** nos `dropTargets` (também no toque, e no mouse, que antes não realçava) e **confirmação por destino**: `KanbanDropTarget.confirm` (título, descrição, rótulo, `destructive` e `reasons`) abre um modal ao soltar ou ao escolher no menu "Mover para", e o motivo escolhido chega em `onDropTarget(cardId, targetId, reason)`. Sem `confirm` o destino age na hora, como antes.
+- Tokens `critical-soft` e `warning-mid` (cada um com o seu `-foreground`, claro e escuro, AA conferido por teste), a seção "Status do Kanban" em `/tokens` e a legenda das cores no `help` da tela `/kanban`.
+
+### Alterado
+
+- **Valores empilhados no card (mudança só visual).** Com `valueFields`, o card passa a mostrar os valores um embaixo do outro (P&S em cima, MRR embaixo), abaixo da linha de data e responsável, em vez de lado a lado acima dela. Quem já usa `valueFields` vê isso sem pedir.
+- **Percentual nos totais da coluna (mudança só visual).** Quem já usa `valueFields` passa a ver "(N%)" abaixo de cada total da coluna.
+- Com `renderCard`, o calendário e os valores do padrão não aparecem (o `renderCard` já substituía o corpo todo); o fundo de status continua no card.
+- Descrição de `KANB-001` e `KANB-002` no catálogo (sem código novo).
+
+### Limites
+
+- Lixeira com restauração e descongelar não existem: o componente só entrega o evento e a demonstração remove o card e mostra um aviso.
+- Busca e filtros trabalham sobre os cards recebidos em `cards` (nada vem do servidor). O Customizar é por navegador.
+- O `Kanban` passa a importar `DataToolbar`, `Modal`, `Drawer`, `Popover` e `Checkbox`: quem copia o arquivo leva essas peças pelo registry, mesmo sem ligar a barra.
+
 ## 2.7.0 (23/10/2026)
 
 Fluxos de automação com o React Flow. Versão minor, aditiva: nenhuma prop, export ou assinatura existente muda, e a entrada principal (`@rendra-ui/web`) não importa o React Flow.

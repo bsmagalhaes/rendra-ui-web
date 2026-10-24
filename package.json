@@ -1,6 +1,6 @@
 {
   "name": "@rendra-ui/web",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "type": "module",
   "description": "Rendra, design system e boilerplate React (Vite, TypeScript, Tailwind v4, Radix), com CLI de catálogo, auditoria e troca de variante.",
   "author": {
@@ -127,6 +127,7 @@
     "test:motion": "playwright test --project=motion --project=estados",
     "test:lazy": "playwright test --project=lazy",
     "test:flow": "playwright test --project=flow",
+    "test:kanban": "playwright test --project=kanban",
     "test:css-layers": "playwright test --project=css-layers",
     "test:site": "playwright test -c playwright.site.config.ts",
     "registry:build": "node scripts/build-registry.mjs",

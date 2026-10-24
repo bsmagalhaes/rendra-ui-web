@@ -91,11 +91,11 @@ export const pipelineValues = [
 ]
 
 export const pipelineColumns: KanbanColumn[] = [
-  { id: 'lead', title: 'Novo contato', tone: 'neutral' },
-  { id: 'qualificado', title: 'Qualificado', tone: 'info' },
-  { id: 'proposta', title: 'Proposta', tone: 'warning', limit: 4 },
-  { id: 'negociacao', title: 'Negociação', tone: 'primary' },
-  { id: 'contrato', title: 'Contrato enviado', tone: 'info' },
+  { id: 'lead', title: 'Novo contato', tone: 'neutral', cadenceDays: 3 },
+  { id: 'qualificado', title: 'Qualificado', tone: 'info', cadenceDays: 5 },
+  { id: 'proposta', title: 'Proposta', tone: 'warning', limit: 4, cadenceDays: 7 },
+  { id: 'negociacao', title: 'Negociação', tone: 'primary', cadenceDays: 7 },
+  { id: 'contrato', title: 'Contrato enviado', tone: 'info', cadenceDays: 5 },
   { id: 'fechado', title: 'Fechado', tone: 'success' },
   { id: 'perdido', title: 'Perdido', tone: 'error' },
 ]
@@ -131,7 +131,64 @@ export function demoCards(today = new Date()): KanbanCard[] {
     dueDate: d((i % 9) + 1),
     values: { ps: 900 + ((i * 370) % 5200), mrr: 90 + ((i * 45) % 640) },
   }))
-  return [...base(d), ...extra]
+  return [...base(d), ...extra].map((c, i) => withStatus(c, i, today))
+}
+
+const activityTypes = ['Reunião', 'Ligação', 'Visita', 'Demonstração']
+
+/**
+ * Atividade e data de entrada na etapa dos cards de demonstração, sempre relativas a hoje.
+ * Os oito primeiros cobrem as quatro combinações do fundo e as quatro situações do calendário;
+ * os extras seguem uma regra simples para a rolagem infinita continuar com todas as situações.
+ */
+const baseStatus: Record<
+  string,
+  { ago: number; activity?: { type: string; day: number; h: number; m?: number } }
+> = {
+  // Em dia: cadência dentro do limite e atividade futura.
+  k1: { ago: 1, activity: { type: 'Reunião', day: 2, h: 15 } },
+  // Cadência vencida, atividade futura: vermelho claro.
+  k2: { ago: 5, activity: { type: 'Ligação', day: 4, h: 10 } },
+  // Cadência vencida e sem atividade: crítico.
+  k3: { ago: 6 },
+  k4: { ago: 2, activity: { type: 'Demonstração', day: 1, h: 9, m: 30 } },
+  // Cadência vencida e atividade atrasada: crítico.
+  k5: { ago: 8, activity: { type: 'Visita', day: -2, h: 10 } },
+  // Vence hoje às 15:00.
+  k6: { ago: 3, activity: { type: 'Reunião', day: 0, h: 15 } },
+  // Atividade atrasada, mas a cadência está em dia: card normal com calendário vermelho.
+  k7: { ago: 2, activity: { type: 'Ligação', day: -1, h: 16 } },
+  k8: { ago: 12, activity: { type: 'Pós-venda', day: 10, h: 11 } },
+}
+
+function withStatus(card: KanbanCard, index: number, today: Date): KanbanCard {
+  const day = startOfDay(today)
+  const given = baseStatus[card.id]
+  const closed = !pipelineColumns.find((c) => c.id === card.columnId)?.cadenceDays
+  const i = index - Object.keys(baseStatus).length
+  const spec = given ?? {
+    ago: (i * 2) % 9,
+    // Etapas encerradas não têm cadência: sempre com atividade, para não ficarem amarelas.
+    activity:
+      closed || i % 4 === 1
+        ? { type: activityTypes[i % 4]!, day: (i % 9) + 1, h: 10 }
+        : i % 4 === 2
+          ? { type: activityTypes[i % 4]!, day: -((i % 3) + 1), h: 14 }
+          : i % 4 === 3
+            ? { type: activityTypes[i % 4]!, day: 0, h: 9 + (i % 8) }
+            : undefined,
+  }
+  return {
+    ...card,
+    enteredColumnAt: addDays(day, -spec.ago),
+    activity: spec.activity
+      ? {
+          type: spec.activity.type,
+          at: at(day, spec.activity.day, spec.activity.h, spec.activity.m ?? 0),
+          with: card.contact?.name,
+        }
+      : undefined,
+  }
 }
 
 function base(d: (n: number) => Date): KanbanCard[] {

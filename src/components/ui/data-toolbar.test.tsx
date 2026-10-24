@@ -81,4 +81,32 @@ describe('DataToolbar', () => {
     expect(within(lista).queryByText('E-mail')).not.toBeInTheDocument()
     expect(within(lista).getByText('Telefone')).toBeInTheDocument()
   })
+
+  it('o resumo aparece depois da busca e antes dos filtros e da ação principal', () => {
+    renderApp(
+      <DataToolbar
+        search={{ value: '', onChange: () => {}, placeholder: 'Buscar card' }}
+        filters={<span>painel</span>}
+        summary={<span>Total P&S: R$ 10,00</span>}
+        primaryAction={<button type="button">Novo card</button>}
+      />,
+    )
+    const busca = screen.getByPlaceholderText('Buscar card')
+    const resumo = screen.getByText('Total P&S: R$ 10,00')
+    const filtros = screen.getByRole('button', { name: 'Filtros' })
+    const novo = screen.getByRole('button', { name: 'Novo card' })
+    const depois = (a: Node, b: Node) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(depois(busca, resumo)).toBe(true)
+    expect(depois(resumo, filtros)).toBe(true)
+    expect(depois(filtros, novo)).toBe(true)
+  })
+
+  it('sem resumo, a barra não desenha nó extra', () => {
+    const { container } = renderApp(
+      <DataToolbar search={{ value: '', onChange: () => {} }} actions={<span>acao</span>} />,
+    )
+    expect(container.querySelector('[data-toolbar-summary]')).toBeNull()
+    expect(container.querySelector('[data-rendra="DTB-001"]')?.children).toHaveLength(1)
+  })
 })
