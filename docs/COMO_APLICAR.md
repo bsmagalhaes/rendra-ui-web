@@ -98,6 +98,66 @@ O contrato do JSON (`Flow`): `{ nodes, edges }`. Cada bloco (`nodes[]`): `id` (t
 
 `readOnly` no editor deixa só ver, navegar e testar. O `FlowViewer` mostra o mesmo JSON só para leitura (`activeId` destaca um bloco). **No celular (abaixo de 768 px) o fluxo só se vê e se navega; tocar no bloco abre a gaveta**, onde se edita, se liga ao próximo bloco e se exclui. Montar arrastando começa no tablet.
 
+## Kanban com status, barra e confirmação (opcional)
+
+Tudo opcional no `Kanban` (`src/components/ui/kanban.tsx`); sem estes campos o quadro fica como sempre foi. Formas:
+
+- `KanbanColumn.cadenceDays?: number`: dias máximos de um card na etapa (aparece no cabeçalho como "Cadência: N dias").
+- `KanbanCard.enteredColumnAt?: Date`: quando o card entrou na etapa atual. Quem usa o componente grava `new Date()` ao mover o card de etapa; é isso que recomeça a contagem da cadência.
+- `KanbanCard.activity?: { type: string; at: Date; with?: string }`: a próxima atividade (`at` leva data e hora; `type` e `with` só aparecem no hint do calendário).
+- `KanbanDropTarget.confirm?: { title: string; description: string; confirmLabel?: string; destructive?: boolean; reasons?: { value: string; label: string }[] }`: abre a confirmação ao soltar (ou escolher no menu "Mover para"); sem `confirm`, o destino age na hora. O motivo escolhido chega como 3.º argumento de `onDropTarget`.
+- `toolbar` liga a barra do quadro (busca, filtros, totais, Customizar), `onNewCard` mostra o botão "Novo card", `storageKey` guarda no navegador os campos escondidos pelo Customizar e `referenceDate` troca o "hoje" (para teste).
+
+O status por cor liga sozinho quando alguma etapa tem `cadenceDays` ou algum card tem `activity`. Exemplo:
+
+```tsx
+const columns = [
+  { id: 'lead', title: 'Novo contato', cadenceDays: 3 },
+  { id: 'proposta', title: 'Proposta', cadenceDays: 7 },
+  { id: 'fechado', title: 'Fechado' }, // sem cadência: nunca vence
+]
+const cards = [
+  {
+    id: 'k1',
+    columnId: 'lead',
+    title: 'Mercado Central',
+    enteredColumnAt: new Date(2026, 9, 21),
+    activity: { type: 'Reunião', at: new Date(2026, 9, 26, 15, 0), with: 'Marcos Lima' },
+    values: { ps: 4800, mrr: 590 },
+  },
+]
+const dropTargets = [
+  {
+    id: 'perdido',
+    label: 'Perder',
+    hint: 'Encerra como perdido, com motivo',
+    tone: 'error',
+    confirm: {
+      title: 'Marcar como perdido?',
+      description: 'Encerra o card como perdido.',
+      destructive: true,
+      reasons: [
+        { value: 'preco', label: 'Preço' },
+        { value: 'sem-retorno', label: 'Sem retorno' },
+      ],
+    },
+  },
+]
+
+<Kanban
+  columns={columns}
+  cards={cards}
+  valueFields={[{ key: 'ps', label: 'P&S' }, { key: 'mrr', label: 'MRR' }]}
+  toolbar
+  storageKey="meu-funil"
+  dropTargets={dropTargets}
+  onDropTarget={(cardId, targetId, reason) => {/* remova o card e avise */}}
+  onCardMove={(id, to, index) => {/* moveKanbanCard e enteredColumnAt = new Date() */}}
+/>
+```
+
+Os textos "Novo card", "Buscar card", "Empresa" (no modal de confirmação) e "Customizar" são fixos em português; para outro texto, edite o `kanban.tsx` do seu projeto. A tela `/kanban` (`src/pages/app/kanban-page.tsx`) é o exemplo completo, com a legenda das cores no `help` do `PageHeader`.
+
 ## Movimento (opcional)
 
 `<RendraProvider motion="on">` liga as animações (o padrão é `'off'`, e em `off` o Motion nem entra no bundle inicial). Com o texto `'on'` o Motion vem de um chunk carregado depois do primeiro quadro: a tela começa em `off` e liga sem remontar nada. Para o `on` desde o primeiro quadro e no servidor, passe o objeto: `import { rendraMotion } from '@rendra-ui/web/motion'` e `<RendraProvider motion={rendraMotion}>`. No clone (quem começou o sistema a partir deste repositório), o mesmo objeto vem de `@/lib/motion/motion-on`. Quem instalou o pacote já tem o `motion` como dependência; quem copiou arquivos-fonte (Caminho 2) copia também `src/lib/motion/*` (o registry do shadcn entrega a pasta inteira, com o `motion-on.tsx`, que concentra tudo o que os componentes usam do Motion) e o bloco de tokens de `src/styles/globals.css` (`--rendra-duration-*`, `--rendra-reveal-*`, `--rendra-ease-*`; o host pode sobrescrevê-los). O `off` também mudou na 2.5.0 em tempo, curva e origem (toque de 120 ms, saída de overlay em 120 ms, popover nascendo do gatilho, reduzido só com opacidade): não há mudança de API nem de quadro parado, e as capturas de regressão do projeto de destino não devem mudar. Detalhes e a lista de tokens no README, seção "Movimento".
@@ -115,6 +175,7 @@ Só se aplica a quem clonou o repositório inteiro (caminho 1a, ou o caminho "cl
 - **Página de apresentação do Rendra**: o clone herda a página do Rendra e a montagem do site que a publica na raiz do GitHub Pages. Apague `docs/index.html`, `docs/videos/`, `docs/icon.svg`, `docs/og-image.png`, `docs/google9146e14a87f8288f.html`, `scripts/pages-build.mjs`, `scripts/pages-stage.mjs`, `scripts/og-image.mjs`, `scripts/lib/pages-stage.ts`, `scripts/lib/pages-env.ts`, `scripts/lib/redirect-stubs.ts`, `scripts/lib/og-html.ts` e os testes `scripts/lib/{pages-stage,pages-env,redirect-stubs,og-html,site-config,site-tokens,site-images,readme-links,icon-svg,clone-cleanup}.test.ts`, mais `tests/site.spec.ts` e `playwright.site.config.ts`. Mantenha `scripts/lib/sitemap.ts`, `scripts/lib/html.ts` e os testes deles: o `scripts/seo-build.mjs`, que gera as páginas, o sitemap e o robots da demo do próprio clone, importa os dois. Tire do `package.json` os scripts `pages:build`, `pages:stage`, `docs:og-image` e `test:site` (e a dependência `serve`), o passo `test:site` do `.github/workflows/ci.yml` e as referências a esses arquivos no `vite.config.ts` (pisos de cobertura, mantendo `sitemap` e `html` no piso) e no `tsconfig.node.json`. Troque `public/og-image.png` pela imagem social do seu produto: a atual leva o selo e o nome do Rendra.
 - **GitHub Pages**: o `pages.yml` do Rendra publica a página do Rendra na raiz do site e a demo em `/demo/`. No clone, remova a página (item acima) ou o workflow, e ajuste `pages.yml` se quiser publicar o próprio demo.
 - **Regras só do Rendra**: apague `src/lib/utilities-doc.test.ts`, que exige que toda `@utility` do `globals.css` esteja na lista do guia do Rendra (no seu produto, `@utility` nova é sua e não entra nessa lista), e `scripts/lib/texto-publico.test.ts`, que barra "grátis", "gratuito", "para sempre" e "sem assinatura" no `src/config/seo.ts` e no `index.html`: é regra de texto do dono do Rendra, não do seu produto, e deixaria o `npm test` vermelho se o seu texto usar essas palavras.
+- **Créditos do README**: o teste `src/lib/motion/creditos.test.ts` exige a seção `## Créditos` no `README.md`. Ao trocar o README, mantenha essa seção (a do Rendra, com os créditos das regras de movimento: autoria, licença e link de origem; ele confere o texto dessa seção), senão a suíte falha; só apague o teste se também apagar a seção, de propósito.
 - **Mantenha**: o `LICENSE`, o aviso de copyright e a autoria do Rendra (a licença MIT exige os dois; o crédito visível na interface é opcional, veja a seção "Crédito 'Feito com Rendra' e licença" do `AGENTS.md`).
 
 ## Troca de marca, passo a passo

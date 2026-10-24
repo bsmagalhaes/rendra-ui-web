@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataToolbar } from '@/components/ui/data-toolbar'
 import { Drawer } from '@/components/ui/drawer'
+import { Field } from '@/components/ui/field'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1213,24 +1214,26 @@ export function Kanban({
         hasFilters ? (
           <div className="flex flex-col gap-4">
             {assignees.length > 0 && (
-              <Select
-                label="Responsável"
-                placeholder="Todos"
-                clearable
-                options={assignees.map((a) => ({ value: a, label: a }))}
-                value={assigneeFilter}
-                onChange={setAssigneeFilter}
-              />
+              <Field label="Responsável" span="full">
+                <Select
+                  placeholder="Todos"
+                  clearable
+                  options={assignees.map((a) => ({ value: a, label: a }))}
+                  value={assigneeFilter}
+                  onChange={setAssigneeFilter}
+                />
+              </Field>
             )}
             {statusEnabled && (
-              <Select
-                label="Situação"
-                placeholder="Todas"
-                clearable
-                options={situationOptions}
-                value={situationFilter}
-                onChange={setSituationFilter}
-              />
+              <Field label="Situação" span="full">
+                <Select
+                  placeholder="Todas"
+                  clearable
+                  options={situationOptions}
+                  value={situationFilter}
+                  onChange={setSituationFilter}
+                />
+              </Field>
             )}
           </div>
         ) : undefined

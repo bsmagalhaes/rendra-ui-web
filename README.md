@@ -343,7 +343,7 @@ docs/            guia de aplicação, prompt de migração e imagens
 
 Marca de cada cliente em tempo de execução (white label, sem build): `applyPalette(sementes)`. Exemplo em [docs/COMO_APLICAR.md](docs/COMO_APLICAR.md).
 
-O passo a passo completo, inclusive como adotar o Equilíbrio ou o Aurora como marca principal, está em [docs/COMO_APLICAR.md](docs/COMO_APLICAR.md).
+Os campos do Kanban com status, barra e confirmação (`cadenceDays`, `activity`, `enteredColumnAt`, `confirm`) têm formato e exemplo em [docs/COMO_APLICAR.md](docs/COMO_APLICAR.md). O passo a passo completo, inclusive como adotar o Equilíbrio ou o Aurora como marca principal, está em [docs/COMO_APLICAR.md](docs/COMO_APLICAR.md).
 
 ---
 
