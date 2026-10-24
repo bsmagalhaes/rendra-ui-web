@@ -339,6 +339,29 @@ describe('Kanban: calendário e hint', () => {
     expect(screen.getByText('Em dia')).toBeInTheDocument()
   })
 
+  it('um fechamento agendado pela saída do mouse não fecha o hint se o gatilho é apertado a tempo', async () => {
+    renderApp(board(fourCards.slice(3)))
+    const trigger = screen.getByRole('button', { name: /^26\/10\/2026/ })
+    await userEvent.hover(trigger)
+    expect(await screen.findByText('Em dia')).toBeInTheDocument()
+    // O mouse sai (agenda o fechamento) e volta a apertar o gatilho antes de o prazo vencer.
+    fireEvent.pointerLeave(trigger, { pointerType: 'mouse' })
+    fireEvent.pointerDown(trigger, { pointerType: 'mouse' })
+    await new Promise((r) => setTimeout(r, 400))
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('Em dia')).toBeInTheDocument()
+    fireEvent.pointerUp(window)
+  })
+
+  it('o fechamento agendado vence se o gatilho não é apertado', async () => {
+    renderApp(board(fourCards.slice(3)))
+    const trigger = screen.getByRole('button', { name: /^26\/10\/2026/ })
+    await userEvent.hover(trigger)
+    expect(await screen.findByText('Em dia')).toBeInTheDocument()
+    fireEvent.pointerLeave(trigger, { pointerType: 'mouse' })
+    await waitFor(() => expect(screen.queryByText('Em dia')).not.toBeInTheDocument())
+  })
+
   it('status ligado só por activity, sem cadenceDays em nenhuma coluna', () => {
     renderApp(
       <Kanban
