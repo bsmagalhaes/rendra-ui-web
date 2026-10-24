@@ -185,7 +185,11 @@ function DeleteBlockModal({ flow, nodeId, onClose, onConfirm }: DeleteBlockModal
       size="md"
       type="destructive"
       title="Excluir este bloco?"
-      description={`${FLOW_TYPE_NAME[node.type]}: ${nodeName(node)}`}
+      description={
+        nodeName(node) === FLOW_TYPE_NAME[node.type]
+          ? nodeName(node)
+          : `${FLOW_TYPE_NAME[node.type]}: ${nodeName(node)}`
+      }
       confirmLabel="Excluir"
       onOpenChange={(open) => {
         if (open) return
@@ -617,17 +621,21 @@ function FlowEditorInner({
         setBlockStep(null)
         setSim(s)
       }}
-      onClose={() => {
-        setTestOpen(false)
-        setDrawerOpen(false)
-      }}
+      onClose={
+        isMobile
+          ? undefined
+          : () => {
+              setTestOpen(false)
+              setDrawerOpen(false)
+            }
+      }
       onViewBlock={viewBlock}
     />
   ) : view === 'validate' ? (
     <FlowValidationPanel
       flow={flow}
       issues={issues}
-      onClose={closeSidebarPanel}
+      onClose={isMobile ? undefined : closeSidebarPanel}
       onViewBlock={viewBlock}
     />
   ) : view === 'config' && configNode ? (
@@ -636,7 +644,7 @@ function FlowEditorInner({
       flow={flow}
       nodeId={configNode.id}
       onApply={(next, message) => emit(next, message)}
-      onClose={closeSidebarPanel}
+      onClose={isMobile ? undefined : closeSidebarPanel}
     />
   ) : canEdit ? (
     <FlowPanelShell title="Adicionar bloco">

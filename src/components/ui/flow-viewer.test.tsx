@@ -265,7 +265,7 @@ describe('tema do fluxo (bloco em @layer rendra.components)', () => {
     expect(css).toMatch(
       /\.flow-surface \.react-flow__handle\s*\{[^}]*background-color:\s*transparent !important/,
     )
-    expect(fonte).toMatch(/data-flow-dot[\s\S]*bg-primary/)
+    expect(fonte).toMatch(/data-flow-dot[\s\S]*bg-primary-text/)
   })
 
   it('a ponte --xy-* vai no style do contêiner, apontando para os tokens do Rendra', () => {
