@@ -10,6 +10,7 @@ import {
   Settings,
   SquareKanban,
   Users,
+  Workflow,
 } from 'lucide-react'
 import type { NavGroup } from '@/components/app-shell/types'
 
@@ -87,6 +88,12 @@ export const navigation: NavGroup[] = [
         to: '/kanban',
         icon: SquareKanban,
         description: 'Negócios em kanban, de contato a fechado.',
+      },
+      {
+        title: 'Automações',
+        to: '/automacoes',
+        icon: Workflow,
+        description: 'Fluxos com gatilho, mensagens, condição e webhook.',
       },
     ],
   },

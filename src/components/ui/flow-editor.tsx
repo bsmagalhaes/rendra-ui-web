@@ -657,7 +657,7 @@ function FlowEditorInner({
       ref={rootRef}
       data-rendra="FLX-001"
       className={cn(
-        'flow-editor flex min-w-0 flex-col overflow-hidden rounded-surface border bg-card lg:h-board lg:flex-row',
+        'flow-editor flex min-w-0 flex-col overflow-hidden rounded-surface border bg-card lg:h-board lg:min-h-flow lg:flex-row',
         className,
       )}
     >

@@ -846,7 +846,7 @@ export const CATALOG: ComponentCatalogEntry[] = [
     file: 'components/ui/flow-editor.tsx',
     variantProps: {},
     whenToUse:
-      'Para montar, ligar, validar e testar um fluxo de automação (gatilho, ação, condição, espera e fim).',
+      'Para montar, ligar, validar e testar um fluxo de automação (gatilhos, mensagens, condição com várias regras, espera, webhooks e tarefa).',
   },
   {
     code: 'FLX-002',

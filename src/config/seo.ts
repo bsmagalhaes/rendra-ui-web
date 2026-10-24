@@ -84,6 +84,16 @@ export const routeSeo: Record<string, RouteSeo> = {
     description:
       'CRM em kanban com status do card por cor e cadência, calendário da atividade, barra com busca, filtros e totais em R$ e arraste para ganhar ou perder.',
   },
+  '/automacoes': {
+    title: 'Automações',
+    description:
+      'Listagem de automações com busca, filtro por situação, última execução e contagem de execuções.',
+  },
+  '/automacoes/nova': {
+    title: 'Editor de automação',
+    description:
+      'Editor de fluxo no estilo N8N em tela cheia, com blocos, webhooks simulados, condição com várias regras, configurações e histórico de execuções.',
+  },
   '/configuracoes': {
     title: 'Configurações',
     description:

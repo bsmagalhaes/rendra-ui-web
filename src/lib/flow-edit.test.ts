@@ -217,7 +217,7 @@ describe('findFreePosition', () => {
     const run = () => {
       let f: Flow = { version: 2, nodes: [], edges: [] }
       for (let i = 0; i < 12; i++) {
-        const size = { w: 320, h: 160 }
+        const size = { w: 336, h: 160 }
         const at = findFreePosition(f, size, { x: 10, y: 10 })
         f = addNode(f, 'tarefa', at).flow
       }
@@ -225,19 +225,19 @@ describe('findFreePosition', () => {
     }
     const f = run()
     expect(run()).toEqual(f)
-    const r = f.nodes.map((n) => ({ ...n.position, w: 320, h: estimateNodeHeight(n) }))
+    const r = f.nodes.map((n) => ({ ...n.position, w: 336, h: estimateNodeHeight(n) }))
     for (let i = 0; i < r.length; i++)
       for (let j = i + 1; j < r.length; j++) {
         const a = r[i]!
         const b = r[j]!
-        const cruza = a.x < b.x + 320 && b.x < a.x + 320 && a.y < b.y + 160 && b.y < a.y + 160
+        const cruza = a.x < b.x + 336 && b.x < a.x + 336 && a.y < b.y + 160 && b.y < a.y + 160
         expect(cruza).toBe(false)
       }
   })
 
   it('usa o tamanho medido quando há', () => {
     const f = base()
-    const livre = findFreePosition(f, { w: 320, h: 100 }, { x: 0, y: 0 }, { w: { w: 600, h: 600 } })
+    const livre = findFreePosition(f, { w: 336, h: 100 }, { x: 0, y: 0 }, { w: { w: 600, h: 600 } })
     expect(livre.x >= 600 || livre.y >= 600 || livre.x < 0).toBe(true)
   })
 })

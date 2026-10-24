@@ -16,8 +16,8 @@ import type {
 
 /* ----------------------------------------------------------------------- medidas */
 
-/** Largura do card do bloco em px (igual a `w-flow-node`, 20rem). */
-export const FLOW_CARD_W = 320
+/** Largura do card do bloco em px (igual a `w-flow-node`, 21rem). */
+export const FLOW_CARD_W = 336
 export const FLOW_GAP_X = 96
 export const FLOW_GAP_Y = 32
 /** Altura mínima de uma linha de saída da condição em px (alvo de toque, `min-h-touch`). */
@@ -496,8 +496,25 @@ export function buildWebhookRequest(
   return { method: text(config?.method) || 'POST', url: text(config?.url), body }
 }
 
-/** Altura estimada do card em px, usada enquanto o React Flow ainda não mediu o bloco. */
+/** Linhas que o valor do resumo ocupa no card (chips largos quebram em mais de uma). */
+function valueLines(value: string): number {
+  let width = 0
+  for (const part of splitVariables(value))
+    width += part.kind === 'var' ? (part.value.length + 4) * 6.6 + 20 : part.value.length * 6.4
+  return Math.max(1, Math.ceil(width / 290))
+}
+
+/**
+ * Altura estimada do card em px (medida no navegador e arredondada para cima), usada enquanto o
+ * React Flow ainda não mediu o bloco: na arrumação automática e ao procurar espaço livre.
+ */
 export function estimateNodeHeight(node: Pick<FlowNode, 'type' | 'data'>): number {
   if (node.type === 'condicao') return 88 + ROW_H * (rulesOf(node).length + 1)
-  return 104 + 28 * summarizeConfig(node).length
+  const rows = summarizeConfig(node)
+  let h = 86
+  if (rows.length > 0)
+    h +=
+      25 + rows.reduce((sum, r) => sum + 20 + 24 * valueLines(r.value), 0) + 8 * (rows.length - 1)
+  if (node.type === 'webhook-entrada' && node.data.config?.received === true) h += 44
+  return h
 }

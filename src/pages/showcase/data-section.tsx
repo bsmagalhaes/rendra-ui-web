@@ -30,69 +30,12 @@ import { toast } from '@/components/ui/toast'
 import { WidgetGrid, type Widget } from '@/components/ui/widget-grid'
 import { bySegment, clients, monthly, statusTone, type Client } from '@/mocks/clients'
 import { serializeFlow, type Flow } from '@/lib/flow'
+import { automationFlow } from '@/mocks/automations'
 import { formatCurrency } from '@/lib/masks'
 import { CatalogCode, Demo, GroupTitle, Row } from './demo'
 
-/* Fluxo de exemplo da vitrine e da story: os cinco tipos de bloco, com a condição de duas saídas. */
-export const demoFlow: Flow = {
-  nodes: [
-    { id: 'gatilho-1', type: 'gatilho', position: { x: 0, y: 0 }, data: { label: 'Novo pedido' } },
-    {
-      id: 'acao-1',
-      type: 'acao',
-      position: { x: 0, y: 120 },
-      data: { label: 'Enviar confirmação' },
-    },
-    {
-      id: 'condicao-1',
-      type: 'condicao',
-      position: { x: 0, y: 240 },
-      data: { label: 'Pagamento aprovado?' },
-    },
-    {
-      id: 'espera-1',
-      type: 'espera',
-      position: { x: 360, y: 240 },
-      data: { label: 'Aguardar liberação', config: { duration: 2, unit: 'horas' } },
-    },
-    {
-      id: 'acao-2',
-      type: 'acao',
-      position: { x: 360, y: 380 },
-      data: { label: 'Liberar acesso' },
-    },
-    {
-      id: 'fim-1',
-      type: 'fim',
-      position: { x: 360, y: 500 },
-      data: { label: 'Pedido concluído' },
-    },
-    {
-      id: 'fim-2',
-      type: 'fim',
-      position: { x: 0, y: 420 },
-      data: { label: 'Pedido cancelado' },
-    },
-  ],
-  edges: [
-    { id: 'gatilho-1->acao-1', source: 'gatilho-1', target: 'acao-1' },
-    { id: 'acao-1->condicao-1', source: 'acao-1', target: 'condicao-1' },
-    {
-      id: 'condicao-1:sim->espera-1',
-      source: 'condicao-1',
-      target: 'espera-1',
-      branch: 'sim',
-    },
-    {
-      id: 'condicao-1:nao->fim-2',
-      source: 'condicao-1',
-      target: 'fim-2',
-      branch: 'nao',
-    },
-    { id: 'espera-1->acao-2', source: 'espera-1', target: 'acao-2' },
-    { id: 'acao-2->fim-1', source: 'acao-2', target: 'fim-1' },
-  ],
-}
+/* Fluxo de exemplo da vitrine e da story (o mesmo da tela /automacoes/nova). */
+export const demoFlow = automationFlow
 
 /* Widgets de exemplo para a vitrine do WidgetGrid (cada um já é um card). */
 const demoWidgets: Widget[] = [
@@ -677,8 +620,8 @@ export function DataSection() {
       <Demo
         id="fluxo-editor"
         title="FlowEditor"
-        description="Editor de fluxos de automação: monte os blocos (gatilho, ação, condição, espera e fim), ligue um ao próximo, valide e teste o caminho. No celular só se vê e se navega; tocar no bloco abre a gaveta, onde se edita, se liga ao próximo bloco e se exclui. O JSON ao lado é o que a tela guarda."
-        props="value (Flow), onChange, readOnly"
+        description="Editor de fluxos de automação no estilo N8N: blocos agrupados na barra lateral, configuração por bloco, webhooks simulados, condição com várias regras e teste do caminho. Nada é executado de verdade. No celular a barra abre num Drawer. O JSON abaixo é o que a tela guarda."
+        props="value (Flow), onChange, readOnly, toolbar, testOpen, onTestOpenChange"
         code="FLX-001"
         bare
       >

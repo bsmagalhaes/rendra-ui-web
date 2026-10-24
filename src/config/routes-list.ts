@@ -12,6 +12,8 @@ export const publicRoutes = [
   '/atendimento',
   '/agenda',
   '/kanban',
+  '/automacoes',
+  '/automacoes/nova',
   '/configuracoes',
   '/componentes',
   '/tokens',
