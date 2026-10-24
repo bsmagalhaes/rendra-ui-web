@@ -238,6 +238,10 @@
   --color-info-foreground: var(--rendra-info-foreground);
   --color-info-soft: var(--rendra-info-soft);
   --color-info-soft-foreground: var(--rendra-info-soft-foreground);
+  --color-critical-soft: var(--rendra-critical-soft);
+  --color-critical-soft-foreground: var(--rendra-critical-soft-foreground);
+  --color-warning-mid: var(--rendra-warning-mid);
+  --color-warning-mid-foreground: var(--rendra-warning-mid-foreground);
 
   --color-sidebar: var(--rendra-sidebar);
   --color-sidebar-foreground: var(--rendra-sidebar-foreground);

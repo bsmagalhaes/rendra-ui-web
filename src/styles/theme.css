@@ -93,6 +93,13 @@
   --rendra-info-soft: #e7f0fc;
   --rendra-info-soft-foreground: #0b58b5;
 
+  /* Status do card do Kanban: o fundo mais forte do card crítico (cadência vencida e sem
+     próxima atividade) e o amarelo do calendário "vence hoje". Texto com AA sobre o fundo. */
+  --rendra-critical-soft: #f8d6d2;
+  --rendra-critical-soft-foreground: #7a1d0a;
+  --rendra-warning-mid: #f6d77a;
+  --rendra-warning-mid-foreground: #4a3500;
+
   /*
    * DEGRADÊS (gerados pela paleta), com regra de uso fixa.
    *   gradient-brand   forte. Só em: sidebar, painel lateral do login, destaque de página,
@@ -143,6 +150,11 @@
   --rendra-info-foreground: #ffffff;
   --rendra-info-soft: #11305a;
   --rendra-info-soft-foreground: #7fb4ef;
+
+  --rendra-critical-soft: #5a2214;
+  --rendra-critical-soft-foreground: #fbc4b4;
+  --rendra-warning-mid: #6b5116;
+  --rendra-warning-mid-foreground: #fbe3a0;
 
   --rendra-elevation-sm: 0 1px 2px rgb(var(--rendra-shadow-color) / 0.3);
   --rendra-elevation-md: 0 4px 12px -2px rgb(var(--rendra-shadow-color) / 0.35);

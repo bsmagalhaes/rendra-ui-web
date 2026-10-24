@@ -72,6 +72,9 @@ jobs:
       - name: Fluxos de automação (arrastar, ligar, apagar, simular, tema e toque)
         if: ${{ !cancelled() }}
         run: npm run test:flow
+      - name: Kanban (arrastar até o rodapé, confirmar e hint do calendário)
+        if: ${{ !cancelled() }}
+        run: npm run test:kanban
       - name: CSS em camadas
         if: ${{ !cancelled() }}
         run: npm run test:css-layers

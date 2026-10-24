@@ -82,7 +82,7 @@ export const routeSeo: Record<string, RouteSeo> = {
   '/kanban': {
     title: 'CRM kanban (funil de vendas)',
     description:
-      'CRM em kanban com etapas do funil, totais em R$, rolagem infinita por etapa, cartões com empresa, contato e valores.',
+      'CRM em kanban com status do card por cor e cadência, calendário da atividade, barra com busca, filtros e totais em R$ e arraste para ganhar ou perder.',
   },
   '/configuracoes': {
     title: 'Configurações',

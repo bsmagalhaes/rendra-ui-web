@@ -502,11 +502,15 @@ export const CATALOG: ComponentCatalogEntry[] = [
     component: 'Kanban',
     file: 'components/ui/kanban.tsx',
     // variantProps fica vazio de propósito: a diferença para KANB-002 é a prop `dropTargets`
-    // (um array de destinos de arraste), não um literal de string/número/booleano, e o
-    // `rendra trocar` não tem como inventar um array, então ele recusa a troca com uma
-    // mensagem clara ("sem prop que os distinga"), e a variante certa fica documentada aqui.
+    // (um array de destinos de arraste, cada um com `confirm` também não literal), não um
+    // literal de string/número/booleano, e o `rendra trocar` não tem como inventar um array,
+    // então ele recusa a troca com uma mensagem clara ("sem prop que os distinga"), e a
+    // variante certa fica documentada aqui.
     variantProps: {},
-    whenToUse: 'Para um funil de etapas com cartões que se movem entre colunas.',
+    whenToUse:
+      'Para um funil de etapas com cartões que se movem entre colunas, com status por cor ' +
+      '(cadência da etapa e próxima atividade), valores empilhados no card e, com `toolbar`, ' +
+      'barra do quadro com busca, filtros, totais e Customizar.',
     isDefault: true,
   },
   {
@@ -516,8 +520,9 @@ export const CATALOG: ComponentCatalogEntry[] = [
     file: 'components/ui/kanban.tsx',
     variantProps: { hasDropTargets: true },
     whenToUse:
-      'Quando o card pode ir para uma ação além de outra coluna (ex.: "Marcar como ganho"), ' +
-      'mostrada numa barra durante o arraste e no menu "Mover para".',
+      'Quando o card pode ir para uma ação além de outra coluna (ex.: Lixeira, Congelar, Perder, ' +
+      'Ganhar), mostrada num rodapé flutuante durante o arraste e no menu "Mover para", com ' +
+      'confirmação opcional por destino (e motivo, ao perder).',
   },
   // ---------------------------------------------------------------- list
   {
