@@ -1,13 +1,40 @@
 /*
- * Fluxos de automação: contrato do JSON, validação, edição, serialização e simulação.
- * Funções puras e imutáveis, com tipos próprios do Rendra: nada daqui importa o React Flow,
- * então o item `core` do registry não depende dele. A conversão para os nós da biblioteca
- * mora só dentro de FlowEditor e FlowViewer.
+ * Fluxos de automação: contrato do JSON (formato v2), validação, leitura, escrita e conversão da
+ * 2.7.0. Funções puras e imutáveis, com tipos próprios do Rendra: nada daqui importa o React Flow,
+ * então o item `core` do registry não depende dele. A edição está em `flow-edit.ts`, a simulação
+ * em `flow-sim.ts`, o catálogo de blocos em `flow-blocks.ts` e a arrumação em `flow-layout.ts`.
  */
+import { FLOW_BLOCKS, FLOW_TYPE_NAME, isRuleComplete, isTrigger, rulesOf } from './flow-blocks'
+import { layoutFlow } from './flow-layout'
 
-export type FlowNodeType = 'gatilho' | 'acao' | 'condicao' | 'espera' | 'fim'
-export type FlowBranch = 'sim' | 'nao'
+export type FlowNodeType =
+  | 'webhook-entrada'
+  | 'agendamento'
+  | 'registro-criado'
+  | 'whatsapp'
+  | 'email'
+  | 'condicao'
+  | 'espera'
+  | 'webhook-saida'
+  | 'tarefa'
+  // legados da 2.7.0: `gatilho` e `acao` seguem válidos; `fim` só existe na leitura da 2.7.0
+  | 'gatilho'
+  | 'acao'
+  | 'fim'
+/** Id da regra da condição, ou `'senao'`. */
+export type FlowBranch = string
 export type FlowWaitUnit = 'segundos' | 'minutos' | 'horas' | 'dias'
+export type FlowRuleOperator =
+  'igual' | 'diferente' | 'maior' | 'menor' | 'contem' | 'vazio' | 'nao-vazio'
+
+export interface FlowRule {
+  id: string
+  label?: string
+  field: string
+  operator: FlowRuleOperator
+  /** Vazio nos operadores `vazio` e `nao-vazio`. */
+  value: string
+}
 
 export interface FlowNode {
   id: string
@@ -20,11 +47,13 @@ export interface FlowEdge {
   id: string
   source: string
   target: string
-  /** Só a saída de uma condição usa o ramo. */
+  /** Só a saída de uma condição usa o ramo: o id da regra ou `senao`. */
   branch?: FlowBranch
 }
 
 export interface Flow {
+  /** Ausente = formato da 2.7.0 (convertido ao ler). */
+  version?: 2
   nodes: FlowNode[]
   edges: FlowEdge[]
 }
@@ -36,72 +65,67 @@ export interface FlowIssue {
   edgeId?: string
 }
 
-export interface SimulationStep {
-  nodeId: string
-  type: FlowNodeType
-  label: string
-  status: 'succeeded' | 'failed' | 'skipped'
-  detail?: string
-}
-
-export interface SimulationState {
-  status: 'idle' | 'running' | 'waiting-choice' | 'finished' | 'error'
-  steps: SimulationStep[]
-  /** Bloco que o próximo avanço executa (o bloco ativo); `null` fora da simulação. */
-  currentId: string | null
-  issues: FlowIssue[]
-}
-
-export const FLOW_NODE_TYPES: readonly FlowNodeType[] = [
-  'gatilho',
-  'acao',
+const V2_TYPES: readonly string[] = [
+  'webhook-entrada',
+  'agendamento',
+  'registro-criado',
+  'whatsapp',
+  'email',
   'condicao',
   'espera',
-  'fim',
+  'webhook-saida',
+  'tarefa',
+  'gatilho',
+  'acao',
 ]
-
-export const FLOW_WAIT_UNITS: readonly FlowWaitUnit[] = ['segundos', 'minutos', 'horas', 'dias']
-
-/** Nome do tipo de bloco, como aparece na interface. */
-export const FLOW_TYPE_NAME: Record<FlowNodeType, string> = {
-  gatilho: 'Gatilho',
-  acao: 'Ação',
-  condicao: 'Condição',
-  espera: 'Espera',
-  fim: 'Fim',
-}
-
-const BRANCH_NAME: Record<FlowBranch, string> = { sim: 'Sim', nao: 'Não' }
-
-const WAIT_SINGULAR: Record<FlowWaitUnit, string> = {
-  segundos: 'segundo',
-  minutos: 'minuto',
-  horas: 'hora',
-  dias: 'dia',
-}
-
-const DEFAULT_WAIT: { duration: number; unit: FlowWaitUnit } = { duration: 5, unit: 'minutos' }
-
-const isUnit = (v: unknown): v is FlowWaitUnit =>
-  typeof v === 'string' && (FLOW_WAIT_UNITS as readonly string[]).includes(v)
-
-/** A duração do bloco de espera ("5 minutos"), ou `null` se o config não a define. */
-export function formatWait(config: Record<string, unknown> | undefined): string | null {
-  const duration = config?.duration
-  const unit = config?.unit
-  if (typeof duration !== 'number' || !Number.isFinite(duration) || !isUnit(unit)) return null
-  return `${duration} ${duration === 1 ? WAIT_SINGULAR[unit] : unit}`
-}
-
-/** Texto da espera simulada: nunca espera de verdade. */
-export function describeWait(config: Record<string, unknown> | undefined): string {
-  const wait = formatWait(config)
-  return wait ? `Aguardaria ${wait}` : 'Aguardaria o tempo definido no bloco'
-}
+const LEGACY_TYPES: readonly string[] = ['gatilho', 'acao', 'condicao', 'espera', 'fim']
 
 /** Nome do bloco para mensagens e rótulos: o rótulo, ou o tipo quando ele está vazio. */
 export const nodeName = (n: Pick<FlowNode, 'type' | 'data'>) =>
   n.data.label.trim() || FLOW_TYPE_NAME[n.type]
+
+/* ---------------------------------------------------------------- conversão da 2.7.0 */
+
+function renameEdge(e: FlowEdge): FlowEdge {
+  return {
+    id: `${e.source}:senao->${e.target}`,
+    source: e.source,
+    target: e.target,
+    branch: 'senao',
+  }
+}
+
+/**
+ * Leva um fluxo da 2.7.0 (sem `version`) ao formato v2: tira os blocos Fim, a condição vira uma
+ * regra "Sim" mais "Senão", e os blocos são arrumados da esquerda para a direita. Quem já é v2
+ * volta igual.
+ */
+export function migrateFlow(flow: Flow): Flow {
+  if (flow.version === 2) return flow
+  const fim = new Set(flow.nodes.filter((n) => n.type === 'fim').map((n) => n.id))
+  const nodes = flow.nodes
+    .filter((n) => !fim.has(n.id))
+    .map((n) =>
+      n.type === 'condicao' && !Array.isArray(n.data.config?.rules)
+        ? {
+            ...n,
+            data: {
+              ...n.data,
+              config: {
+                ...n.data.config,
+                rules: [{ id: 'sim', label: 'Sim', field: '', operator: 'igual', value: '' }],
+              },
+            },
+          }
+        : n,
+    )
+  const edges = flow.edges
+    .filter((e) => !fim.has(e.source) && !fim.has(e.target))
+    .map((e) => (e.branch === 'nao' ? renameEdge(e) : e))
+  return layoutFlow({ version: 2, nodes, edges })
+}
+
+/* ------------------------------------------------------------------------ validação */
 
 /** Ligações que saem de cada bloco, na ordem do fluxo. */
 function outgoing(flow: Flow) {
@@ -110,25 +134,25 @@ function outgoing(flow: Flow) {
   return map
 }
 
+const filled = (v: unknown) => typeof v === 'string' && v.trim() !== ''
+
 /** Problemas do fluxo, em ordem estável: a mesma entrada dá sempre a mesma lista. */
-export function validateFlow(flow: Flow): FlowIssue[] {
+export function validateFlow(input: Flow): FlowIssue[] {
+  const flow = migrateFlow(input)
   const issues: FlowIssue[] = []
   const byId = new Map(flow.nodes.map((n) => [n.id, n]))
   const out = outgoing(flow)
 
-  const triggers = flow.nodes.filter((n) => n.type === 'gatilho')
+  const triggers = flow.nodes.filter((n) => isTrigger(n.type))
   if (triggers.length === 0)
-    issues.push({
-      code: 'sem-gatilho',
-      message: 'O fluxo precisa de um bloco Gatilho para começar.',
-    })
+    issues.push({ code: 'sem-gatilho', message: 'O fluxo precisa de um gatilho para começar.' })
   else if (triggers.length > 1)
     issues.push({
       code: 'varios-gatilhos',
       message: `O fluxo tem ${triggers.length} gatilhos, mas deve ter só um.`,
     })
 
-  // Integridade: ligações apontando para o que não existe, ou com o ramo errado.
+  // Integridade: ligações apontando para o que não existe, ou com a saída errada.
   const sound: FlowEdge[] = []
   for (const e of flow.edges) {
     const from = byId.get(e.source)
@@ -141,13 +165,17 @@ export function validateFlow(flow: Flow): FlowIssue[] {
       })
       continue
     }
-    if (from.type === 'condicao' ? !e.branch : e.branch) {
+    const validBranch =
+      from.type === 'condicao'
+        ? !!e.branch && (e.branch === 'senao' || rulesOf(from).some((r) => r.id === e.branch))
+        : !e.branch
+    if (!validBranch) {
       issues.push({
         code: 'ramo-invalido',
         message:
           from.type === 'condicao'
-            ? `Uma saída da condição "${nodeName(from)}" não diz se é "Sim" ou "Não".`
-            : `A ligação que sai de "${nodeName(from)}" não pode ter "Sim" ou "Não": isso só vale para condição.`,
+            ? `Uma saída da condição "${nodeName(from)}" não corresponde a nenhuma regra nem ao "Senão".`
+            : `A ligação que sai de "${nodeName(from)}" não pode ter saída de regra: isso só vale para condição.`,
         nodeId: from.id,
         edgeId: e.id,
       })
@@ -159,40 +187,36 @@ export function validateFlow(flow: Flow): FlowIssue[] {
   for (const n of flow.nodes) {
     const edges = out.get(n.id) ?? []
     const name = nodeName(n)
-    if (n.type === 'fim') {
-      if (edges.length > 0)
+    const cfg = n.data.config
+    if (n.type === 'condicao') {
+      const rules = rulesOf(n)
+      if (rules.length === 0)
         issues.push({
-          code: 'fim-com-saida',
-          message: `O bloco Fim "${name}" não pode ter saída.`,
+          code: 'condicao-sem-regra',
+          message: `A condição "${name}" precisa de ao menos uma regra.`,
           nodeId: n.id,
         })
-    } else if (n.type === 'condicao') {
-      const sim = edges.filter((e) => e.branch === 'sim').length
-      const nao = edges.filter((e) => e.branch === 'nao').length
-      if (sim === 0)
-        issues.push({
-          code: 'condicao-sem-sim',
-          message: `A condição "${name}" precisa de uma saída "Sim".`,
-          nodeId: n.id,
-        })
-      if (nao === 0)
-        issues.push({
-          code: 'condicao-sem-nao',
-          message: `A condição "${name}" precisa de uma saída "Não".`,
-          nodeId: n.id,
-        })
-      if (sim > 1 || nao > 1)
+      rules.forEach((r, i) => {
+        if (!isRuleComplete(r))
+          issues.push({
+            code: 'regra-incompleta',
+            message: `A regra ${i + 1} da condição "${name}" precisa de campo, operador e valor.`,
+            nodeId: n.id,
+          })
+      })
+      const seen = new Set<string>()
+      let repeated = false
+      for (const e of edges) {
+        if (!e.branch) continue
+        if (seen.has(e.branch)) repeated = true
+        seen.add(e.branch)
+      }
+      if (repeated)
         issues.push({
           code: 'condicao-saida-repetida',
-          message: `A condição "${name}" tem mais de uma saída para o mesmo ramo.`,
+          message: `A condição "${name}" tem mais de uma ligação na mesma saída.`,
           nodeId: n.id,
         })
-    } else if (edges.length === 0) {
-      issues.push({
-        code: 'sem-saida',
-        message: `O bloco "${name}" não leva a nenhum próximo bloco.`,
-        nodeId: n.id,
-      })
     } else if (edges.length > 1) {
       issues.push({
         code: 'varias-saidas',
@@ -200,6 +224,19 @@ export function validateFlow(flow: Flow): FlowIssue[] {
         nodeId: n.id,
       })
     }
+    for (const f of FLOW_BLOCKS[n.type].required)
+      if (!filled(cfg?.[f.key]))
+        issues.push({
+          code: 'config-obrigatoria-vazia',
+          message: `O bloco "${name}" precisa do campo "${f.label}".`,
+          nodeId: n.id,
+        })
+    if (n.type === 'espera' && !(typeof cfg?.duration === 'number' && cfg.duration > 0))
+      issues.push({
+        code: 'config-obrigatoria-vazia',
+        message: `O bloco "${name}" precisa de uma duração maior que zero.`,
+        nodeId: n.id,
+      })
   }
 
   const next = new Map<string, string[]>()
@@ -261,8 +298,12 @@ const sortKeys = (v: unknown): unknown => {
   return v
 }
 
-/** JSON do fluxo, com a ordem das chaves fixa: o mesmo fluxo dá sempre o mesmo texto. */
-export function serializeFlow(flow: Flow): string {
+/**
+ * JSON do fluxo (sempre no formato v2, com `version` na primeira chave) e a ordem das chaves
+ * fixa: o mesmo fluxo dá sempre o mesmo texto. Um fluxo da 2.7.0 é convertido antes.
+ */
+export function serializeFlow(input: Flow): string {
+  const flow = migrateFlow(input)
   const nodes = flow.nodes.map((n) => ({
     id: n.id,
     type: n.type,
@@ -276,7 +317,7 @@ export function serializeFlow(flow: Flow): string {
       ? { id: e.id, source: e.source, target: e.target, branch: e.branch }
       : { id: e.id, source: e.source, target: e.target },
   )
-  return JSON.stringify({ nodes, edges }, null, 2)
+  return JSON.stringify({ version: 2, nodes, edges }, null, 2)
 }
 
 export type ParseResult = { ok: true; flow: Flow } | { ok: false; errors: string[] }
@@ -284,7 +325,10 @@ export type ParseResult = { ok: true; flow: Flow } | { ok: false; errors: string
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v)
 
-/** Lê o JSON de um fluxo. Nunca lança; campos que o contrato não conhece são ignorados. */
+/**
+ * Lê o JSON de um fluxo. Nunca lança; campos que o contrato não conhece são ignorados. Texto sem
+ * `version` é lido pelas regras da 2.7.0 e convertido; `version: 2` segue as regras do formato novo.
+ */
 export function parseFlow(text: string): ParseResult {
   let raw: unknown
   try {
@@ -293,10 +337,14 @@ export function parseFlow(text: string): ParseResult {
     return { ok: false, errors: ['O texto não é um JSON válido.'] }
   }
   if (!isObject(raw)) return { ok: false, errors: ['O JSON do fluxo precisa ser um objeto.'] }
+  if (raw.version !== undefined && raw.version !== 2)
+    return { ok: false, errors: ['Versão do formato não suportada (use 2 ou deixe sem versão).'] }
   if (!Array.isArray(raw.nodes) || !Array.isArray(raw.edges)) {
     const falta = !Array.isArray(raw.nodes) ? 'nodes' : 'edges'
     return { ok: false, errors: [`O campo "${falta}" precisa ser uma lista.`] }
   }
+  const v2 = raw.version === 2
+  const types = v2 ? V2_TYPES : LEGACY_TYPES
 
   const errors: string[] = []
   const nodes: FlowNode[] = []
@@ -313,7 +361,7 @@ export function parseFlow(text: string): ParseResult {
       errors.push(`${at}: o id "${id}" está repetido.`)
       ok = false
     } else ids.add(id)
-    if (!(FLOW_NODE_TYPES as readonly unknown[]).includes(type)) {
+    if (!types.includes(type as string)) {
       errors.push(`${at}: tipo desconhecido (${String(type)}).`)
       ok = false
     }
@@ -366,9 +414,18 @@ export function parseFlow(text: string): ParseResult {
       errors.push(`${at}: o id "${id as string}" está repetido.`)
       ok = false
     }
-    if (branch !== undefined && branch !== 'sim' && branch !== 'nao') {
-      errors.push(`${at}: "branch" só pode ser "sim" ou "nao".`)
-      ok = false
+    if (branch !== undefined) {
+      const valid = v2
+        ? typeof branch === 'string' && branch !== ''
+        : branch === 'sim' || branch === 'nao'
+      if (!valid) {
+        errors.push(
+          v2
+            ? `${at}: "branch" precisa ser o id de uma regra ou "senao".`
+            : `${at}: "branch" só pode ser "sim" ou "nao".`,
+        )
+        ok = false
+      }
     }
     if (ok) {
       edgeIds.add(id as string)
@@ -385,204 +442,6 @@ export function parseFlow(text: string): ParseResult {
     }
   })
 
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, flow: { nodes, edges } }
-}
-
-/* ---------------------------------------------------------------------- edição */
-
-export interface AddNodeOptions {
-  label?: string
-  /** Ids que já existiram neste fluxo (mesmo apagados): não voltam a ser usados. */
-  reservedIds?: Iterable<string>
-}
-
-/** Acrescenta um bloco com id único e determinístico (`tipo-N`). */
-export function addNode(
-  flow: Flow,
-  type: FlowNodeType,
-  position: { x: number; y: number },
-  options: AddNodeOptions = {},
-): { flow: Flow; id: string } {
-  const taken = new Set([...flow.nodes.map((n) => n.id), ...(options.reservedIds ?? [])])
-  let n = 1
-  while (taken.has(`${type}-${n}`)) n++
-  const id = `${type}-${n}`
-  const node: FlowNode = {
-    id,
-    type,
-    position: { x: position.x, y: position.y },
-    data:
-      type === 'espera'
-        ? { label: options.label ?? FLOW_TYPE_NAME[type], config: { ...DEFAULT_WAIT } }
-        : { label: options.label ?? FLOW_TYPE_NAME[type] },
-  }
-  return { flow: { ...flow, nodes: [...flow.nodes, node] }, id }
-}
-
-/** Apaga o bloco e as ligações que chegam ou saem dele. */
-export function removeNode(flow: Flow, id: string): Flow {
-  if (!flow.nodes.some((n) => n.id === id)) return flow
-  return {
-    nodes: flow.nodes.filter((n) => n.id !== id),
-    edges: flow.edges.filter((e) => e.source !== id && e.target !== id),
-  }
-}
-
-export function removeEdge(flow: Flow, id: string): Flow {
-  return { ...flow, edges: flow.edges.filter((e) => e.id !== id) }
-}
-
-export function moveNode(flow: Flow, id: string, position: { x: number; y: number }): Flow {
-  return {
-    ...flow,
-    nodes: flow.nodes.map((n) =>
-      n.id === id ? { ...n, position: { x: position.x, y: position.y } } : n,
-    ),
-  }
-}
-
-/** Troca o rótulo e/ou o config do bloco (o config informado substitui o anterior). */
-export function updateNodeData(
-  flow: Flow,
-  id: string,
-  patch: { label?: string; config?: Record<string, unknown> },
-): Flow {
-  return {
-    ...flow,
-    nodes: flow.nodes.map((n) => {
-      if (n.id !== id) return n
-      const label = patch.label ?? n.data.label
-      const config = patch.config ?? n.data.config
-      return { ...n, data: config ? { label, config } : { label } }
-    }),
-  }
-}
-
-export type ConnectResult = { ok: true; flow: Flow } | { ok: false; reason: string }
-
-const edgeId = (source: string, target: string, branch?: FlowBranch) =>
-  branch ? `${source}:${branch}->${target}` : `${source}->${target}`
-
-/**
- * Liga dois blocos. A segunda saída de um bloco comum (ou do mesmo ramo da condição) substitui
- * a primeira. Recusa, com o motivo, o que o fluxo nunca aceita.
- */
-export function connectNodes(
-  flow: Flow,
-  source: string,
-  target: string,
-  branch?: FlowBranch,
-): ConnectResult {
-  const from = flow.nodes.find((n) => n.id === source)
-  const to = flow.nodes.find((n) => n.id === target)
-  if (!from || !to) return { ok: false, reason: 'Esse bloco não existe mais.' }
-  if (source === target) return { ok: false, reason: 'Um bloco não pode ligar a ele mesmo.' }
-  if (from.type === 'fim')
-    return { ok: false, reason: 'O bloco Fim termina o fluxo e não tem saída.' }
-  if (to.type === 'gatilho')
-    return { ok: false, reason: 'O gatilho começa o fluxo e não recebe ligação.' }
-  if (from.type === 'condicao' && !branch)
-    return { ok: false, reason: 'Escolha a saída "Sim" ou "Não" da condição.' }
-  if (from.type !== 'condicao' && branch)
-    return { ok: false, reason: '"Sim" e "Não" só existem na condição.' }
-  const id = edgeId(source, target, branch)
-  if (flow.edges.some((e) => e.id === id)) return { ok: false, reason: 'Essa ligação já existe.' }
-  const kept = flow.edges.filter(
-    (e) => !(e.source === source && (from.type === 'condicao' ? e.branch === branch : true)),
-  )
-  const edge: FlowEdge = branch ? { id, source, target, branch } : { id, source, target }
-  return { ok: true, flow: { ...flow, edges: [...kept, edge] } }
-}
-
-/**
- * Define (ou, com `target` nulo, tira) o próximo bloco de `id`; na condição, o do ramo dado.
- * Uma ligação recusada devolve o próprio fluxo, sem mudança.
- */
-export function setNext(flow: Flow, id: string, target: string | null, branch?: FlowBranch): Flow {
-  if (target === null)
-    return {
-      ...flow,
-      edges: flow.edges.filter((e) => !(e.source === id && (branch ? e.branch === branch : true))),
-    }
-  const r = connectNodes(flow, id, target, branch)
-  return r.ok ? r.flow : flow
-}
-
-/** Blocos que `id` pode ter como próximo: nunca ele mesmo nem o gatilho. */
-export function nextCandidates(flow: Flow, id: string): FlowNode[] {
-  const from = flow.nodes.find((n) => n.id === id)
-  if (!from || from.type === 'fim') return []
-  return flow.nodes.filter((n) => n.id !== id && n.type !== 'gatilho')
-}
-
-/* -------------------------------------------------------------------- simulação */
-
-export function resetSimulation(): SimulationState {
-  return { status: 'idle', steps: [], currentId: null, issues: [] }
-}
-
-/** Começa no gatilho. Fluxo inválido não inicia: devolve `error` com os problemas. */
-export function startSimulation(flow: Flow): SimulationState {
-  const issues = validateFlow(flow)
-  if (issues.length > 0) return { status: 'error', steps: [], currentId: null, issues }
-  const trigger = flow.nodes.find((n) => n.type === 'gatilho')!
-  return { status: 'running', steps: [], currentId: trigger.id, issues: [] }
-}
-
-/**
- * Executa o bloco ativo (um passo) e passa ao próximo. Na condição é preciso escolher o ramo:
- * sem escolha válida nada anda. A espera é instantânea; só o texto diz quanto aguardaria.
- */
-export function advanceSimulation(
-  flow: Flow,
-  state: SimulationState,
-  choice?: FlowBranch,
-): SimulationState {
-  if ((state.status !== 'running' && state.status !== 'waiting-choice') || !state.currentId)
-    return state
-  const node = flow.nodes.find((n) => n.id === state.currentId)
-  const edges = node ? flow.edges.filter((e) => e.source === node.id) : []
-  const fail = (): SimulationState => ({
-    ...state,
-    status: 'error',
-    currentId: null,
-    issues: [
-      {
-        code: 'fluxo-mudou',
-        message: 'O fluxo mudou durante o teste. Reinicie para testar de novo.',
-      },
-    ],
-  })
-  if (!node) return fail()
-
-  let detail: string | undefined
-  let target: string | undefined
-  if (node.type === 'condicao') {
-    if (choice !== 'sim' && choice !== 'nao') return state
-    target = edges.find((e) => e.branch === choice)?.target
-    detail = `Escolha: ${BRANCH_NAME[choice]}`
-    if (!target) return fail()
-  } else if (node.type !== 'fim') {
-    target = edges[0]?.target
-    if (node.type === 'espera') detail = describeWait(node.data.config)
-    if (!target) return fail()
-  }
-
-  const step: SimulationStep = {
-    nodeId: node.id,
-    type: node.type,
-    label: nodeName(node),
-    status: 'succeeded',
-    ...(detail ? { detail } : {}),
-  }
-  const steps = [...state.steps, step]
-  if (!target) return { status: 'finished', steps, currentId: null, issues: [] }
-  const next = flow.nodes.find((n) => n.id === target)
-  if (!next) return fail()
-  return {
-    status: next.type === 'condicao' ? 'waiting-choice' : 'running',
-    steps,
-    currentId: target,
-    issues: [],
-  }
+  if (errors.length > 0) return { ok: false, errors }
+  return { ok: true, flow: migrateFlow(v2 ? { version: 2, nodes, edges } : { nodes, edges }) }
 }

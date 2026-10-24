@@ -19,5 +19,7 @@ export {
   type FlowIssue,
   type FlowNode,
   type FlowNodeType,
+  type FlowRule,
+  type FlowRuleOperator,
   type ParseResult,
 } from './lib/flow'
