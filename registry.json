@@ -21,6 +21,22 @@
         { "path": "src/lib/cn.ts", "type": "registry:file", "target": "src/lib/cn.ts" },
         { "path": "src/lib/contrast.ts", "type": "registry:file", "target": "src/lib/contrast.ts" },
         { "path": "src/lib/control.ts", "type": "registry:file", "target": "src/lib/control.ts" },
+        {
+          "path": "src/lib/flow-blocks.ts",
+          "type": "registry:file",
+          "target": "src/lib/flow-blocks.ts"
+        },
+        {
+          "path": "src/lib/flow-edit.ts",
+          "type": "registry:file",
+          "target": "src/lib/flow-edit.ts"
+        },
+        {
+          "path": "src/lib/flow-layout.ts",
+          "type": "registry:file",
+          "target": "src/lib/flow-layout.ts"
+        },
+        { "path": "src/lib/flow-sim.ts", "type": "registry:file", "target": "src/lib/flow-sim.ts" },
         { "path": "src/lib/flow.ts", "type": "registry:file", "target": "src/lib/flow.ts" },
         { "path": "src/lib/initials.ts", "type": "registry:file", "target": "src/lib/initials.ts" },
         { "path": "src/lib/lookup.ts", "type": "registry:file", "target": "src/lib/lookup.ts" },
@@ -801,24 +817,55 @@
       "meta": { "codes": ["FLD-001", "FLD-002"] }
     },
     {
+      "name": "flow-config-panels",
+      "type": "registry:item",
+      "title": "flow-config-panels",
+      "description": "Componente flow-config-panels do Rendra Design System.",
+      "dependencies": ["lucide-react@^1.48.0"],
+      "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/button.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/empty-state.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/field.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/flow-sidebar.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/info-hint.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/input.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/radio-group.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/select.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/tabs.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/textarea.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/toast.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/ui/flow-config-panels.tsx",
+          "type": "registry:file",
+          "target": "src/components/ui/flow-config-panels.tsx"
+        }
+      ],
+      "meta": { "codes": [] }
+    },
+    {
       "name": "flow-editor",
       "type": "registry:item",
       "title": "flow-editor",
       "description": "Componente flow-editor do Rendra Design System.",
       "dependencies": ["@xyflow/react@^12.12.0", "lucide-react@^1.48.0"],
       "registryDependencies": [
-        "https://bsmagalhaes.github.io/rendra-ui-web/r/action-bar.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/alert.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/button.json",
-        "https://bsmagalhaes.github.io/rendra-ui-web/r/card.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/checkbox.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/drawer.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/field.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/flow-config-panels.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/flow-sidebar.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/flow-simulation-panel.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/flow-viewer.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/input.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/modal.json",
-        "https://bsmagalhaes.github.io/rendra-ui-web/r/select.json",
-        "https://bsmagalhaes.github.io/rendra-ui-web/r/timeline.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/radio-group.json",
         "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
       ],
       "files": [
@@ -829,6 +876,53 @@
         }
       ],
       "meta": { "codes": ["FLX-001"] }
+    },
+    {
+      "name": "flow-sidebar",
+      "type": "registry:item",
+      "title": "flow-sidebar",
+      "description": "Componente flow-sidebar do Rendra Design System.",
+      "dependencies": ["lucide-react@^1.48.0"],
+      "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/button.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/empty-state.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/flow-viewer.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/input.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/ui/flow-sidebar.tsx",
+          "type": "registry:file",
+          "target": "src/components/ui/flow-sidebar.tsx"
+        }
+      ],
+      "meta": { "codes": [] }
+    },
+    {
+      "name": "flow-simulation-panel",
+      "type": "registry:item",
+      "title": "flow-simulation-panel",
+      "description": "Componente flow-simulation-panel do Rendra Design System.",
+      "dependencies": ["lucide-react@^1.48.0"],
+      "registryDependencies": [
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/action-bar.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/alert.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/button.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/core.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/flow-sidebar.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/timeline.json",
+        "https://bsmagalhaes.github.io/rendra-ui-web/r/tokens.json"
+      ],
+      "files": [
+        {
+          "path": "src/components/ui/flow-simulation-panel.tsx",
+          "type": "registry:file",
+          "target": "src/components/ui/flow-simulation-panel.tsx"
+        }
+      ],
+      "meta": { "codes": [] }
     },
     {
       "name": "flow-viewer",

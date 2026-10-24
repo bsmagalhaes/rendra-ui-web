@@ -53,6 +53,7 @@
   --spacing-chart-sm: 12rem;
   --spacing-chart-md: 16rem;
   --spacing-viewer: 28rem;
+  --spacing-flow: 42rem;
 
   /* Larguras de estrutura */
   --container-sidebar: 16rem;
@@ -933,7 +934,7 @@
 
 /* Fluxo de automação (FlowEditor e FlowViewer, React Flow): o bloco tem largura própria. */
 @utility w-flow-node {
-  width: 20rem;
+  width: 21rem;
 }
 
 /* Barra lateral do FlowEditor (blocos, configuração e teste). */

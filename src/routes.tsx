@@ -71,6 +71,11 @@ export const routes: RouteObject[] = [
             lazy: page(() => import('@/pages/app/kanban-page'), 'KanbanPage'),
           },
           {
+            path: 'automacoes',
+            handle: h('Automações'),
+            lazy: page(() => import('@/pages/app/automations-list-page'), 'AutomationsListPage'),
+          },
+          {
             path: 'tarefas',
             handle: h('Tarefas'),
             lazy: page(() => import('@/pages/app/tasks-page'), 'TasksPage'),
@@ -107,6 +112,13 @@ export const routes: RouteObject[] = [
           },
           { path: '*', handle: h('Página não encontrada'), element: <ErrorPage code={404} /> },
         ],
+      },
+      {
+        // Tela cheia: fora do AppShell, sem sidebar nem header do sistema (DESIGN_RULES, Fluxos de automação).
+        path: 'automacoes/nova',
+        handle: h('Nova automação'),
+        errorElement: <ErrorPage code={500} fullScreen />,
+        lazy: page(() => import('@/pages/app/automation-editor-page'), 'AutomationEditorPage'),
       },
       { path: 'login', lazy: page(() => import('@/pages/auth/auth-pages'), 'LoginPage') },
       {

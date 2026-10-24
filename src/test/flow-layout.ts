@@ -17,7 +17,7 @@ const saved = {
 }
 
 /** Tamanho que o mock dá a cada bloco do canvas. */
-export const MOCK_NODE = { w: 320, h: 160 }
+export const MOCK_NODE = { w: 336, h: 160 }
 
 export function mockFlowLayout() {
   const size = (el: HTMLElement) =>
