@@ -71,6 +71,8 @@ export async function auditLayout(page: Page, mobile: boolean) {
         mobile &&
         clickable &&
         !el.closest('.sr-only') &&
+        // o canvas do fluxo escala os blocos pelo zoom: o alvo dos botões do card é de 44 px em zoom 1
+        !el.closest('.react-flow__viewport') &&
         el.getAttribute('aria-hidden') !== 'true' &&
         cs.pointerEvents !== 'none'
       ) {

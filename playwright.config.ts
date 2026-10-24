@@ -9,6 +9,7 @@ import { defineConfig } from '@playwright/test'
  *   npm run test:lazy     o motor do Motion só é baixado por quem liga o `on`
  *   npm run test:flow     fluxos de automação (FlowEditor e FlowViewer): arrastar, ligar, apagar, tema, toque
  *   npm run test:kanban   Kanban: arrastar até o rodapé, confirmar, hint do calendário
+ *   npm run test:automacoes   Automações: listagem, tela cheia, abas, histórico
  */
 export default defineConfig({
   testDir: './tests',
@@ -40,6 +41,8 @@ export default defineConfig({
     { name: 'flow', testMatch: 'flow.spec.ts' },
     // Kanban (/kanban): arrastar até o rodapé flutuante, confirmar e o hint do calendário.
     { name: 'kanban', testMatch: 'kanban.spec.ts' },
+    // Automações (/automacoes e /automacoes/nova): listagem, tela cheia, abas e histórico.
+    { name: 'automacoes', testMatch: 'automacoes.spec.ts' },
     // CSS em camadas (C4, etapa 2.0.0-alpha.8): tests/css-layers.spec.ts.
     { name: 'css-layers', testMatch: 'css-layers.spec.ts' },
   ],
