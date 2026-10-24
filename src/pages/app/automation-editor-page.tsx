@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { FlowEditor } from '@/components/ui/flow-editor'
 import { Tabs } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/toast'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { useRouteMeta } from '@/hooks/use-route-meta'
 import { validateFlow, type Flow } from '@/lib/flow'
@@ -41,94 +42,97 @@ export function AutomationEditorPage() {
     else toast.success('Automação salva')
   }
 
+  // Fora do AppShell não há TooltipProvider (a tabela do histórico usa Tooltip nas ações da linha).
   return (
-    <div className="flex h-dvh flex-col bg-background">
-      <header className="flex shrink-0 items-center gap-3 border-b bg-card px-4 py-2 md:px-6">
-        <Link
-          to="/automacoes"
-          aria-label="Voltar para Automações"
-          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          <ArrowLeft className="size-icon-md" aria-hidden />
-        </Link>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <p className="truncate text-xs text-muted-foreground">Automações / Nova automação</p>
-          <div className="flex min-w-0 items-center gap-2">
-            <h1 className="truncate text-base font-semibold">{draft.name || 'Sem nome'}</h1>
-            <Badge tone={automationStatusTone[draft.status]}>
-              {automationStatusLabel[draft.status]}
-            </Badge>
+    <TooltipProvider>
+      <div className="flex h-dvh flex-col bg-background">
+        <header className="flex shrink-0 items-center gap-3 border-b bg-card px-4 py-2 md:px-6">
+          <Link
+            to="/automacoes"
+            aria-label="Voltar para Automações"
+            className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <ArrowLeft className="size-icon-md" aria-hidden />
+          </Link>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <p className="truncate text-xs text-muted-foreground">Automações / Nova automação</p>
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="truncate text-base font-semibold">{draft.name || 'Sem nome'}</h1>
+              <Badge tone={automationStatusTone[draft.status]}>
+                {automationStatusLabel[draft.status]}
+              </Badge>
+            </div>
           </div>
-        </div>
-        <Button
-          variant="outline"
-          iconOnly={isMobile}
-          aria-label="Testar fluxo"
-          icon={<FlaskConical />}
-          onClick={() => {
-            setTab('workflow')
-            setTestOpen(true)
-          }}
-        >
-          {isMobile ? null : 'Testar fluxo'}
-        </Button>
-        <Button onClick={save}>Salvar</Button>
-      </header>
-      <main id="automacao" className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <Container padded>
-          <Stack gap="section">
-            <Tabs
-              aria-label="Seções da automação"
-              value={tab}
-              onChange={setTab}
-              items={[
-                {
-                  value: 'geral',
-                  label: 'Geral',
-                  content: (
-                    <div className="pt-4">
-                      <AutomationGeneralTab draft={draft} onChange={patch} />
-                    </div>
-                  ),
-                },
-                {
-                  value: 'workflow',
-                  label: 'Workflow',
-                  content: (
-                    <div className="pt-4">
-                      <FlowEditor
-                        value={flow}
-                        onChange={setFlow}
-                        toolbar={false}
-                        testOpen={testOpen}
-                        onTestOpenChange={setTestOpen}
-                      />
-                    </div>
-                  ),
-                },
-                {
-                  value: 'configuracoes',
-                  label: 'Configurações',
-                  content: (
-                    <div className="pt-4">
-                      <AutomationSettingsTab draft={draft} onChange={patch} />
-                    </div>
-                  ),
-                },
-                {
-                  value: 'historico',
-                  label: 'Histórico de execuções',
-                  content: (
-                    <div className="pt-4">
-                      <AutomationHistoryTab />
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </Stack>
-        </Container>
-      </main>
-    </div>
+          <Button
+            variant="outline"
+            iconOnly={isMobile}
+            aria-label="Testar fluxo"
+            icon={<FlaskConical />}
+            onClick={() => {
+              setTab('workflow')
+              setTestOpen(true)
+            }}
+          >
+            {isMobile ? null : 'Testar fluxo'}
+          </Button>
+          <Button onClick={save}>Salvar</Button>
+        </header>
+        <main id="automacao" className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <Container padded>
+            <Stack gap="section">
+              <Tabs
+                aria-label="Seções da automação"
+                value={tab}
+                onChange={setTab}
+                items={[
+                  {
+                    value: 'geral',
+                    label: 'Geral',
+                    content: (
+                      <div className="pt-4">
+                        <AutomationGeneralTab draft={draft} onChange={patch} />
+                      </div>
+                    ),
+                  },
+                  {
+                    value: 'workflow',
+                    label: 'Workflow',
+                    content: (
+                      <div className="pt-4">
+                        <FlowEditor
+                          value={flow}
+                          onChange={setFlow}
+                          toolbar={false}
+                          testOpen={testOpen}
+                          onTestOpenChange={setTestOpen}
+                        />
+                      </div>
+                    ),
+                  },
+                  {
+                    value: 'configuracoes',
+                    label: 'Configurações',
+                    content: (
+                      <div className="pt-4">
+                        <AutomationSettingsTab draft={draft} onChange={patch} />
+                      </div>
+                    ),
+                  },
+                  {
+                    value: 'historico',
+                    label: 'Histórico de execuções',
+                    content: (
+                      <div className="pt-4">
+                        <AutomationHistoryTab />
+                      </div>
+                    ),
+                  },
+                ]}
+              />
+            </Stack>
+          </Container>
+        </main>
+      </div>
+    </TooltipProvider>
   )
 }

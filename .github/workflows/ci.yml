@@ -75,6 +75,9 @@ jobs:
       - name: Kanban (arrastar até o rodapé, confirmar e hint do calendário)
         if: ${{ !cancelled() }}
         run: npm run test:kanban
+      - name: Automações (listagem, tela cheia, abas e histórico)
+        if: ${{ !cancelled() }}
+        run: npm run test:automacoes
       - name: CSS em camadas
         if: ${{ !cancelled() }}
         run: npm run test:css-layers
