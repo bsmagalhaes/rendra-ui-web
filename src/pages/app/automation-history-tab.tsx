@@ -74,7 +74,7 @@ export function AutomationHistoryTab() {
         columns={columns}
         getRowId={(r) => r.id}
         empty={{ title: 'Nenhuma execução', description: 'Nenhuma execução bate com os filtros.' }}
-        rowActions={[{ label: 'Ver detalhes', icon: <Eye />, onClick: (r) => setDetail(r) }]}
+        rowActions={[{ label: 'Passo a passo', icon: <Eye />, onClick: (r) => setDetail(r) }]}
         toolbar={{
           filterCount,
           onClearFilters: filterCount

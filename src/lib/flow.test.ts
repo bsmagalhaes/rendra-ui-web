@@ -97,7 +97,7 @@ describe('migração da 2.7.0', () => {
     expect(c.data.config).toEqual({
       rules: [{ id: 'sim', label: 'Sim', field: '', operator: 'igual', value: '' }],
     })
-    expect(f.edges.map((e) => e.branch).filter(Boolean)).toEqual(['sim', 'senao'].slice(0, 1))
+    expect(f.edges.map((e) => e.branch).filter(Boolean)).toEqual(['sim'])
     // a ligação que ia para o fim some; quem apontava para ele fica sem saída
     expect(f.edges.some((e) => e.target === 'f1' || e.target === 'f2')).toBe(false)
     const x = (id: string) => f.nodes.find((n) => n.id === id)!.position.x

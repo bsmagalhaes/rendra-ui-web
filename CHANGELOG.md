@@ -19,7 +19,7 @@ Editor de automações no estilo N8N e telas de automações. Versão minor: o f
 - **Teste do fluxo** avalia a condição sozinho contra os dados de exemplo e diz qual regra bateu; o play do card mostra o resultado só daquele bloco.
 - **Props do `FlowEditor`:** `toolbar` (tira "Validar" e "Testar fluxo" do quadro), `testOpen` e `onTestOpenChange` (controle do painel de teste de fora).
 - **Telas `/automacoes` e `/automacoes/nova`, item "Automações" no menu** (grupo Operação, depois do Funil de vendas), `src/mocks/automations.ts` (6 automações e 20 execuções) e o projeto de testes `automacoes` (`npm run test:automacoes`). A listagem segue o padrão das listagens. A automação abre **sempre em tela cheia**, fora do `AppShell` (sem sidebar nem header do sistema), com a própria barra (voltar, nome, situação, "Testar fluxo" e "Salvar") e as abas Geral, Workflow, Configurações (alertas de erro, aplicação e a situação em cartões) e Histórico de execuções (tabela com filtros e o passo a passo de cada execução). Exceções registradas no `DESIGN_RULES.md`.
-- Utilitário `w-flow-panel` (largura da barra do editor) e token `--spacing-flow`.
+- Utilitário `w-flow-panel` (largura da barra do editor). A barra fica à direita quando o editor tem 64rem ou mais de largura (container query) e embaixo do quadro quando é mais estreito; o enquadramento inicial nunca fica abaixo de 50% de zoom: se o fluxo não couber, abre pelo gatilho (no celular, o fluxo abre legível e o dedo navega).
 
 ### Alterado
 
