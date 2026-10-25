@@ -7,6 +7,8 @@ import {
   MarkerType,
   Position,
   ReactFlow,
+  getNodesBounds,
+  useNodesInitialized,
   useReactFlow,
   useStore,
   type AriaLabelConfig,
@@ -606,15 +608,32 @@ export function FlowZoomControls() {
   )
 }
 
-/** Enquadra de novo quando a largura do canvas muda (painel abrindo, janela redimensionada). */
+/** Zoom mínimo do enquadramento inicial: abaixo disso os cards e as alças ficam ilegíveis e pequenos demais. */
+export const MIN_FIT_ZOOM = 0.5
+
+/**
+ * Enquadramento inicial e quando a largura do canvas muda. Cabe tudo se o zoom ficar em 50 % ou
+ * mais; senão abre em 50 % começando pela esquerda (pelo gatilho) e a pessoa navega. O botão
+ * "Enquadrar" continua mostrando o fluxo inteiro, sem piso de zoom.
+ */
 function FlowAutoFit() {
-  const { fitView } = useReactFlow()
+  const { getNodes, setViewport } = useReactFlow()
   const width = useStore((st) => st.width)
+  const height = useStore((st) => st.height)
+  const ready = useNodesInitialized()
   const before = useRef(0)
   useEffect(() => {
-    if (before.current > 0 && width > 0 && width !== before.current) void fitView(fitViewOptions)
-    if (width > 0) before.current = width
-  }, [width, fitView])
+    if (!ready || width <= 0 || height <= 0 || width === before.current) return
+    before.current = width
+    const nodes = getNodes()
+    if (nodes.length === 0) return
+    const b = getNodesBounds(nodes)
+    const fit = Math.min(1, (width - 32) / b.width, (height - 128) / b.height)
+    const zoom = Math.max(fit, MIN_FIT_ZOOM)
+    const x = zoom === fit ? (width - b.width * zoom) / 2 - b.x * zoom : 16 - b.x * zoom
+    const y = (height - b.height * zoom) / 2 - b.y * zoom
+    void setViewport({ x, y, zoom })
+  }, [ready, width, height, getNodes, setViewport])
   return null
 }
 
@@ -662,8 +681,6 @@ export function FlowSurface({ className, children, fill = true, ...props }: Flow
         connectionLineType={ConnectionLineType.Bezier}
         connectionRadius={CONNECTION_RADIUS}
         ariaLabelConfig={FLOW_ARIA}
-        fitView
-        fitViewOptions={fitViewOptions}
         minZoom={0.1}
         maxZoom={2}
         zoomOnDoubleClick={false}

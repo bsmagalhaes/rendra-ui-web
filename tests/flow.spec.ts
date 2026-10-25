@@ -124,6 +124,11 @@ const pontoDaLigacao = (page: Page, id: string) =>
     return { x: m.a * pt.x + m.c * pt.y + m.e, y: m.b * pt.x + m.d * pt.y + m.f }
   }, id)
 
+const zoomDe = (page: Page) =>
+  page
+    .locator(`${SEC} .react-flow__viewport`)
+    .evaluate((el) => Number(/scale(([d.]+))/.exec((el as HTMLElement).style.transform)![1]))
+
 const caixas = (page: Page) =>
   nodes(page).evaluateAll((els) =>
     els.map((e) => {
@@ -421,6 +426,9 @@ test.describe('desktop (1280, claro, mouse)', () => {
     await page.mouse.wheel(0, 300)
     await page.waitForTimeout(300)
     expect(await page.evaluate(() => document.querySelector('main')!.scrollTop)).toBeGreaterThan(y0)
+    // a página rolou: o mouse volta para o meio do canvas antes do zoom
+    const c2 = await centro(page.locator(`${SEC} .flow-surface`))
+    await page.mouse.move(c2.x, c2.y)
     const z0 = await zoom()
     await page.keyboard.down('Control')
     await page.mouse.wheel(0, -300)
@@ -495,6 +503,8 @@ test.describe('tablet (768 e 1024, toque)', () => {
           reta(item, { x: canvas.x + canvas.width * 0.2, y: canvas.y + canvas.height * 0.85 }),
         )
         await expect(nodes(page)).toHaveCount(6)
+        await page.locator(SEC).getByRole('button', { name: 'Enquadrar' }).tap()
+        await page.waitForTimeout(500)
         const alca = await centro(node(page, 'tarefa-1').locator('.react-flow__handle.source'))
         const corpo = await centro(node(page, 'whatsapp-1').locator('[data-flow-node]'))
         await toque(page, reta(alca, corpo, 16))
@@ -511,14 +521,14 @@ test.describe('tablet (768 e 1024, toque)', () => {
           .evaluate((el) =>
             Number(/scale\(([\d.]+)\)/.exec((el as HTMLElement).style.transform)![1]),
           )
-        const b = (await node(page, 'tarefa-1')
+        const b = (await node(page, 'webhook-entrada-1')
           .getByRole('button', { name: /Editar bloco/ })
           .boundingBox())!
         expect(b.width / zoom).toBeGreaterThanOrEqual(43.5)
-        await node(page, 'tarefa-1')
+        await node(page, 'webhook-entrada-1')
           .getByRole('button', { name: /Editar bloco/ })
           .tap()
-        await expect(painel(page).getByRole('textbox', { name: 'Responsável' })).toBeVisible()
+        await expect(painel(page).getByRole('textbox', { name: 'Nome do bloco' })).toBeVisible()
       })
     })
   }
@@ -533,6 +543,19 @@ test.describe('celular (360)', () => {
     await abrir(page)
     await expect(page.locator(`${SEC} .react-flow__handle.connectable`)).toHaveCount(0)
     await expect(painel(page)).toHaveCount(0)
+    // abre legível: zoom de 50 % ou mais, começando pelo gatilho
+    await expect
+      .poll(() =>
+        page
+          .locator(`${SEC} .react-flow__viewport`)
+          .evaluate((el) =>
+            Number(/scale(([d.]+))/.exec((el as HTMLElement).style.transform)?.[1]),
+          ),
+      )
+      .toBeGreaterThanOrEqual(0.5)
+    const superficie = (await page.locator(`${SEC} .flow-surface`).boundingBox())!
+    const gatilho = (await node(page, 'webhook-entrada-1').boundingBox())!
+    expect(gatilho.x).toBeGreaterThanOrEqual(superficie.x)
     const c = await centro(page.locator(`${SEC} .flow-surface`))
     const rolagem = () => page.evaluate(() => document.querySelector('main')!.scrollTop)
     const y0 = await rolagem()
@@ -558,13 +581,13 @@ test.describe('celular (360)', () => {
 
   test('editar pelo toque: "Próximo bloco" liga e excluir abre o modal', async ({ page }) => {
     await abrir(page)
-    await node(page, 'whatsapp-1')
+    await node(page, 'webhook-entrada-1')
       .getByRole('button', { name: /Editar bloco/ })
       .tap()
     const gaveta = page.getByRole('dialog')
     await gaveta.getByRole('combobox', { name: 'Próximo bloco' }).tap()
     await page.getByRole('option', { name: /Criar tarefa/ }).tap()
-    expect((await json(page)).edges.map((e) => e.id)).toContain('whatsapp-1->tarefa-1')
+    expect((await json(page)).edges.map((e) => e.id)).toContain('webhook-entrada-1->tarefa-1')
     await expect(page.locator(`${SEC} [data-flow-notice]`)).toContainText('foi trocada')
   })
 })
@@ -582,7 +605,7 @@ async function levarAoEstado(page: Page, estado: Estado) {
     await tocar(page.locator(SEC).getByRole('button', { name: 'Validar' }))
     await expect(page.getByText('Fluxo válido')).toBeVisible()
   } else if (estado === 'exclusao') {
-    await tocar(node(page, 'whatsapp-1').getByRole('button', { name: /Excluir bloco/ }))
+    await tocar(node(page, 'webhook-entrada-1').getByRole('button', { name: /Excluir bloco/ }))
     await expect(page.getByRole('dialog')).toContainText('Excluir este bloco?')
   } else if (estado === 'erro') {
     // um bloco novo, sem configuração, deixa o fluxo com problemas

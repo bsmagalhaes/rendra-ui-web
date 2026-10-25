@@ -7,9 +7,11 @@ import {
   describeWait,
   flowSampleData,
   isTrigger,
+  RECORD_LABEL,
   renderTemplate,
   rulesOf,
   ruleSummary,
+  str,
 } from './flow-blocks'
 import {
   migrateFlow,
@@ -82,8 +84,6 @@ const FREQUENCY: Record<string, string> = {
   semanal: 'toda semana',
   mensal: 'todo mês',
 }
-const RECORD: Record<string, string> = { cliente: 'cliente', pedido: 'pedido', negocio: 'negócio' }
-const str = (v: unknown) => (typeof v === 'string' ? v : '')
 
 /** A regra que bate primeiro (ou `null`, e o caminho segue por "Senão"). */
 function matchedRule(node: FlowNode, data: Record<string, string>) {
@@ -107,7 +107,7 @@ function blockDetail(node: FlowNode, data: Record<string, string>): string {
     case 'agendamento':
       return `Iniciaria ${FREQUENCY[str(c?.frequency)] ?? ''} às ${str(c?.time)}`.replace('  ', ' ')
     case 'registro-criado':
-      return `Iniciaria quando um ${RECORD[str(c?.record)] ?? 'registro'} fosse criado`
+      return `Iniciaria quando um ${(RECORD_LABEL[str(c?.record)] ?? 'registro').toLowerCase()} fosse criado`
     case 'whatsapp':
       return `Enviaria WhatsApp para ${renderTemplate(str(c?.to), data)}: "${renderTemplate(str(c?.message), data)}"`
     case 'email':

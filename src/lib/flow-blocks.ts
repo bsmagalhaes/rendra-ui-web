@@ -279,7 +279,7 @@ export interface FlowVariable {
   label: string
 }
 
-const asList = (v: unknown): Record<string, unknown>[] =>
+export const asList = (v: unknown): Record<string, unknown>[] =>
   Array.isArray(v)
     ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
     : []
@@ -415,8 +415,13 @@ export function outputIds(node: Pick<FlowNode, 'type' | 'data'>): (string | unde
 /* ---------------------------------------------------------------------- resumo */
 
 const FREQUENCY: Record<string, string> = { diario: 'Diário', semanal: 'Semanal', mensal: 'Mensal' }
-const RECORD: Record<string, string> = { cliente: 'Cliente', pedido: 'Pedido', negocio: 'Negócio' }
-const text = (v: unknown) => (typeof v === 'string' ? v : '')
+export const RECORD_LABEL: Record<string, string> = {
+  cliente: 'Cliente',
+  pedido: 'Pedido',
+  negocio: 'Negócio',
+}
+/** O texto, ou vazio quando o valor não é texto. */
+export const str = (v: unknown) => (typeof v === 'string' ? v : '')
 
 /** Linhas "rótulo e valor" do resumo no card (variáveis `{{x}}` viram chips). */
 export function summarizeConfig(node: Pick<FlowNode, 'type' | 'data'>): {
@@ -427,34 +432,34 @@ export function summarizeConfig(node: Pick<FlowNode, 'type' | 'data'>): {
   switch (node.type) {
     case 'webhook-entrada': {
       const mapped = asList(c?.mapping)
-        .filter((m) => text(m.to) !== '')
-        .map((m) => `{{${text(m.from)}}}`)
+        .filter((m) => str(m.to) !== '')
+        .map((m) => `{{${str(m.from)}}}`)
         .join(' ')
       return [
         {
           label: 'Método e endereço',
-          value: `${text(c?.method) || 'POST'} ${text(c?.path)}`.trim(),
+          value: `${str(c?.method) || 'POST'} ${str(c?.path)}`.trim(),
         },
         { label: 'Campos mapeados', value: mapped },
       ]
     }
     case 'agendamento':
       return [
-        { label: 'Frequência', value: FREQUENCY[text(c?.frequency)] ?? '' },
-        { label: 'Horário', value: text(c?.time) },
+        { label: 'Frequência', value: FREQUENCY[str(c?.frequency)] ?? '' },
+        { label: 'Horário', value: str(c?.time) },
       ]
     case 'registro-criado':
-      return [{ label: 'Registro', value: RECORD[text(c?.record)] ?? '' }]
+      return [{ label: 'Registro', value: RECORD_LABEL[str(c?.record)] ?? '' }]
     case 'whatsapp':
       return [
-        { label: 'Para', value: text(c?.to) },
-        { label: 'Mensagem', value: text(c?.message) },
+        { label: 'Para', value: str(c?.to) },
+        { label: 'Mensagem', value: str(c?.message) },
       ]
     case 'email':
       return [
-        { label: 'Para', value: text(c?.to) },
-        { label: 'Assunto', value: text(c?.subject) },
-        { label: 'Mensagem', value: text(c?.message) },
+        { label: 'Para', value: str(c?.to) },
+        { label: 'Assunto', value: str(c?.subject) },
+        { label: 'Mensagem', value: str(c?.message) },
       ]
     case 'espera':
       return [{ label: 'Tempo', value: formatWait(c) ?? '' }]
@@ -462,12 +467,12 @@ export function summarizeConfig(node: Pick<FlowNode, 'type' | 'data'>): {
       return [
         {
           label: 'Método e endereço',
-          value: `${text(c?.method) || 'POST'} ${text(c?.url)}`.trim(),
+          value: `${str(c?.method) || 'POST'} ${str(c?.url)}`.trim(),
         },
         {
           label: 'Corpo',
           value: asList(c?.body)
-            .map((b) => text(b.value))
+            .map((b) => str(b.value))
             .filter(Boolean)
             .join(' '),
         },
@@ -475,8 +480,8 @@ export function summarizeConfig(node: Pick<FlowNode, 'type' | 'data'>): {
     case 'tarefa': {
       const days = typeof c?.dueDays === 'number' ? c.dueDays : 0
       return [
-        { label: 'Título', value: text(c?.title) },
-        { label: 'Responsável', value: text(c?.assignee) },
+        { label: 'Título', value: str(c?.title) },
+        { label: 'Responsável', value: str(c?.assignee) },
         { label: 'Prazo', value: `${days} ${days === 1 ? 'dia' : 'dias'}` },
       ]
     }
@@ -492,8 +497,8 @@ export function buildWebhookRequest(
 ): { method: string; url: string; body: Record<string, string> } {
   const body: Record<string, string> = {}
   for (const b of asList(config?.body))
-    if (text(b.key) !== '') body[text(b.key)] = renderTemplate(text(b.value), data)
-  return { method: text(config?.method) || 'POST', url: text(config?.url), body }
+    if (str(b.key) !== '') body[str(b.key)] = renderTemplate(str(b.value), data)
+  return { method: str(config?.method) || 'POST', url: str(config?.url), body }
 }
 
 /** Linhas que o valor do resumo ocupa no card (chips largos quebram em mais de uma). */

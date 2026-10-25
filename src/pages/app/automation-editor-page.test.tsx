@@ -134,7 +134,7 @@ describe('AutomationEditorPage', { timeout: 30_000 }, () => {
     await userEvent.click(await screen.findByRole('option', { name: 'Erro' }))
     await waitFor(() => expect(linhas()).toBe(4))
     expect(within(tabela).getAllByText('Erro').length).toBe(4)
-    await userEvent.click(within(tabela).getAllByRole('button', { name: 'Ver detalhes' })[0]!)
+    await userEvent.click(within(tabela).getAllByRole('button', { name: 'Passo a passo' })[0]!)
     const gaveta = await screen.findByRole('dialog')
     expect(within(gaveta).getAllByText('Falhou').length).toBeGreaterThan(0)
     expect(within(gaveta).getByText('Passo 1')).toBeInTheDocument()

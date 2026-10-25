@@ -82,6 +82,12 @@ test.describe('tela cheia (1280)', () => {
     await expect(topo.getByRole('heading', { level: 1 })).toHaveText('Boas-vindas ao novo cliente')
     await expect(topo.getByRole('button', { name: 'Testar fluxo' })).toBeVisible()
     await expect(topo.getByRole('button', { name: 'Salvar' })).toBeVisible()
+    // nem o <main> rola na aba Workflow em 1280x800: o editor cabe no que sobra
+    const mainSobra = await page.evaluate(() => {
+      const m = document.querySelector('main')!
+      return m.scrollHeight - m.clientHeight
+    })
+    expect(mainSobra).toBeLessThanOrEqual(1)
     // a página não rola: só o <main>
     const sobra = await page.evaluate(
       () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
@@ -144,7 +150,7 @@ test.describe('tela cheia (1280)', () => {
     await expect(tabela.getByRole('row')).toHaveCount(5)
     // o painel de filtros abre por cima da tabela: fecha antes de abrir o detalhe
     await page.keyboard.press('Escape')
-    await tabela.getByRole('button', { name: 'Ver detalhes' }).first().click()
+    await tabela.getByRole('button', { name: 'Passo a passo' }).first().click()
     const gaveta = page.getByRole('dialog')
     await expect(gaveta.getByText('Falhou').first()).toBeVisible()
     await expect(gaveta).toContainText('Passo 1')

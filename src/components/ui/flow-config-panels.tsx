@@ -29,6 +29,7 @@ import {
   FLOW_TYPE_NAME,
   FLOW_WAIT_UNITS,
   branchName,
+  asList,
   buildWebhookRequest,
   flattenPayload,
   flowSampleData,
@@ -37,6 +38,7 @@ import {
   operatorHasValue,
   outputIds,
   rulesOf,
+  str,
   type FlowVariable,
 } from '@/lib/flow-blocks'
 import { nodeName } from '@/lib/flow'
@@ -49,9 +51,7 @@ import { nodeName } from '@/lib/flow'
 
 type Rec = Record<string, unknown>
 
-const str = (v: unknown) => (typeof v === 'string' ? v : '')
-const list = (v: unknown): Rec[] =>
-  Array.isArray(v) ? v.filter((x): x is Rec => !!x && typeof x === 'object') : []
+const list = asList
 const NONE = '__nenhum'
 
 export interface BlockConfigPanelProps {
@@ -86,7 +86,7 @@ function VariableInsert({
       placeholder="Inserir variável"
       disabled={variables.length === 0}
       value={null}
-      options={variables.map((v) => ({ value: v.id, label: v.label, description: `{{${v.id}}}` }))}
+      options={variables.map((v) => ({ value: v.id, label: v.id, description: v.label }))}
       onChange={(v) => v && onInsert(`{{${v}}}`)}
     />
   )
@@ -139,7 +139,11 @@ function VariableSelect({
   onChange: (token: string) => void
 }) {
   const current = /^\{\{\s*([\w.]+)\s*\}\}$/.exec(value)?.[1] ?? null
-  const options: SelectOption[] = variables.map((v) => ({ value: v.id, label: v.label }))
+  const options: SelectOption[] = variables.map((v) => ({
+    value: v.id,
+    label: v.id,
+    description: v.label,
+  }))
   if (current && !variables.some((v) => v.id === current))
     options.push({ value: current, label: current })
   return (
@@ -164,7 +168,7 @@ function ConditionFields({
 }: PanelCtx & Pick<BlockConfigPanelProps, 'onApply'>) {
   const rules = rulesOf(node)
   const fieldOptions = (rule: FlowRule): SelectOption[] => {
-    const opts = variables.map((v) => ({ value: v.id, label: v.label, description: v.id }))
+    const opts = variables.map((v) => ({ value: v.id, label: v.id, description: v.label }))
     if (rule.field && !opts.some((o) => o.value === rule.field))
       opts.push({ value: rule.field, label: rule.field, description: '' })
     return opts

@@ -661,184 +661,186 @@ function FlowEditorInner({
   const showAside = !isMobile && sidebarBody !== null
 
   return (
-    <div
-      ref={rootRef}
-      data-rendra="FLX-001"
-      className={cn(
-        'flow-editor flex min-w-0 flex-col overflow-hidden rounded-surface border bg-card lg:h-board lg:min-h-flow lg:flex-row',
-        className,
-      )}
-    >
+    <div className="@container min-w-0">
       <div
-        ref={canvasRef}
+        ref={rootRef}
+        data-rendra="FLX-001"
         className={cn(
-          'relative h-board min-w-0 md:h-viewer lg:h-full lg:flex-1',
-          drag?.over && 'ring-2 ring-primary ring-inset',
+          'flow-editor flex min-w-0 flex-col overflow-hidden rounded-surface border bg-card @5xl:h-board @5xl:min-h-viewer @5xl:flex-row',
+          className,
         )}
       >
-        <FlowActionsContext.Provider value={actions}>
-          <FlowSurface
-            fill={false}
-            nodes={rfNodes}
-            edges={rfEdges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onConnectEnd={onConnectEnd}
-            nodesDraggable={canBuild}
-            nodesConnectable={canBuild}
-            elementsSelectable={canEdit}
-            deleteKeyCode={canEdit ? ['Delete', 'Backspace'] : null}
-            onBeforeDelete={async ({ nodes: gone }) => {
-              if (!canEdit || drawerOpen || deletingRef.current) return false
-              if (gone.length === 0) return true
-              // bloco nunca sai direto: um bloco abre o modal, vários pedem um de cada vez
-              if (gone.length === 1) setDeleting(gone[0]!.id)
-              else setNotice(NO_BLOCK)
-              return false
-            }}
-            onDelete={({ edges: gone }) => {
-              let next = flowRef.current
-              for (const e of gone) next = removeEdge(next, e.id)
-              if (next !== flowRef.current) emit(next)
-            }}
-            onNodeDragStop={(_, __, nodes) =>
-              commitMoves(nodes.map((n) => ({ id: n.id, position: n.position })))
-            }
-            onNodeClick={(e, node) => {
-              if ((e.target as HTMLElement).closest('button')) return
-              openConfig(node.id)
-            }}
-            onPaneClick={() => {
-              if (view === 'config' && !isMobile) setView('blocks')
-            }}
-            onKeyDown={(e) => {
-              const el = e.target as HTMLElement
-              if (
-                e.key === 'Enter' &&
-                el.classList?.contains('react-flow__node') &&
-                el.dataset.id
-              ) {
-                // o foco vai para a barra: sem isto o Enter ainda ativaria o primeiro botão dela
-                e.preventDefault()
-                openConfig(el.dataset.id)
+        <div
+          ref={canvasRef}
+          className={cn(
+            'relative h-board min-w-0 md:h-viewer @5xl:h-full @5xl:flex-1',
+            drag?.over && 'ring-2 ring-primary ring-inset',
+          )}
+        >
+          <FlowActionsContext.Provider value={actions}>
+            <FlowSurface
+              fill={false}
+              nodes={rfNodes}
+              edges={rfEdges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onConnectEnd={onConnectEnd}
+              nodesDraggable={canBuild}
+              nodesConnectable={canBuild}
+              elementsSelectable={canEdit}
+              deleteKeyCode={canEdit ? ['Delete', 'Backspace'] : null}
+              onBeforeDelete={async ({ nodes: gone }) => {
+                if (!canEdit || drawerOpen || deletingRef.current) return false
+                if (gone.length === 0) return true
+                // bloco nunca sai direto: um bloco abre o modal, vários pedem um de cada vez
+                if (gone.length === 1) setDeleting(gone[0]!.id)
+                else setNotice(NO_BLOCK)
+                return false
+              }}
+              onDelete={({ edges: gone }) => {
+                let next = flowRef.current
+                for (const e of gone) next = removeEdge(next, e.id)
+                if (next !== flowRef.current) emit(next)
+              }}
+              onNodeDragStop={(_, __, nodes) =>
+                commitMoves(nodes.map((n) => ({ id: n.id, position: n.position })))
               }
-            }}
-          />
-        </FlowActionsContext.Provider>
-        {(toolbar || (isMobile && canEdit)) && (
-          <div className="absolute top-2 right-2 z-10 flex gap-2">
-            {isMobile && canEdit && (
-              <Button
-                variant="outline"
-                iconOnly
-                aria-label="Blocos"
-                icon={<Plus />}
-                onClick={openBlocks}
-              />
-            )}
-            {toolbar && (
-              <>
+              onNodeClick={(e, node) => {
+                if ((e.target as HTMLElement).closest('button')) return
+                openConfig(node.id)
+              }}
+              onPaneClick={() => {
+                if (view === 'config' && !isMobile) setView('blocks')
+              }}
+              onKeyDown={(e) => {
+                const el = e.target as HTMLElement
+                if (
+                  e.key === 'Enter' &&
+                  el.classList?.contains('react-flow__node') &&
+                  el.dataset.id
+                ) {
+                  // o foco vai para a barra: sem isto o Enter ainda ativaria o primeiro botão dela
+                  e.preventDefault()
+                  openConfig(el.dataset.id)
+                }
+              }}
+            />
+          </FlowActionsContext.Provider>
+          {(toolbar || (isMobile && canEdit)) && (
+            <div className="absolute top-2 right-2 z-10 flex gap-2">
+              {isMobile && canEdit && (
                 <Button
                   variant="outline"
-                  iconOnly={isMobile}
-                  aria-label="Validar"
-                  icon={<ListChecks />}
-                  onClick={() => {
-                    setValidated(true)
-                    setView('validate')
-                    setTestOpen(false)
-                    showDrawer()
-                  }}
-                >
-                  {isMobile ? null : 'Validar'}
-                </Button>
-                <Button
-                  iconOnly={isMobile}
-                  aria-label="Testar fluxo"
-                  icon={<FlaskConical />}
-                  onClick={openTest}
-                >
-                  {isMobile ? null : 'Testar fluxo'}
-                </Button>
-              </>
-            )}
+                  iconOnly
+                  aria-label="Blocos"
+                  icon={<Plus />}
+                  onClick={openBlocks}
+                />
+              )}
+              {toolbar && (
+                <>
+                  <Button
+                    variant="outline"
+                    iconOnly={isMobile}
+                    aria-label="Validar"
+                    icon={<ListChecks />}
+                    onClick={() => {
+                      setValidated(true)
+                      setView('validate')
+                      setTestOpen(false)
+                      showDrawer()
+                    }}
+                  >
+                    {isMobile ? null : 'Validar'}
+                  </Button>
+                  <Button
+                    iconOnly={isMobile}
+                    aria-label="Testar fluxo"
+                    icon={<FlaskConical />}
+                    onClick={openTest}
+                  >
+                    {isMobile ? null : 'Testar fluxo'}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+          <div
+            role="status"
+            aria-live="polite"
+            id={noticeId}
+            data-flow-notice
+            className={cn(notice ? 'absolute inset-x-2 top-16 z-10' : 'sr-only')}
+          >
+            {notice && <Alert type="warning" title={notice} onDismiss={() => setNotice(null)} />}
+          </div>
+        </div>
+        {showAside && (
+          <aside
+            aria-label="Painel do fluxo"
+            className="w-full shrink-0 scrollbar-subtle border-t p-4 @5xl:h-full @5xl:w-flow-panel @5xl:overflow-y-auto @5xl:border-t-0 @5xl:border-l"
+          >
+            <div
+              role="presentation"
+              onKeyDown={(e) => {
+                if (
+                  e.key === 'Escape' &&
+                  view === 'config' &&
+                  !testOpen &&
+                  !(e.target as HTMLElement).closest(
+                    '[role="combobox"],[role="listbox"],[role="dialog"],[data-radix-popper-content-wrapper],[cmdk-root]',
+                  )
+                )
+                  setView('blocks')
+              }}
+            >
+              {sidebarBody}
+            </div>
+          </aside>
+        )}
+        {drag && (
+          <div
+            aria-hidden
+            data-flow-drag
+            className="pointer-events-none fixed top-0 left-0 z-50 translate-x-(--flow-x) translate-y-(--flow-y) rounded-control border bg-card px-3 py-2 text-sm shadow-md"
+            style={{ '--flow-x': `${drag.x}px`, '--flow-y': `${drag.y}px` } as CSSProperties}
+          >
+            {FLOW_TYPE_NAME[drag.type]}
           </div>
         )}
-        <div
-          role="status"
-          aria-live="polite"
-          id={noticeId}
-          data-flow-notice
-          className={cn(notice ? 'absolute inset-x-2 top-16 z-10' : 'sr-only')}
-        >
-          {notice && <Alert type="warning" title={notice} onDismiss={() => setNotice(null)} />}
-        </div>
-      </div>
-      {showAside && (
-        <aside
-          aria-label="Painel do fluxo"
-          className="w-full shrink-0 scrollbar-subtle border-t p-4 lg:h-full lg:w-flow-panel lg:overflow-y-auto lg:border-t-0 lg:border-l"
-        >
-          <div
-            role="presentation"
-            onKeyDown={(e) => {
-              if (
-                e.key === 'Escape' &&
-                view === 'config' &&
-                !testOpen &&
-                !(e.target as HTMLElement).closest(
-                  '[role="combobox"],[role="listbox"],[role="dialog"],[data-radix-popper-content-wrapper],[cmdk-root]',
-                )
-              )
+        {isMobile && sidebarBody !== null && (
+          <Drawer
+            open={drawerOpen}
+            onOpenChange={(open) => {
+              setDrawerOpen(open)
+              if (!open) {
+                if (testOpen) setTestOpen(false)
                 setView('blocks')
+                setValidated(false)
+              }
             }}
+            title="Fluxo de automação"
           >
             {sidebarBody}
-          </div>
-        </aside>
-      )}
-      {drag && (
-        <div
-          aria-hidden
-          data-flow-drag
-          className="pointer-events-none fixed top-0 left-0 z-50 translate-x-(--flow-x) translate-y-(--flow-y) rounded-control border bg-card px-3 py-2 text-sm shadow-md"
-          style={{ '--flow-x': `${drag.x}px`, '--flow-y': `${drag.y}px` } as CSSProperties}
-        >
-          {FLOW_TYPE_NAME[drag.type]}
-        </div>
-      )}
-      {isMobile && sidebarBody !== null && (
-        <Drawer
-          open={drawerOpen}
-          onOpenChange={(open) => {
-            setDrawerOpen(open)
-            if (!open) {
-              if (testOpen) setTestOpen(false)
+          </Drawer>
+        )}
+        {canEdit && deleting && (
+          <DeleteBlockModal
+            key={deleting}
+            flow={flow}
+            nodeId={deleting}
+            onClose={() => setDeleting(null)}
+            onConfirm={(mode) => {
+              emit(removeNode(flowRef.current, deleting, mode))
+              setDeleting(null)
+              setConfigId((id) => (id === deleting ? null : id))
               setView('blocks')
-              setValidated(false)
-            }
-          }}
-          title="Fluxo de automação"
-        >
-          {sidebarBody}
-        </Drawer>
-      )}
-      {canEdit && deleting && (
-        <DeleteBlockModal
-          key={deleting}
-          flow={flow}
-          nodeId={deleting}
-          onClose={() => setDeleting(null)}
-          onConfirm={(mode) => {
-            emit(removeNode(flowRef.current, deleting, mode))
-            setDeleting(null)
-            setConfigId((id) => (id === deleting ? null : id))
-            setView('blocks')
-            setDrawerOpen(false)
-          }}
-        />
-      )}
+              setDrawerOpen(false)
+            }}
+          />
+        )}
+      </div>
     </div>
   )
 }
