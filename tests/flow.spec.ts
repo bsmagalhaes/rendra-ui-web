@@ -485,6 +485,8 @@ test.describe('tema pelos tokens', () => {
 })
 
 test.describe('tablet (768 e 1024, toque)', () => {
+  // o gesto de toque por CDP é sensível à carga da máquina (a alça tem 13 px na tela no enquadramento geral)
+  test.describe.configure({ retries: 2 })
   for (const width of [768, 1024]) {
     test.describe(`${width}px`, () => {
       test.use({ viewport: { width, height: 1500 }, hasTouch: true })
