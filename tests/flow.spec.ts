@@ -544,7 +544,7 @@ test.describe('celular (360)', () => {
         page
           .locator(`${SEC} .react-flow__viewport`)
           .evaluate((el) =>
-            Number(/scale(([d.]+))/.exec((el as HTMLElement).style.transform)?.[1]),
+            Number(/scale\(([\d.]+)\)/.exec((el as HTMLElement).style.transform)?.[1]),
           ),
       )
       .toBeGreaterThanOrEqual(0.5)
