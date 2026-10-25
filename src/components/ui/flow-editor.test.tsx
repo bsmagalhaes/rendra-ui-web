@@ -28,6 +28,9 @@ vi.mock('@xyflow/react', async (original) => {
   }
 })
 
+// O editor monta React Flow, painéis e modais: sob a suíte inteira (162 arquivos em paralelo) 5 s não bastam.
+vi.setConfig({ testTimeout: 30_000 })
+
 const setViewportWidth = (w: number) =>
   (globalThis as unknown as { setViewportWidth: (w: number) => void }).setViewportWidth(w)
 
