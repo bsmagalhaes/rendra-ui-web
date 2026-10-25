@@ -8,7 +8,6 @@ import {
   Position,
   ReactFlow,
   getNodesBounds,
-  useNodesInitialized,
   useReactFlow,
   useStore,
   type AriaLabelConfig,
@@ -620,11 +619,17 @@ function FlowAutoFit() {
   const { getNodes, setViewport } = useReactFlow()
   const width = useStore((st) => st.width)
   const height = useStore((st) => st.height)
-  const ready = useNodesInitialized()
+  // `useNodesInitialized` nunca fica verdadeiro no viewer (sem alças conectáveis): basta ter medido os blocos
+  const ready = useStore(
+    (st) =>
+      st.nodeLookup.size > 0 &&
+      [...st.nodeLookup.values()].every((n) => (n.measured.width ?? 0) > 0),
+  )
   const before = useRef(0)
+  // o d3-zoom da biblioteca nasce depois do primeiro quadro: se o viewport ainda não aceitou, tenta de novo
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     if (!ready || width <= 0 || height <= 0 || width === before.current) return
-    before.current = width
     const nodes = getNodes()
     if (nodes.length === 0) return
     const b = getNodesBounds(nodes)
@@ -633,8 +638,11 @@ function FlowAutoFit() {
     const x = zoom === fit ? (width - b.width * zoom) / 2 - b.x * zoom : 16 - b.x * zoom
     // centraliza na vertical, mas nunca abaixo da barra de zoom (64 px de folga no topo)
     const y = Math.max((height - b.height * zoom) / 2, 64) - b.y * zoom
-    void setViewport({ x, y, zoom })
-  }, [ready, width, height, getNodes, setViewport])
+    void setViewport({ x, y, zoom }).then((ok) => {
+      if (ok) before.current = width
+      else if (attempt < 20) setTimeout(() => setAttempt((a) => a + 1), 50)
+    })
+  }, [ready, width, height, attempt, getNodes, setViewport])
   return null
 }
 
