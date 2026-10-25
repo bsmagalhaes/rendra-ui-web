@@ -631,7 +631,8 @@ function FlowAutoFit() {
     const fit = Math.min(1, (width - 32) / b.width, (height - 128) / b.height)
     const zoom = Math.max(fit, MIN_FIT_ZOOM)
     const x = zoom === fit ? (width - b.width * zoom) / 2 - b.x * zoom : 16 - b.x * zoom
-    const y = (height - b.height * zoom) / 2 - b.y * zoom
+    // centraliza na vertical, mas nunca abaixo da barra de zoom (64 px de folga no topo)
+    const y = Math.max((height - b.height * zoom) / 2, 64) - b.y * zoom
     void setViewport({ x, y, zoom })
   }, [ready, width, height, getNodes, setViewport])
   return null

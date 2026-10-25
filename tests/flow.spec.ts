@@ -124,11 +124,6 @@ const pontoDaLigacao = (page: Page, id: string) =>
     return { x: m.a * pt.x + m.c * pt.y + m.e, y: m.b * pt.x + m.d * pt.y + m.f }
   }, id)
 
-const zoomDe = (page: Page) =>
-  page
-    .locator(`${SEC} .react-flow__viewport`)
-    .evaluate((el) => Number(/scale(([d.]+))/.exec((el as HTMLElement).style.transform)![1]))
-
 const caixas = (page: Page) =>
   nodes(page).evaluateAll((els) =>
     els.map((e) => {
