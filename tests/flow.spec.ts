@@ -409,6 +409,17 @@ test.describe('desktop (1280, claro, mouse)', () => {
     await expect(nodes(page)).toHaveCount(5)
   })
 
+  test('o enquadramento inicial do viewer não põe os botões de zoom sobre o primeiro card', async ({
+    page,
+  }) => {
+    await abrir(page)
+    const v = page.locator('#fluxo-viewer')
+    await v.scrollIntoViewIfNeeded()
+    const card = (await v.locator('.react-flow__node').first().boundingBox())!
+    const zoom = (await v.getByRole('button', { name: 'Enquadrar' }).boundingBox())!
+    expect(card.y).toBeGreaterThanOrEqual(zoom.y + zoom.height)
+  })
+
   test('o viewer não rola a página com a roda, e Ctrl+roda dá zoom no editor', async ({ page }) => {
     await abrir(page)
     const zoom = () =>

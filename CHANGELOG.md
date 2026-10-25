@@ -35,6 +35,7 @@ Editor de automações no estilo N8N e telas de automações. Versão minor: o f
 
 - Nada executa de verdade: webhook, play, teste e histórico são simulações com dados de exemplo.
 - Todas as linhas da listagem de `/automacoes` abrem a mesma automação de demonstração (`/automacoes/nova`).
+- O gatilho da 2.7.0 (`gatilho`, "Gatilho personalizado") não tem campos: para completar a regra da condição, exclua-o e acrescente Receber webhook, Agendamento ou Registro criado (o editor aceita um gatilho por vez), e só então escolha o campo.
 - As referências da regressão visual das duas rotas novas não são geradas na máquina local: dependem do rótulo `atualizar-visual` no pull request (8 capturas por rota).
 - Os blocos da barra se acrescentam no celular por toque, mas montar arrastando começa no tablet (768 px).
 
